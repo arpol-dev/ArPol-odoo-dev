@@ -2,15 +2,15 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
-    'name': 'Spécificités pour Casa Angels',
+    'name': 'Amélioration du modèle de reçu du point de vente',
     'version': '1.0.1',
-    'category': 'Hidden',
+    'category': 'Sales/Point Of Sale',
     'sequence': 40,
     'summary': '[ArPol] Module personnalisé pour Casa Angels',
     'depends': ['point_of_sale','l10n_fr_siret'],
     'assets': {
         'point_of_sale.assets': [
-            'casaangels_custom/static/xml/OrderReceipt_inherit.xml',
+            'pos_receipt_upgrade/static/xml/OrderReceipt_inherit.xml',
         ],
     },
     'installable': True,
