@@ -1,7 +1,7 @@
 <templates id="template" xml:space="preserve">
     <t t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
         <xpath expr="//img[@class='pos-receipt-logo']" position="replace">
-            <img class="pos-receipt-logo" t-att-src="'/casaangels_custom/static/img/logo.png'" alt="Logo"/>
+            <img class="pos-receipt-logo" t-att-src="'/pos_receipt_upgrade/static/img/logo.png'" alt="Logo"/>
         </xpath>
         <xpath expr="//t[@t-if='receipt.company.vat']" position="replace">
             <div>SIRET : 98074488200013</div>
@@ -13,9 +13,10 @@
             <div>contact@casaangels.fr</div>
         </xpath>
     </t>
-    
-    <t t-name="pos_coupon.OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
-        <xpath expr="div[@class='pos-coupon-rewards']" position="replace">
+</template>
+<templates id="template" xml:space="preserve">
+    <t t-inherit="pos_coupon.OrderReceipt" t-inherit-mode="extension" owl="1">
+        <xpath expr="//div[contains(@class, 'pos-coupon-rewards')]" position="replace">
             <div class="pos-coupon-rewards">
                 <div>------------------------</div>
                 <br/>
@@ -26,12 +27,9 @@
                         </div>
                         <div>
                             <t t-if="coupon_info['expiration_date']">
-                                <span>Valid until: </span> 
+                                <span>Valid until: </span>
                                 <t t-esc="coupon_info['expiration_date']"/>
                             </t>
-                            <!-- <t t-else="">
-                                no expiration
-                            </t> -->
                         </div>
                         <div>
                             <img t-att-src="'/report/barcode/Code128/'+coupon_info['code']" style="width:200px;height:50px" alt="Barcode"/>
