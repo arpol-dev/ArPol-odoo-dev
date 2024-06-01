@@ -10,7 +10,7 @@
     'depends': ['point_of_sale','l10n_fr_siret','pos_loyalty'],
     'assets': {
         'point_of_sale.assets': [
-            'pos_loyalty/static/src/xml/OrderReceipt.xml',
+            'pos_receipt_upgrade/static/src/xml/OrderReceipt.xml',
             ('replace', 'pos_loyalty/static/src/xml/OrderReceipt.xml', 'pos_receipt_upgrade/static/src/xml/loyalty_OrderReceipt.xml'),
         ],
     },
