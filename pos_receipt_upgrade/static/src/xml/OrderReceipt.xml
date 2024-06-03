@@ -1,5 +1,5 @@
 <templates id="template" xml:space="preserve">
-    <t t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
+    <t t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">     
         <xpath expr="//img[@class='pos-receipt-logo']" position="replace">
             <img class="pos-receipt-logo" t-att-src="'/pos_receipt_upgrade/static/img/logo.png'" alt="Logo"/>
         </xpath>
@@ -12,20 +12,17 @@
         <xpath expr="//t[@t-if='receipt.company.email']/div" position="replace">
             <div>contact@casaangels.fr</div>
         </xpath>
-    </t>
-</template>
-<templates id="template" xml:space="preserve">
-    <t t-inherit="pos_coupon.OrderReceipt" t-inherit-mode="extension" owl="1">
-        <xpath expr="//div[contains(@class, 'pos-coupon-rewards')]" position="replace">
+
+        <xpath expr="//div[hasclass('pos-coupon-rewards')]" position="replace">
             <div class="pos-coupon-rewards">
                 <div>------------------------</div>
                 <br/>
                 <t t-foreach="receipt.new_coupon_info" t-as="coupon_info" t-key="coupon_info.code">
                     <div class="coupon-container">
-                        <div style="font-size: 110%;">
+                        <div style="font-size: 140%;">
                             <t t-esc="coupon_info['program_name']"/>
                         </div>
-                        <div>
+                        <div>                             
                             <t t-if="coupon_info['expiration_date']">
                                 <span>Valid until: </span>
                                 <t t-esc="coupon_info['expiration_date']"/>
@@ -42,4 +39,4 @@
             </div>
         </xpath>
     </t>
-</templates>
+</template>

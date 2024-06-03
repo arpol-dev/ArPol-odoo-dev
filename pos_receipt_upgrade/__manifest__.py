@@ -11,7 +11,6 @@
     'assets': {
         'point_of_sale.assets': [
             'pos_receipt_upgrade/static/src/xml/OrderReceipt.xml',
-            ('replace', 'pos_loyalty/static/src/xml/OrderReceipt.xml', 'pos_receipt_upgrade/static/src/xml/loyalty_OrderReceipt.xml'),
         ],
     },
 }
