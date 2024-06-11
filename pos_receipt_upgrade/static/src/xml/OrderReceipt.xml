@@ -4,6 +4,10 @@
             <img class="pos-receipt-logo" t-att-src="'/pos_receipt_upgrade/static/img/logo.png'" alt="Logo"/>
         </xpath>
         <xpath expr="//t[@t-if='receipt.company.vat']" position="replace">
+            <!-- <t t-if="receipt.company.siret">
+                <div>SIRET : <t t-esc="receipt.company.siret" /></div>
+            </t> -->
+            <div>37 rue de l'eglise, 25720 Avanne</div>
             <div>SIRET : 98074488200013</div>
             <t t-if="receipt.company.vat">
                 <div><t t-esc="receipt.company.vat_label"/> : <t t-esc="receipt.company.vat" /></div>
