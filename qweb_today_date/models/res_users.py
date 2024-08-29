@@ -10,7 +10,7 @@ class ResUsers(models.Model):
     _inherit = "res.users"
 
     @api.model
-    def get_formatted_date(self):
+    def get_formatted_today_date(self):
         lang = self.env.user.lang or 'en_US'
         date = datetime.now()
 
