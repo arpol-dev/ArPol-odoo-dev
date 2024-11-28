@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import pdb
 
 from email_validator import EmailSyntaxError, EmailUndeliverableError, validate_email
 
@@ -37,8 +36,6 @@ class SignupVerifyEmail(AuthSignupHome):
             values["email"] = values.get("login")
         
         # Search for an existing partner to link the new user to
-        pdb.set_trace()
-        temp = request.env['res.partner'].sudo().search([])
         partner = request.env['res.partner'].sudo().search([('email','=',values['email'])], limit=1)
         if partner:
             values['partner_id'] = partner.id
