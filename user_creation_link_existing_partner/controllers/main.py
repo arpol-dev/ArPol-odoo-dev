@@ -11,6 +11,8 @@ from odoo.addons.auth_signup.controllers.main import AuthSignupHome
 
 from odoo.addons.auth_signup_verify_email.controllers.main import SignupVerifyEmail
 
+_logger = logging.getLogger(__name__)
+
 class SignupVerifyEmail(AuthSignupHome):
     def passwordless_signup(self):
         values = request.params
@@ -36,7 +38,7 @@ class SignupVerifyEmail(AuthSignupHome):
             values["email"] = values.get("login")
         
         # Search for an existing partner to link the new user to
-        partner = request.env['res.partner'].sudo().search([('email','=',values['email'])], limit=1)
+        partner = request.env['res.partner'].sudo().search([('email','=',values['email']),('user_ids','=',False)], limit=1)
         if partner:
             values['partner_id'] = partner.id
 
