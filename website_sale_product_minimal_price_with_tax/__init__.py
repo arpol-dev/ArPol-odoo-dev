@@ -1,0 +1,2 @@
+# filepath: /website_sale_product_minimal_price_with_tax/website_sale_product_minimal_price_with_tax/__init__.py
+from . import controllers
