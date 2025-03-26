@@ -2,7 +2,6 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from dateutil.relativedelta import relativedelta
 import logging
-import pdb
 
 _logger = logging.getLogger(__name__)
 
@@ -18,8 +17,6 @@ class ResUsers(models.Model):
             ('state', '=', 'new'),
             ('log_ids', '=', False),
         ])
-
-        pdb.set_trace()
 
         for user in unlogged_users:
             partner = user.partner_id
