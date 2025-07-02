@@ -1,0 +1,55 @@
+<odoo>
+    <record id="view_ir_actions_report_pdf_form" model="ir.ui.view">
+        <field name="name">ir.actions.report.pdf.form</field>
+        <field name="model">ir.actions.report</field>
+        <field name="inherit_id" ref="base.act_report_xml_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Form Fields Mapping" attrs="{'invisible': [('report_type', '!=', 'pdf_form')]}">
+                    <field name="model_id" invisible="1"/>
+                    <field name="form_fields_match" context="{'default_is_manual': True}">
+                        <tree create="true" edit="false" delete="true">
+                            <field name="description"/>
+                            <field name="name" width="20%"/>
+                            <field name="field_type" width="10%"/> 
+                        </tree>
+                        <form>
+                            <div class="oe_title">
+                                <label for="description"/>
+                                <h1><field name="description" placeholder="Add a name/description"/></h1>
+                                <label for="name"/>
+                                <h2><field name="name" attrs="{'readonly': [('is_manual','=',False)]}"/></h2>                              
+                            </div>
+                            <group string="Field Mapping">  
+                                <group>
+                                    <field name="is_manual" widget="boolean_toggle"/> 
+                                    <field name="field_type" attrs="{'invisible': [('is_manual','=',True)]}" readonly="1"/>                              
+                                </group>
+                                <group>
+                                    <field name="evaluation_type"/>
+                                    <label for="field_value" attrs="{'invisible': [('evaluation_type','!=','value')]}"/>
+                                    <label for="field_value" string="Python expression" attrs="{'invisible': [('evaluation_type','!=','equation')]}"/>
+                                    <field name="field_value" attrs="{'invisible': ['|','&amp;',('is_manual','=',False),('field_type','not in',['text']),('evaluation_type','not in',['value','equation'])]}" nolabel="1"/>
+                                    <field name="field_reference" domain="[('model_id','=',parent.model_id)]" attrs="{'invisible': [('evaluation_type','!=','reference')]}" options="{'no_create': True}"/>
+                                    <field name="field_file" string="Upload file" attrs="{'invisible': [('evaluation_type','!=','file')]}"/>
+                                    <field name="field_bool" string="Value" attrs="{'invisible': ['|','|',('evaluation_type','!=','value'),('field_type','!=','checkbox'),('is_manual','=',True)]}"/>
+                                    <field name="page" attrs="{'invisible': [('is_manual','=',False)]}"/>
+                                    <field name="position" placeholder="x0,y0,x1,y1" attrs="{'invisible': [('is_manual','=',False)]}"/>
+                                </group>
+                            </group>
+                        </form>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//field[@name='print_report_name']" position="attributes">
+                <attribute name="attrs">{'invisible': [('report_type', '=', 'pdf_form')]}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='report_name']" position="attributes">
+                <attribute name="string">Report Name</attribute>
+            </xpath>
+            <xpath expr="//field[@name='report_name']" position="after">
+                <field name="pdf_form_template" attrs="{'invisible': [('report_type', '!=', 'pdf_form')]}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
