@@ -9,6 +9,6 @@ class MicrosoftSync(models.AbstractModel):
 
     def _need_video_call(self):
         res = super()._need_video_call()
-        if self.videocall_source == 'teams':
-            res = True
+        if self.videocall_source != 'teams':
+            res = False
         return res
