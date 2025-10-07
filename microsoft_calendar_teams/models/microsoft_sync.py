@@ -7,8 +7,9 @@ from odoo import api, fields, models, _
 class MicrosoftSync(models.AbstractModel):
     _inherit = 'microsoft.calendar.sync'
 
+    # Returns True only if the meeting location is left empty (with the placeholder "online meeting") and the videocall_source is 'teams'
     def _need_video_call(self):
         res = super()._need_video_call()
-        if self.videocall_source != 'teams':
+        if self.location:
             res = False
         return res
