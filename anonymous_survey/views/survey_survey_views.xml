@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+    <record id="anonymous_survey_survey_view_form" model="ir.ui.view">
+        <field name="name">survey.survey.view.form.anonymous</field>
+        <field name="model">survey.survey</field>
+        <field name="inherit_id" ref="survey.survey_survey_view_form"/>
+        <field name="priority" eval="20"/>
+        <field name="arch" type="xml">
+            <data>
+                <field name="users_login_required" position="after">
+                    <field name="anonymous_survey" widget="boolean_toggle"/>
+                </field>
+            </data>
+        </field>
+    </record>  
+</data>
+</odoo>
