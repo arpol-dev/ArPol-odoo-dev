@@ -10,11 +10,17 @@ class SaleSubscriptionPlan(models.Model):
 
     subscription_invoice_policy = fields.Selection(
         selection=[
-            ('prepaid', "Prepaid Invoicing (in advance)"),
-            ('postpaid', "Postpaid Invoicing (in arrears)")
+            ('mixed', "Standard"),
+            ('postpaid', "Force postpaid invoicing")
         ],
         string="Default Subscription Invoicing Policy",
         default='prepaid',
         help="Determines whether the subscriptions are invoiced in advance or in arrears.",
+    )
+
+    ignore_overdelivery = fields.Boolean(
+        string="ignore overdelivery",
+        default=False,
+        help="If checked, the deliveries that are not ordered will not be invoiced on the subscription's postpaid lines.",
     )
     

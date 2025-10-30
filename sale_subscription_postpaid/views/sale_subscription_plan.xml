@@ -8,6 +8,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='billing_first_day']" position="before">
                 <field name="subscription_invoice_policy"/>
+                <field name="ignore_overdelivery" widget="boolean_toggle"/>
             </xpath>
         </field>
     </record>
@@ -19,6 +20,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='billing_period_display']" position="after">
                 <field name="subscription_invoice_policy" optional="hide"/>
+                <field name="ignore_overdelivery" widget="boolean_toggle" optional="hide"/>
             </xpath>
         </field>
     </record>

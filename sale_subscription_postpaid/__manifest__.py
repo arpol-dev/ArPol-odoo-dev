@@ -16,5 +16,5 @@
     "installable": True,
     "application": False,
     "license": "AGPL-3",
-    "description": "With his module, you can configure your subscription plans to invoice for the previous period, from one billing period in the past until the day before the invoicing date."
+    "description": "With his module, you can configure your subscription plans to invoice for the previous period, from one billing period in the past until the day before the invoicing date. this forces all the subscription to be postpaid. You can also choose to ignore overdeliveries on postpaid lines when invoicing."
 }
