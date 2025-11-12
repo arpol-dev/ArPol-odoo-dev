@@ -1,86 +1,68 @@
+# @author: Armand Polmard (contact@arpol.fr)
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+# -*- coding: utf-8 -*-
+
 import json
-import logging
-
-import werkzeug.exceptions
-from werkzeug.urls import url_parse
-
 from odoo import http
-from odoo.http import content_disposition, request
-from odoo.tools.misc import html_escape
-from odoo.tools.safe_eval import safe_eval, time
+from odoo.http import request, content_disposition
+from odoo.tools.safe_eval import safe_eval
+import time
 
 
-_logger = logging.getLogger(__name__)
+class PdfFormReportController(http.Controller):
+    """
+    Custom controller for PDF Form reports.
+    Provides a direct route that calls _render() which dispatches to _render_pdf_form()
+    """
 
-
-class MyReportController(http.Controller):
-
-    #------------------------------------------------------
-    # Report controllers
-    #------------------------------------------------------
     @http.route([
-        '/report/<converter>/<reportname>',
-        '/report/<converter>/<reportname>/<docids>',
-    ], type='http', auth='user', website=True)
-    def report_routes(self, reportname, docids=None, converter=None, **data):
-        report = request.env['ir.actions.report']._get_report_from_name(reportname)
+        '/report/pdf_form/<reportname>',
+        '/report/pdf_form/<reportname>/<docids>',
+    ], type='http', auth='user', website=True, readonly=True, methods=['GET', 'POST'])
+    def report_pdf_form(self, reportname, docids=None, converter=None, **data):
+        """
+        Direct route for PDF Form reports.
+        Calls _render() which will dispatch to _render_pdf_form() automatically.
+        """
+        report_sudo = request.env['ir.actions.report'].sudo()
+        context = dict(request.env.context)
 
-        if converter == 'pdf' and report.report_type == 'pdf_form':
-            pdf_content, content_type = report._render_pdf_form(docids, data=data)
-            pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdf))]
-            return request.make_response(pdf_content, [('Content-Type', content_type), ('Content-Length', len(pdf_content))])
-        else:
-            return super().report_routes(reportname, docids=docids, converter=converter, **data)
+        if docids:
+            docids = [int(i) for i in docids.split(',') if i.isdigit()]
 
-    
-    @http.route(['/report/download'], type='http', auth="user")
-    def report_download(self, data, context=None, token=None):
-        requestcontent = json.loads(data)
-        url, type_ = requestcontent[0], requestcontent[1]
-        reportname = '???'
+        if data.get('options'):
+            data.update(json.loads(data.pop('options')))
 
-        if type_ in ['pdf_form']:
-            try:            
-                converter = 'pdf'
-                extension = 'pdf'
-                pattern = '/report/pdf/'
-                reportname = url.split(pattern)[1].split('?')[0]
+        if data.get('context'):
+            data['context'] = json.loads(data['context'])
+            context.update(data['context'])
 
-                docids = None
-                if '/' in reportname:
-                    reportname, docids = reportname.split('/')
+        # Call _render() which will automatically dispatch to _render_pdf_form()
+        import logging
+        _logger = logging.getLogger(__name__)
 
-                if docids:
-                    # Generic report:
-                    response = self.report_routes(reportname, docids=docids, converter=converter, context=context)
-                else:
-                    # Particular report:
-                    data = url_parse(url).decode_query(cls=dict)  # decoding the args represented in JSON
-                    if 'context' in data:
-                        context, data_context = json.loads(context or '{}'), json.loads(data.pop('context'))
-                        context = json.dumps({**context, **data_context})
-                    response = self.report_routes(reportname, converter=converter, context=context, **data)
+        _logger.info(f"[PDF Form Controller] Rendering report: {reportname} for docids: {docids}")
+        pdf_content = report_sudo.with_context(context)._render(reportname, docids, data=data)[0]
+        _logger.info(f"[PDF Form Controller] PDF generated, size: {len(pdf_content)} bytes")
 
-                report = request.env['ir.actions.report']._get_report_from_name(reportname)
-                filename = "%s.%s" % (report.name, extension)
+        # Set proper filename
+        report = report_sudo._get_report_from_name(reportname)
+        filename = f"{report.name}.pdf"
 
-                if docids:
-                    ids = [int(x) for x in docids.split(",") if x.isdigit()]
-                    obj = request.env[report.model].browse(ids)
-                    if report.print_report_name and not len(obj) > 1:
-                        report_name = safe_eval(report.print_report_name, {'object': obj, 'time': time})
-                        filename = "%s.%s" % (report_name, extension)
-                response.headers.add('Content-Disposition', content_disposition(filename))
-                return response
-            except Exception as e:
-                _logger.exception("Error while generating report %s", reportname)
-                se = http.serialize_exception(e)
-                error = {
-                    'code': 200,
-                    'message': "Odoo Server Error",
-                    'data': se
-                }
-                res = request.make_response(html_escape(json.dumps(error)))
-                raise werkzeug.exceptions.InternalServerError(response=res) from e
-        else:
-            return super().report_download(self, data, context=context, token=token)
+        if docids:
+            obj = request.env[report.model].browse(docids)
+            if report.print_report_name and not len(obj) > 1:
+                report_name = safe_eval(report.print_report_name, {'object': obj, 'time': time})
+                filename = f"{report_name}.pdf"
+
+        _logger.info(f"[PDF Form Controller] Filename: {filename}")
+
+        pdfhttpheaders = [
+            ('Content-Type', 'application/pdf'),
+            ('Content-Length', len(pdf_content)),
+            ('Content-Disposition', content_disposition(filename))
+        ]
+
+        _logger.info(f"[PDF Form Controller] Sending response with headers: {pdfhttpheaders}")
+
+        return request.make_response(pdf_content, headers=pdfhttpheaders)

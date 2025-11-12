@@ -14,16 +14,18 @@
                             <field name="field_type" width="10%"/> 
                         </tree>
                         <form>
+                            <!-- Load is_manual first for attrs evaluation -->
+                            <field name="is_manual" invisible="1"/>
                             <div class="oe_title">
                                 <label for="description"/>
                                 <h1><field name="description" placeholder="Add a name/description"/></h1>
                                 <label for="name"/>
-                                <h2><field name="name" attrs="{'readonly': [('is_manual','=',False)]}"/></h2>                              
+                                <h2><field name="name" attrs="{'readonly': [('is_manual','=',False)]}"/></h2>
                             </div>
-                            <group string="Field Mapping">  
+                            <group string="Field Mapping">
                                 <group>
                                     <field name="is_manual" widget="boolean_toggle"/> 
-                                    <field name="field_type" attrs="{'invisible': [('is_manual','=',True)]}" readonly="1"/>                              
+                                    <field name="field_type" attrs="{'invisible': [('is_manual','=',True)], 'required': [('is_manual','=',False)]}" readonly="1"/>                              
                                 </group>
                                 <group>
                                     <field name="evaluation_type"/>

@@ -15,7 +15,7 @@ class FormFieldLine(models.Model):
     field_type = fields.Selection([
         ('text', 'Text'),
         ('checkbox', 'Checkbox'),
-    ], string='Field Type', required=True)
+    ], string='Field Type')
     report_id = fields.Many2one('ir.actions.report', string='Report', ondelete='cascade')
     evaluation_type = fields.Selection([
         ('value', 'Value'),
@@ -30,10 +30,12 @@ class FormFieldLine(models.Model):
         help="Reference to a field in the model. "
     )
     field_bool = fields.Boolean(string='Boolean Value')
-    page = fields.Integer(string='Page Number', help="Page number in the PDF form where the field is added. Starting from 1. Negatives are allowed.", default=-1)
+    page = fields.Integer(string='Page Number', help="Page number in the PDF form where the field is added. Starting from 1. Negatives are allowed.", default=1)
     position = fields.Char(
         string='Position',
         help="Position of the field in the PDF form. "
-             "Format: x1,y1,x2,y2 (top-left and bottom-right coordinates)."
+             "Format: x1,y1,x2,y2 (top-left and bottom-right coordinates in pixels)."
+             "The coordinate system origin is on the top left corner of the page."
+             "X is the horizontal, Y the vertical."
     )
     field_file = fields.Binary(string='Add document', attachment=True)
