@@ -8,6 +8,8 @@ import fitz  # PyMuPDF
 import io
 import base64
 import logging
+from datetime import datetime
+from num2words import num2words
 
 _logger = logging.getLogger(__name__)
 
@@ -256,7 +258,7 @@ class IrActionsReport(models.Model):
 
             try:
                 value = getattr(record, match.field_reference.name, None)
-                if value is None:
+                if value is None or value is False:
                     return None
 
                 # Handle different field types
@@ -265,6 +267,9 @@ class IrActionsReport(models.Model):
                 elif hasattr(value, '__iter__') and not isinstance(value, str):  # One2many, Many2many
                     return ', '.join([str(v.name if hasattr(v, 'name') else v) for v in value])
                 else:
+                    # Don't display "False" for boolean False values
+                    if value is False:
+                        return None
                     return str(value)
             except Exception as e:
                 _logger.warning("Failed to evaluate field reference '%s': %s", match.field_reference.name, str(e))
@@ -276,15 +281,20 @@ class IrActionsReport(models.Model):
                 return None
 
             try:
-                # Evaluation context
+                # Evaluation context with useful libraries
                 eval_context = {
                     'object': record,
                     'record': record,
                     'env': self.env,
                     'data': data,
+                    'num2words': num2words,
+                    'datetime': datetime,
                 }
                 result = eval(match.field_value, eval_context)
-                return str(result) if result is not None else None
+                # Don't display "False" for boolean False values
+                if result is False or result is None:
+                    return None
+                return str(result)
             except Exception as e:
                 _logger.error("Failed to evaluate equation '%s': %s", match.field_value, str(e))
                 raise UserError(_("Error evaluating equation for field %s: %s") % (match.name, str(e)))
