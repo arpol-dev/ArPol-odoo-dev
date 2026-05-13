@@ -1,0 +1,26 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# * website_sale_default_qty
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: 2026-05-13 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: website_sale_default_qty
+#: model:ir.model.fields,field_description:website_sale_default_qty.field_product_template__website_default_qty
+msgid "Default Cart Quantity"
+msgstr "Standard-Warenkorbmenge"
+
+#. module: website_sale_default_qty
+#: model:ir.model.fields,help:website_sale_default_qty.field_product_template__website_default_qty
+msgid "Default quantity pre-filled in the eCommerce cart quantity selector for this product."
+msgstr "Standardmäßig vorausgefüllte Menge im Mengenauswähler des Online-Shops für dieses Produkt."
