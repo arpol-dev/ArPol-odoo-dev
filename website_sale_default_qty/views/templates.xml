@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- @author: Armand Polmard (contact@arpol.fr) -->
+<!-- License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html). -->
+<odoo>
+
+    <template id="product_quantity_default_qty" inherit_id="website_sale.product_quantity"
+              name="Default Cart Quantity">
+        <xpath expr="//input[@name='add_qty']" position="attributes">
+            <attribute name="t-att-value">product_variant.website_default_qty or 1</attribute>
+        </xpath>
+    </template>
+
+</odoo>
