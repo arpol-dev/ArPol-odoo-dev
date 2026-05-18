@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="mail_partner_history.ChatterPatch" t-inherit="mail.Chatter" t-inherit-mode="extension">
+
+    <!-- Boutons onglet : injectés juste avant la zone de contenu -->
+    <xpath expr="//div[hasclass('o-mail-Chatter-content')]" position="before">
+        <t t-if="state.showHistoryTab">
+            <div class="d-flex border-bottom px-3 gap-1">
+                <button
+                    class="btn btn-sm btn-link text-decoration-none py-2 px-1"
+                    t-att-class="{ 'fw-bold border-bottom border-2 border-primary rounded-0': state.activeTab === 'discussion' }"
+                    t-on-click="() => this.switchTab('discussion')">
+                    Discussion
+                </button>
+                <button
+                    class="btn btn-sm btn-link text-decoration-none py-2 px-1"
+                    t-att-class="{ 'fw-bold border-bottom border-2 border-primary rounded-0': state.activeTab === 'history' }"
+                    t-on-click="() => this.switchTab('history')">
+                    Historique partenaire
+                </button>
+            </div>
+        </t>
+    </xpath>
+
+    <!--
+        Remplace <Thread t-else=""> par une chaîne t-elif/t-else.
+        La chaîne complète après patch :
+          SearchMessageResult  t-if="searching"
+          PartnerHistoryList   t-elif="showHistoryTab and activeTab === 'history'"
+          Thread               t-else=""
+    -->
+    <xpath expr="//Thread[@t-else]" position="replace">
+        <t t-elif="state.showHistoryTab and state.activeTab === 'history'">
+            <PartnerHistoryList
+                partnerId="state.historyPartnerId"
+                partnerName="state.historyPartnerName"
+            />
+        </t>
+        <Thread
+            t-else=""
+            thread="state.thread"
+            t-key="state.thread.localId"
+            order="'desc'"
+            scrollRef="rootRef"
+            jumpPresent="state.jumpThreadPresent"
+        />
+    </xpath>
+
+</t>
+
+</templates>
