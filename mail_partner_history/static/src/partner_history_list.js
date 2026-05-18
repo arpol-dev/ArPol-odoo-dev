@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, onWillStart, useState } from "@odoo/owl";
+import { Component, onWillStart, useState, markup } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 
 const LIMIT = 30;
@@ -76,6 +76,10 @@ export class PartnerHistoryList extends Component {
             res_id: msg.res_id,
             views: [[false, 'form']],
         });
+    }
+
+    getMarkupBody(body) {
+        return markup(body || '');
     }
 
     getAvatarUrl(authorId) {

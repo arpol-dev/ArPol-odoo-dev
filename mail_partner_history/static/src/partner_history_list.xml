@@ -64,7 +64,7 @@
                                 </t>
                             </div>
                             <!-- Corps du message -->
-                            <div class="small mt-1 text-break" t-raw="msg.body"/>
+                            <div class="small mt-1 text-break" t-out="getMarkupBody(msg.body)"/>
                         </div>
                     </div>
                 </t>
