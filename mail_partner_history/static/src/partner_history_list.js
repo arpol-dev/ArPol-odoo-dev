@@ -14,6 +14,7 @@ export class PartnerHistoryList extends Component {
 
     setup() {
         this.orm = useService("orm");
+        this.actionService = useService("action");
         this.state = useState({
             messages: [],
             isLoaded: false,
@@ -67,9 +68,14 @@ export class PartnerHistoryList extends Component {
         return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
     }
 
-    getDocumentUrl(msg) {
-        if (!msg.model || !msg.res_id) return false;
-        return `/web#model=${msg.model}&id=${msg.res_id}&view_type=form`;
+    openDocument(msg) {
+        if (!msg.model || !msg.res_id) return;
+        this.actionService.doAction({
+            type: 'ir.actions.act_window',
+            res_model: msg.model,
+            res_id: msg.res_id,
+            views: [[false, 'form']],
+        });
     }
 
     getAvatarUrl(authorId) {

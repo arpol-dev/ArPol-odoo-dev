@@ -55,15 +55,16 @@
                                 </div>
                                 <!-- Badge document source -->
                                 <t t-if="msg.model and msg.res_id">
-                                    <a t-att-href="getDocumentUrl(msg)"
-                                       class="badge bg-light text-primary border border-primary-subtle text-decoration-none small text-nowrap"
-                                       style="font-size:0.7rem;">
+                                    <button type="button"
+                                           class="badge bg-light text-primary border border-primary-subtle text-decoration-none small text-nowrap"
+                                           style="font-size:0.7rem;cursor:pointer;border:none;padding:0.25rem 0.5rem;"
+                                           t-on-click="() => this.openDocument(msg)">
                                         ↗ <t t-esc="msg.record_name or msg.model"/>
-                                    </a>
+                                    </button>
                                 </t>
                             </div>
                             <!-- Corps du message -->
-                            <div class="small mt-1 text-break" t-out="msg.body"/>
+                            <div class="small mt-1 text-break" t-raw="msg.body"/>
                         </div>
                     </div>
                 </t>
