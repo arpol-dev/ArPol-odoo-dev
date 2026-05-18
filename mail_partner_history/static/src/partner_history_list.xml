@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="mail_partner_history.PartnerHistoryList">
+    <div class="o-partner-history-List d-flex flex-column py-2">
+
+        <!-- Chargement -->
+        <t t-if="!state.isLoaded">
+            <div class="text-center p-4 text-muted">
+                <i class="fa fa-circle-o-notch fa-spin fa-lg"/>
+            </div>
+        </t>
+
+        <!-- Aucun message -->
+        <t t-elif="state.messages.length === 0">
+            <div class="text-center p-4 text-muted fst-italic small">
+                Aucun échange avec ce partenaire.
+            </div>
+        </t>
+
+        <!-- Liste groupée par date -->
+        <t t-else="">
+            <t t-foreach="groupedMessages" t-as="group" t-key="group.dateLabel">
+                <!-- Séparateur de date -->
+                <div class="d-flex align-items-center gap-2 px-3 py-1">
+                    <hr class="flex-grow-1 my-0"/>
+                    <span class="small text-muted text-nowrap" t-esc="group.dateLabel"/>
+                    <hr class="flex-grow-1 my-0"/>
+                </div>
+
+                <!-- Messages du groupe -->
+                <t t-foreach="group.messages" t-as="msg" t-key="msg.id">
+                    <div class="d-flex gap-2 px-3 py-2 o-partner-history-Message"
+                         t-att-class="{ 'bg-warning bg-opacity-10': msg.is_internal }">
+                        <!-- Avatar -->
+                        <img
+                            t-att-src="getAvatarUrl(msg.author_id and msg.author_id[0])"
+                            class="rounded-circle flex-shrink-0 mt-1"
+                            style="width:32px;height:32px;object-fit:cover;"
+                            alt="avatar"
+                        />
+                        <!-- Contenu -->
+                        <div class="flex-grow-1 overflow-hidden">
+                            <!-- En-tête : auteur + date + badge document -->
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+                                <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                                    <span class="fw-bold small"
+                                          t-esc="msg.author_id ? msg.author_id[1] : 'Inconnu'"/>
+                                    <span class="text-muted" style="font-size:0.75rem;"
+                                          t-esc="getRelativeTime(msg.date)"/>
+                                    <t t-if="msg.is_internal">
+                                        <span class="badge bg-warning text-dark"
+                                              style="font-size:0.65rem;">Note interne</span>
+                                    </t>
+                                </div>
+                                <!-- Badge document source -->
+                                <t t-if="msg.model and msg.res_id">
+                                    <a t-att-href="getDocumentUrl(msg)"
+                                       class="badge bg-light text-primary border border-primary-subtle text-decoration-none small text-nowrap"
+                                       style="font-size:0.7rem;">
+                                        ↗ <t t-esc="msg.record_name or msg.model"/>
+                                    </a>
+                                </t>
+                            </div>
+                            <!-- Corps du message -->
+                            <div class="small mt-1 text-break" t-out="msg.body"/>
+                        </div>
+                    </div>
+                </t>
+            </t>
+
+            <!-- Bouton charger plus -->
+            <div t-if="state.canLoadMore" class="text-center py-2">
+                <button class="btn btn-sm btn-link text-muted" t-on-click="() => this.loadMore()">
+                    Charger plus…
+                </button>
+            </div>
+        </t>
+
+    </div>
+</t>
+
+</templates>
