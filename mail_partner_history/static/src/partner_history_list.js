@@ -2,6 +2,7 @@
 
 import { Component, onWillStart, useState, markup } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
+import { user } from "@web/core/user";
 
 const LIMIT = 30;
 
@@ -84,6 +85,7 @@ export class PartnerHistoryList extends Component {
 
     getBubbleColor(msg) {
         if (msg.is_internal) return undefined;
+        if (msg.author_id && msg.author_id[0] === user.partnerId) return 'green';
         return 'blue';
     }
 
