@@ -3,13 +3,13 @@
 
 <t t-name="mail_partner_history.ChatterPatch" t-inherit="mail.Chatter" t-inherit-mode="extension">
 
-    <!-- A. Masquer les activités dans l'onglet historique -->
+    <!-- A. Hide activities in partner history tab -->
     <xpath expr="//t[@t-if='props.has_activities and activities.length and !messageSearch.searching and !messageSearch.searched']"
            position="attributes">
         <attribute name="t-if">props.has_activities and activities.length and !messageSearch.searching and !messageSearch.searched and !(state.showHistoryTab and state.activeTab === 'history')</attribute>
     </xpath>
 
-    <!-- B. Onglets : remplacer le div custom par nav-tabs Bootstrap -->
+    <!-- B. Tab buttons -->
     <xpath expr="//div[hasclass('o-mail-Chatter-content')]" position="before">
         <t t-if="state.showHistoryTab">
             <ul class="nav nav-tabs px-3 justify-content-center">
@@ -17,27 +17,20 @@
                     <a class="nav-link"
                        t-att-class="{ 'active': state.activeTab === 'discussion' }"
                        href="#" t-on-click.prevent="() => this.switchTab('discussion')">
-                        Historique <t t-esc="state.historyModelName || 'Discussion'"/>
+                        <t t-esc="historyTabLabel"/>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link"
                        t-att-class="{ 'active': state.activeTab === 'history' }"
                        href="#" t-on-click.prevent="() => this.switchTab('history')">
-                        Historique partenaire
+                        Partner History
                     </a>
                 </li>
             </ul>
         </t>
     </xpath>
 
-    <!--
-        Remplace <Thread t-else=""> par une chaîne t-elif/t-else.
-        La chaîne complète après patch :
-          SearchMessageResult  t-if="searching"
-          PartnerHistoryList   t-elif="showHistoryTab and activeTab === 'history'"
-          Thread               t-else=""
-    -->
     <xpath expr="//Thread[@t-else]" position="replace">
         <t t-elif="state.showHistoryTab and state.activeTab === 'history'">
             <PartnerHistoryList

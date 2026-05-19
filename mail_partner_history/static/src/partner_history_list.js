@@ -3,6 +3,7 @@
 import { Component, onWillStart, useState, markup } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { user } from "@web/core/user";
+import { _t } from "@web/core/l10n/translation";
 
 const LIMIT = 30;
 
@@ -58,15 +59,15 @@ export class PartnerHistoryList extends Component {
     }
 
     _dateLabel(isoDate) {
-        if (!isoDate) return "Date inconnue";
+        if (!isoDate) return _t("Unknown date");
         const d = new Date(isoDate);
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(today.getDate() - 1);
 
-        if (d.toDateString() === today.toDateString()) return "Aujourd'hui";
-        if (d.toDateString() === yesterday.toDateString()) return "Hier";
-        return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+        if (d.toDateString() === today.toDateString()) return _t("Today");
+        if (d.toDateString() === yesterday.toDateString()) return _t("Yesterday");
+        return d.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
     }
 
     openDocument(msg) {
@@ -98,13 +99,13 @@ export class PartnerHistoryList extends Component {
         if (!isoDate) return "";
         const diff = Date.now() - new Date(isoDate).getTime();
         const minutes = Math.floor(diff / 60000);
-        if (minutes < 1) return "à l'instant";
-        if (minutes < 60) return `il y a ${minutes} min`;
+        if (minutes < 1) return _t("just now");
+        if (minutes < 60) return _t`${minutes} min ago`;
         const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `il y a ${hours}h`;
+        if (hours < 24) return _t`${hours}h ago`;
         const days = Math.floor(hours / 24);
-        if (days < 30) return `il y a ${days}j`;
+        if (days < 30) return _t`${days}d ago`;
         const months = Math.floor(days / 30);
-        return `il y a ${months} mois`;
+        return _t`${months} months ago`;
     }
 }

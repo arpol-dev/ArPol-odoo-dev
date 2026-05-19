@@ -1,0 +1,107 @@
+# Italian translation for mail_partner_history.
+# Copyright (C) 2026 Armand Polmard
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-19 00:00+0000\n"
+"PO-Revision-Date: 2026-05-19 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Italian\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: mail_partner_history
+#: model:ir.model.fields,field_description:mail_partner_history.field_ir_model__partner_history_enabled
+msgid "Show partner history"
+msgstr "Mostra cronologia del partner"
+
+#. module: mail_partner_history
+#: model:ir.model.fields,help:mail_partner_history.field_ir_model__partner_history_enabled
+msgid "Adds a 'Partner History' tab in this model's chatter."
+msgstr "Aggiunge una scheda 'Cronologia del partner' nel chatter di questo modello."
+
+#. module: mail_partner_history
+#: model:ir.module.module,shortdesc:mail_partner_history
+msgid "Consolidated partner message history in chatter"
+msgstr "Cronologia consolidata dei messaggi del partner nel chatter"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.xml
+msgid "No messages with this partner."
+msgstr "Nessun messaggio con questo partner."
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.xml
+msgid "Unknown"
+msgstr "Sconosciuto"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.xml
+msgid "Internal note"
+msgstr "Nota interna"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.xml
+msgid "Load more…"
+msgstr "Carica altro…"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/chatter_patch.xml
+msgid "Partner History"
+msgstr "Cronologia del partner"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.js
+msgid "Unknown date"
+msgstr "Data sconosciuta"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.js
+msgid "Today"
+msgstr "Oggi"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.js
+msgid "Yesterday"
+msgstr "Ieri"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.js
+msgid "just now"
+msgstr "adesso"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.js
+msgid "%(minutes)s min ago"
+msgstr "%(minutes)s min fa"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.js
+msgid "%(hours)sh ago"
+msgstr "%(hours)sh fa"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.js
+msgid "%(days)sd ago"
+msgstr "%(days)sd fa"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/partner_history_list.js
+msgid "%(months)s months ago"
+msgstr "%(months)s mesi fa"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/chatter_patch.js
+msgid "History %(model)s"
+msgstr "Cronologia %(model)s"
+
+#. module: mail_partner_history
+#: addons/mail_partner_history/static/src/chatter_patch.js
+msgid "History"
+msgstr "Cronologia"

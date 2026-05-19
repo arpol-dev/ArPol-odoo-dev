@@ -5,6 +5,7 @@ import { PartnerHistoryList } from "./partner_history_list";
 import { onWillStart } from "@odoo/owl";
 import { patch } from "@web/core/utils/patch";
 import { useService } from "@web/core/utils/hooks";
+import { _t } from "@web/core/l10n/translation";
 
 Object.assign(Chatter.components, { PartnerHistoryList });
 
@@ -57,6 +58,11 @@ patch(Chatter.prototype, {
         } catch {
             // Silencieux : pas d'onglet si erreur de lecture
         }
+    },
+
+    get historyTabLabel() {
+        const model = this.state.historyModelName;
+        return model ? _t`History ${model}` : _t("History");
     },
 
     switchTab(tab) {

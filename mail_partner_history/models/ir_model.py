@@ -6,8 +6,8 @@ class IrModel(models.Model):
     _inherit = 'ir.model'
 
     partner_history_enabled = fields.Boolean(
-        string="Afficher l'historique partenaire",
-        help="Ajoute un onglet 'Historique partenaire' dans le chatter de ce modèle.",
+        string="Show partner history",
+        help="Adds a 'Partner History' tab in this model's chatter.",
         default=False,
     )
 
