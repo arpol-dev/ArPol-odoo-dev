@@ -55,11 +55,14 @@
                                 <!-- Badge document source -->
                                 <t t-if="msg.model and msg.res_id">
                                     <button type="button"
-                                           class="bg-light border border-primary-subtle text-decoration-none text-nowrap d-flex flex-column align-items-start rounded"
+                                           class="bg-light border border-primary-subtle text-decoration-none text-nowrap d-flex align-items-center gap-1 rounded"
                                            style="font-size:0.7rem;cursor:pointer;border:none;padding:0.25rem 0.5rem;"
                                            t-on-click="() => this.openDocument(msg)">
-                                        <span class="text-primary fw-semibold">↗ <t t-esc="msg.model_description or msg.model"/></span>
-                                        <span t-if="msg.record_name" class="text-muted" style="font-size:0.65rem;"><t t-esc="msg.record_name"/></span>
+                                        <span class="text-primary fw-semibold">↗</span>
+                                        <span class="d-flex flex-column" style="gap:0.15rem;">
+                                            <span class="text-primary fw-semibold lh-sm"><t t-esc="msg.model_description or msg.model"/></span>
+                                            <span t-if="msg.record_name" class="text-muted lh-sm" style="font-size:0.65rem;"><t t-esc="msg.record_name"/></span>
+                                        </span>
                                     </button>
                                 </t>
                             </div>
