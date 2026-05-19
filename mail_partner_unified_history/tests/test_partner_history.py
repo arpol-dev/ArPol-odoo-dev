@@ -1,4 +1,4 @@
-# mail_partner_history/tests/test_partner_history.py
+# mail_partner_unified_history/tests/test_partner_history.py
 from odoo.tests.common import TransactionCase
 from odoo.tests import tagged
 

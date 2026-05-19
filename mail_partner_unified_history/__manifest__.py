@@ -1,4 +1,4 @@
-# mail_partner_history/__manifest__.py
+# mail_partner_unified_history/__manifest__.py
 # @author: Armand Polmard (contact@arpol.fr)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 {
@@ -13,11 +13,11 @@
     ],
     'assets': {
         'web.assets_backend': [
-            'mail_partner_history/static/src/partner_history_service.js',
-            'mail_partner_history/static/src/chatter_patch.xml',
-            'mail_partner_history/static/src/chatter_patch.js',
-            'mail_partner_history/static/src/partner_history_list.xml',
-            'mail_partner_history/static/src/partner_history_list.js',
+            'mail_partner_unified_history/static/src/partner_history_service.js',
+            'mail_partner_unified_history/static/src/chatter_patch.xml',
+            'mail_partner_unified_history/static/src/chatter_patch.js',
+            'mail_partner_unified_history/static/src/partner_history_list.xml',
+            'mail_partner_unified_history/static/src/partner_history_list.js',
         ],
     },
     'license': 'AGPL-3',

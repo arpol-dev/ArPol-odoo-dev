@@ -1,4 +1,4 @@
-# mail_partner_history/models/ir_model.py
+# mail_partner_unified_history/models/ir_model.py
 from odoo import api, fields, models
 
 

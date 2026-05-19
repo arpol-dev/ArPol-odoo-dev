@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-<t t-name="mail_partner_history.ChatterPatch" t-inherit="mail.Chatter" t-inherit-mode="extension">
+<t t-name="mail_partner_unified_history.ChatterPatch" t-inherit="mail.Chatter" t-inherit-mode="extension">
 
     <!-- A. Hide activities in partner history tab -->
     <xpath expr="//t[@t-if='props.has_activities and activities.length and !messageSearch.searching and !messageSearch.searched']"

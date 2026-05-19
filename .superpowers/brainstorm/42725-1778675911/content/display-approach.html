@@ -1,0 +1,146 @@
+<h2>Comment afficher l'historique des échanges du partenaire ?</h2>
+<p class="subtitle">Choisissez l'approche d'intégration dans l'interface Odoo</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="A" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup" style="font-size:11px;">
+        <div class="mockup-header">Fiche Contact — Jean Dupont</div>
+        <div class="mockup-body" style="padding:8px;">
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <div style="background:#e0e7ff;border-radius:4px;padding:4px 10px;font-size:10px;">Informations</div>
+            <div style="background:#e0e7ff;border-radius:4px;padding:4px 10px;font-size:10px;">Ventes</div>
+          </div>
+          <div style="background:#f3f4f6;border-radius:4px;padding:6px;margin-bottom:6px;">
+            <div style="font-size:9px;color:#6b7280;">Chatter actuel</div>
+            <div style="font-size:9px;margin-top:4px;">📧 Email reçu — Devis…</div>
+            <div style="font-size:9px;">📝 Note interne — RDV…</div>
+          </div>
+          <div style="text-align:center;">
+            <button class="mock-button" style="font-size:9px;padding:3px 10px;">📋 Voir tous les échanges</button>
+          </div>
+          <!-- Modal overlay hint -->
+          <div style="margin-top:8px;border:1px dashed #9ca3af;border-radius:4px;padding:6px;background:#fafafa;">
+            <div style="font-size:9px;font-weight:600;color:#374151;">↗ Ouvre une fenêtre modale</div>
+            <div style="font-size:9px;color:#6b7280;margin-top:2px;">📧 Email — Commande SO001 · il y a 3j</div>
+            <div style="font-size:9px;color:#6b7280;">📧 Email — Devis SO002 · il y a 1sem</div>
+            <div style="font-size:9px;color:#6b7280;">✉️ Réception — Relance · il y a 2sem</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Modale / Fenêtre popup</h3>
+      <p>Un bouton dans le chatter ouvre une fenêtre modale avec l'historique complet. Le chatter normal reste intact.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Avantages</h4><ul><li>Chatter non modifié</li><li>Plein écran possible</li><li>Simple à implémenter</li></ul></div>
+        <div class="cons"><h4>Inconvénients</h4><ul><li>Interruption du contexte</li><li>Pas de navigation directe</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="B" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup" style="font-size:11px;">
+        <div class="mockup-header">Fiche Contact — Jean Dupont</div>
+        <div class="mockup-body" style="padding:8px;">
+          <div style="background:#f3f4f6;border-radius:4px;padding:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div style="font-size:9px;color:#6b7280;">Chatter</div>
+              <div style="display:flex;gap:4px;">
+                <div style="background:#e0e7ff;border-radius:3px;padding:2px 6px;font-size:8px;">Discussion</div>
+                <div style="background:#6366f1;color:white;border-radius:3px;padding:2px 6px;font-size:8px;">📋 Historique</div>
+              </div>
+            </div>
+            <!-- Historique tab active -->
+            <div style="border-top:1px solid #e5e7eb;padding-top:6px;">
+              <div style="font-size:9px;font-weight:600;color:#374151;margin-bottom:4px;">Tous les échanges — Jean Dupont</div>
+              <div style="font-size:9px;color:#374151;padding:3px;background:white;border-radius:3px;margin-bottom:3px;">📧 Email — <span style="color:#6366f1;text-decoration:underline;">SO001</span> · il y a 3j</div>
+              <div style="font-size:9px;color:#374151;padding:3px;background:white;border-radius:3px;margin-bottom:3px;">✉️ Reçu — <span style="color:#6366f1;text-decoration:underline;">SO002</span> · il y a 1sem</div>
+              <div style="font-size:9px;color:#374151;padding:3px;background:white;border-radius:3px;">📧 Email — <span style="color:#6366f1;text-decoration:underline;">RES.PARTNER/42</span> · il y a 2sem</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Onglets dans le chatter</h3>
+      <p>Deux onglets : "Discussion" (chatter normal) et "Historique partenaire" (tous les échanges triés). Cohabitent côte à côte.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Avantages</h4><ul><li>Pas de popup</li><li>Navigation fluide</li><li>Natif Odoo 18</li></ul></div>
+        <div class="cons"><h4>Inconvénients</h4><ul><li>Plus complexe JS</li><li>Chatter JS à surcharger</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="C" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup" style="font-size:11px;">
+        <div class="mockup-header">Fiche Contact — Jean Dupont</div>
+        <div class="mockup-body" style="padding:8px;">
+          <div style="background:#f3f4f6;border-radius:4px;padding:6px;">
+            <div style="font-size:9px;color:#6b7280;margin-bottom:6px;">Chatter actuel</div>
+            <div style="font-size:9px;margin-bottom:3px;">📧 Email reçu — Devis…</div>
+            <div style="font-size:9px;margin-bottom:6px;">📝 Note interne — RDV…</div>
+            <div style="border-top:2px solid #6366f1;padding-top:6px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+                <div style="font-size:9px;font-weight:600;color:#6366f1;">📋 Historique complet du partenaire</div>
+                <div style="font-size:9px;color:#6366f1;">▼ Déplier</div>
+              </div>
+              <!-- Expanded state shown -->
+              <div style="margin-top:4px;padding:4px;background:white;border-radius:3px;">
+                <div style="font-size:9px;color:#374151;margin-bottom:2px;">📧 Email — <span style="color:#6366f1;text-decoration:underline;">SO001</span> · 3j</div>
+                <div style="font-size:9px;color:#374151;margin-bottom:2px;">✉️ Reçu — <span style="color:#6366f1;text-decoration:underline;">SO002</span> · 1sem</div>
+                <div style="font-size:9px;color:#374151;">📧 Email — <span style="color:#6366f1;text-decoration:underline;">Contact</span> · 2sem</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Section dépliable en bas du chatter</h3>
+      <p>Une section "Historique partenaire" s'affiche sous le chatter normal et se déplie à la demande. Les deux contenus coexistent.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Avantages</h4><ul><li>Très visible</li><li>Pas de popup</li><li>Contexte préservé</li></ul></div>
+        <div class="cons"><h4>Inconvénients</h4><ul><li>Allonge la page</li><li>Mélange visuel possible</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="D" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup" style="font-size:11px;">
+        <div class="mockup-header">Fiche Contact — Jean Dupont</div>
+        <div class="mockup-body" style="padding:8px;display:flex;gap:6px;">
+          <div style="flex:1;background:#f3f4f6;border-radius:4px;padding:6px;">
+            <div style="font-size:9px;color:#6b7280;margin-bottom:4px;">Chatter normal</div>
+            <div style="font-size:9px;margin-bottom:3px;">📧 Email reçu</div>
+            <div style="font-size:9px;margin-bottom:3px;">📝 Note interne</div>
+            <div style="font-size:9px;">✅ Activité planifiée</div>
+          </div>
+          <div style="width:1px;background:#d1d5db;"></div>
+          <div style="flex:1;background:#eef2ff;border-radius:4px;padding:6px;">
+            <div style="font-size:9px;font-weight:600;color:#6366f1;margin-bottom:4px;">📋 Tous échanges</div>
+            <div style="font-size:9px;color:#374151;margin-bottom:2px;">📧 <span style="color:#6366f1;text-decoration:underline;">SO001</span> · 3j</div>
+            <div style="font-size:9px;color:#374151;margin-bottom:2px;">✉️ <span style="color:#6366f1;text-decoration:underline;">SO002</span> · 1sem</div>
+            <div style="font-size:9px;color:#374151;margin-bottom:2px;">📧 <span style="color:#6366f1;text-decoration:underline;">Contact</span> · 2sem</div>
+            <div style="font-size:9px;color:#374151;">📧 <span style="color:#6366f1;text-decoration:underline;">PO005</span> · 1mois</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>D — Vue dédiée (action séparée)</h3>
+      <p>Un bouton "smart button" sur la fiche partenaire ouvre une vue liste dédiée (comme les commandes, factures, etc.) avec filtres et recherche.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Avantages</h4><ul><li>Pattern Odoo natif</li><li>Filtres/recherche faciles</li><li>Plus scalable</li></ul></div>
+        <div class="cons"><h4>Inconvénients</h4><ul><li>Quitte la fiche</li><li>Pas dans le chatter</li><li>Moins contextualisé</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Cliquez sur une ou plusieurs options, puis répondez dans le terminal.</p>

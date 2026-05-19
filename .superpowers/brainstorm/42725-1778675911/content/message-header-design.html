@@ -1,0 +1,110 @@
+<h2>Comment intégrer le lien vers le document dans chaque message ?</h2>
+<p class="subtitle">L'onglet "Historique" affiche les mêmes cartes de message que le chatter normal — où placer le lien vers le document source ?</p>
+
+<div class="split">
+
+  <div class="mockup">
+    <div class="mockup-header">Option A — Badge discret en haut à droite</div>
+    <div class="mockup-body" style="padding:10px;font-size:11px;">
+      <!-- Message card replica -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#6366f1;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">JD</div>
+        <div style="flex:1;background:white;border:1px solid #e5e7eb;border-radius:8px;padding:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+            <div>
+              <span style="font-weight:600;font-size:10px;">Jean Dupont</span>
+              <span style="color:#6b7280;font-size:9px;margin-left:6px;">il y a 3 jours</span>
+            </div>
+            <a style="font-size:9px;background:#eef2ff;color:#6366f1;border-radius:4px;padding:2px 6px;text-decoration:none;white-space:nowrap;">↗ Commande SO/001</a>
+          </div>
+          <div style="font-size:10px;color:#374151;">Bonjour, pourriez-vous me confirmer la date de livraison pour cette commande ?</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#10b981;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">AP</div>
+        <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+            <div>
+              <span style="font-weight:600;font-size:10px;">Armand P. (vous)</span>
+              <span style="color:#6b7280;font-size:9px;margin-left:6px;">il y a 2 jours</span>
+            </div>
+            <a style="font-size:9px;background:#eef2ff;color:#6366f1;border-radius:4px;padding:2px 6px;text-decoration:none;white-space:nowrap;">↗ Commande SO/001</a>
+          </div>
+          <div style="font-size:10px;color:#374151;">Livraison confirmée pour le 15 mai. Nous vous enverrons le numéro de suivi.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#6366f1;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">JD</div>
+        <div style="flex:1;background:white;border:1px solid #e5e7eb;border-radius:8px;padding:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+            <div>
+              <span style="font-weight:600;font-size:10px;">Jean Dupont</span>
+              <span style="color:#6b7280;font-size:9px;margin-left:6px;">il y a 1 semaine</span>
+            </div>
+            <a style="font-size:9px;background:#eef2ff;color:#6366f1;border-radius:4px;padding:2px 6px;text-decoration:none;white-space:nowrap;">↗ Devis SO/002</a>
+          </div>
+          <div style="font-size:10px;color:#374151;">Merci pour votre devis, j'aimerais modifier la quantité de l'article 3.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Option B — Ligne de contexte sous l'auteur</div>
+    <div class="mockup-body" style="padding:10px;font-size:11px;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#6366f1;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">JD</div>
+        <div style="flex:1;background:white;border:1px solid #e5e7eb;border-radius:8px;padding:8px;">
+          <div style="margin-bottom:2px;">
+            <span style="font-weight:600;font-size:10px;">Jean Dupont</span>
+            <span style="color:#6b7280;font-size:9px;margin-left:6px;">il y a 3 jours</span>
+          </div>
+          <div style="font-size:9px;color:#6366f1;margin-bottom:4px;">📄 Sur <a style="color:#6366f1;text-decoration:underline;">Commande client SO/001</a></div>
+          <div style="font-size:10px;color:#374151;">Bonjour, pourriez-vous me confirmer la date de livraison pour cette commande ?</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#10b981;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">AP</div>
+        <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px;">
+          <div style="margin-bottom:2px;">
+            <span style="font-weight:600;font-size:10px;">Armand P. (vous)</span>
+            <span style="color:#6b7280;font-size:9px;margin-left:6px;">il y a 2 jours</span>
+          </div>
+          <div style="font-size:9px;color:#6366f1;margin-bottom:4px;">📄 Sur <a style="color:#6366f1;text-decoration:underline;">Commande client SO/001</a></div>
+          <div style="font-size:10px;color:#374151;">Livraison confirmée pour le 15 mai. Nous vous enverrons le numéro de suivi.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#6366f1;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">JD</div>
+        <div style="flex:1;background:white;border:1px solid #e5e7eb;border-radius:8px;padding:8px;">
+          <div style="margin-bottom:2px;">
+            <span style="font-weight:600;font-size:10px;">Jean Dupont</span>
+            <span style="color:#6b7280;font-size:9px;margin-left:6px;">il y a 1 semaine</span>
+          </div>
+          <div style="font-size:9px;color:#6366f1;margin-bottom:4px;">📄 Sur <a style="color:#6366f1;text-decoration:underline;">Devis SO/002</a></div>
+          <div style="font-size:10px;color:#374151;">Merci pour votre devis, j'aimerais modifier la quantité de l'article 3.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top:12px;font-size:12px;color:#6b7280;text-align:center;">Dans les deux cas, le lien ouvre le document source directement. Cliquez sur votre préférence, puis répondez dans le terminal.</p>
+
+<div class="options" style="margin-top:12px;">
+  <div class="option" data-choice="header-A" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Badge discret en haut à droite</h3>
+      <p>Compact, ne prend pas de place supplémentaire</p>
+    </div>
+  </div>
+  <div class="option" data-choice="header-B" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Ligne "📄 Sur [document]" sous l'auteur</h3>
+      <p>Plus lisible, contexte clairement affiché</p>
+    </div>
+  </div>
+</div>

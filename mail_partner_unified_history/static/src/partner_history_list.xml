@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-<t t-name="mail_partner_history.PartnerHistoryList">
+<t t-name="mail_partner_unified_history.PartnerHistoryList">
     <div class="o-partner-history-List d-flex flex-column py-2">
 
         <!-- Loading -->

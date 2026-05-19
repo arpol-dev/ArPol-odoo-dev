@@ -8,7 +8,7 @@ import { _t } from "@web/core/l10n/translation";
 const LIMIT = 30;
 
 export class PartnerHistoryList extends Component {
-    static template = "mail_partner_history.PartnerHistoryList";
+    static template = "mail_partner_unified_history.PartnerHistoryList";
     static props = {
         partnerId: { type: Number },
         partnerName: { type: String },

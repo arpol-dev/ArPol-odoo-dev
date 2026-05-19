@@ -25,4 +25,4 @@ export const partnerHistoryService = {
     },
 };
 
-registry.category("services").add("mail_partner_history", partnerHistoryService);
+registry.category("services").add("mail_partner_unified_history", partnerHistoryService);

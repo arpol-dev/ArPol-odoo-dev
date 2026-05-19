@@ -12,7 +12,7 @@ Object.assign(Chatter.components, { PartnerHistoryList });
 patch(Chatter.prototype, {
     setup() {
         super.setup(...arguments);
-        this._partnerHistoryService = useService("mail_partner_history");
+        this._partnerHistoryService = useService("mail_partner_unified_history");
         Object.assign(this.state, {
             activeTab: "discussion",
             showHistoryTab: false,
@@ -62,7 +62,7 @@ patch(Chatter.prototype, {
 
     get historyTabLabel() {
         const model = this.state.historyModelName;
-        return model ? _t("History %(model)s", { model }) : _t("History");
+        return model ? _t("%(model)s History", { model }) : _t("History");
     },
 
     switchTab(tab) {

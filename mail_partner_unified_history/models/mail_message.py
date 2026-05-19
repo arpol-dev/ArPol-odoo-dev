@@ -1,4 +1,4 @@
-# mail_partner_history/models/mail_message.py
+# mail_partner_unified_history/models/mail_message.py
 from collections import defaultdict
 
 from odoo import api, models
