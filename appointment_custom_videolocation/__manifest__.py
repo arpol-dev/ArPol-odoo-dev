@@ -9,7 +9,10 @@
     "author": "Armand POLMARD",
     "category": "Services",
     "depends": ["appointment"],
-    "data": ["views/appointment_view.xml"],
+    "data": [
+        "views/appointment_view.xml",
+        "views/res_users_view.xml",
+    ],
     "license": 'LGPL-3',
     "installable": True,
     "application": False,

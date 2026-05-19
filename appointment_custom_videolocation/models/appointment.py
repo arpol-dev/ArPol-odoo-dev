@@ -20,8 +20,12 @@ class CalendarEvent(models.Model):
     def _compute_videocall_location(self):
         super()._compute_videocall_location()
         for event in self:
-            if event.appointment_type_id and event.appointment_type_id.custom_videocall_location and event.videocall_source == 'custom':
+            if event.videocall_source != 'custom':
+                continue
+            if event.appointment_type_id and event.appointment_type_id.custom_videocall_location:
                 event.videocall_location = event.appointment_type_id.custom_videocall_location
+            elif event.user_id and event.user_id.custom_videolink:
+                event.videocall_location = event.user_id.custom_videolink
 
     @api.depends('videocall_location', 'access_token')
     def _compute_videocall_redirection(self):

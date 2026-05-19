@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue admin : Paramètres > Utilisateurs -->
+    <record id="view_users_form_custom_videolink" model="ir.ui.view">
+        <field name="name">res.users.form.custom.videolink</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='messaging']" position="after">
+                <group string="Vidéoconférence">
+                    <field name="custom_videolink" placeholder="https://meet.example.com/mon-lien"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vue profil : Mon Profil (accessible à tous les utilisateurs) -->
+    <record id="view_users_simple_form_custom_videolink" model="ir.ui.view">
+        <field name="name">res.users.simple.form.custom.videolink</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form_simple_modif"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='preference_contact']" position="before">
+                <group string="Vidéoconférence">
+                    <field name="custom_videolink" placeholder="https://meet.example.com/mon-lien"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
