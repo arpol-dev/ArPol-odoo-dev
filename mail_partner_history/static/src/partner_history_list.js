@@ -100,12 +100,12 @@ export class PartnerHistoryList extends Component {
         const diff = Date.now() - new Date(isoDate).getTime();
         const minutes = Math.floor(diff / 60000);
         if (minutes < 1) return _t("just now");
-        if (minutes < 60) return _t`${minutes} min ago`;
+        if (minutes < 60) return _t("%(minutes)s min ago", { minutes });
         const hours = Math.floor(minutes / 60);
-        if (hours < 24) return _t`${hours}h ago`;
+        if (hours < 24) return _t("%(hours)sh ago", { hours });
         const days = Math.floor(hours / 24);
-        if (days < 30) return _t`${days}d ago`;
+        if (days < 30) return _t("%(days)sd ago", { days });
         const months = Math.floor(days / 30);
-        return _t`${months} months ago`;
+        return _t("%(months)s months ago", { months });
     }
 }
