@@ -55,7 +55,7 @@
                                 <!-- Badge document source -->
                                 <t t-if="msg.model and msg.res_id">
                                     <button type="button"
-                                           class="bg-light border border-primary-subtle text-decoration-none text-nowrap d-flex align-items-center gap-1 rounded"
+                                           class="bg-light border border-primary-subtle text-decoration-none text-nowrap d-flex align-items-start gap-1 rounded"
                                            style="font-size:0.7rem;cursor:pointer;border:none;padding:0.25rem 0.5rem;"
                                            t-on-click="() => this.openDocument(msg)">
                                         <span class="text-primary fw-semibold">↗</span>
