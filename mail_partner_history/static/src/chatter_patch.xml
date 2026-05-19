@@ -3,23 +3,31 @@
 
 <t t-name="mail_partner_history.ChatterPatch" t-inherit="mail.Chatter" t-inherit-mode="extension">
 
-    <!-- Boutons onglet : injectés juste avant la zone de contenu -->
+    <!-- A. Masquer les activités dans l'onglet historique -->
+    <xpath expr="//t[@t-if='props.has_activities and activities.length and !messageSearch.searching and !messageSearch.searched']"
+           position="attributes">
+        <attribute name="t-if">props.has_activities and activities.length and !messageSearch.searching and !messageSearch.searched and !(state.showHistoryTab and state.activeTab === 'history')</attribute>
+    </xpath>
+
+    <!-- B. Onglets : remplacer le div custom par nav-tabs Bootstrap -->
     <xpath expr="//div[hasclass('o-mail-Chatter-content')]" position="before">
         <t t-if="state.showHistoryTab">
-            <div class="d-flex border-bottom px-3 gap-1">
-                <button
-                    class="btn btn-sm btn-link text-decoration-none py-2 px-1"
-                    t-att-class="{ 'fw-bold border-bottom border-2 border-primary rounded-0': state.activeTab === 'discussion' }"
-                    t-on-click="() => this.switchTab('discussion')">
-                    Discussion
-                </button>
-                <button
-                    class="btn btn-sm btn-link text-decoration-none py-2 px-1"
-                    t-att-class="{ 'fw-bold border-bottom border-2 border-primary rounded-0': state.activeTab === 'history' }"
-                    t-on-click="() => this.switchTab('history')">
-                    Historique partenaire
-                </button>
-            </div>
+            <ul class="nav nav-tabs px-3">
+                <li class="nav-item">
+                    <a class="nav-link"
+                       t-att-class="{ 'active': state.activeTab === 'discussion' }"
+                       href="#" t-on-click.prevent="() => this.switchTab('discussion')">
+                        Discussion
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link"
+                       t-att-class="{ 'active': state.activeTab === 'history' }"
+                       href="#" t-on-click.prevent="() => this.switchTab('history')">
+                        Historique partenaire
+                    </a>
+                </li>
+            </ul>
         </t>
     </xpath>
 

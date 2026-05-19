@@ -30,17 +30,21 @@
 
                 <!-- Messages du groupe -->
                 <t t-foreach="group.messages" t-as="msg" t-key="msg.id">
-                    <div class="d-flex gap-2 px-3 py-2 o-partner-history-Message"
-                         t-att-class="{ 'bg-warning bg-opacity-10': msg.is_internal }">
+                    <div class="d-flex gap-2 px-3 py-2 o-partner-history-Message position-relative">
+                        <!-- Bubble de couleur (classes CSS natives Odoo) -->
+                        <t t-set="bubbleColor" t-value="getBubbleColor(msg)"/>
+                        <div t-if="bubbleColor"
+                             class="o-mail-Message-bubble rounded-3 position-absolute top-0 start-0 w-100 h-100 border"
+                             t-att-class="{ 'o-blue': bubbleColor === 'blue', 'o-green': bubbleColor === 'green' }"/>
                         <!-- Avatar -->
                         <img
                             t-att-src="getAvatarUrl(msg.author_id and msg.author_id[0])"
-                            class="rounded-circle flex-shrink-0 mt-1"
+                            class="rounded-circle flex-shrink-0 mt-1 position-relative"
                             style="width:32px;height:32px;object-fit:cover;"
                             alt="avatar"
                         />
                         <!-- Contenu -->
-                        <div class="flex-grow-1 overflow-hidden">
+                        <div class="flex-grow-1 overflow-hidden position-relative">
                             <!-- En-tête : auteur + date + badge document -->
                             <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
                                 <div class="d-flex align-items-baseline gap-2 flex-wrap">
@@ -59,7 +63,7 @@
                                            class="badge bg-light text-primary border border-primary-subtle text-decoration-none small text-nowrap"
                                            style="font-size:0.7rem;cursor:pointer;border:none;padding:0.25rem 0.5rem;"
                                            t-on-click="() => this.openDocument(msg)">
-                                        ↗ <t t-esc="msg.record_name or msg.model"/>
+                                        ↗ <t t-esc="msg.model_description or msg.record_name or msg.model"/>
                                     </button>
                                 </t>
                             </div>

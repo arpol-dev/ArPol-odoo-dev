@@ -39,8 +39,17 @@ class MailMessage(models.Model):
 
         accessible.sort(key=lambda m: m.date or m.id, reverse=True)
 
-        return [
-            {
+        model_name_cache = {}
+        result = []
+        for msg in accessible:
+            model_key = msg.model
+            if model_key and model_key not in model_name_cache:
+                try:
+                    model_name_cache[model_key] = self.env['ir.model']._get(model_key).name
+                except Exception:
+                    model_name_cache[model_key] = False
+
+            result.append({
                 'id': msg.id,
                 'author_id': [msg.author_id.id, msg.author_id.display_name]
                              if msg.author_id else False,
@@ -51,6 +60,6 @@ class MailMessage(models.Model):
                 'model': msg.model or False,
                 'res_id': msg.res_id or False,
                 'record_name': msg.record_name or '',
-            }
-            for msg in accessible
-        ]
+                'model_description': model_name_cache.get(model_key or '', False),
+            })
+        return result
