@@ -17,14 +17,14 @@
                     <a class="nav-link"
                        t-att-class="{ 'active': state.activeTab === 'discussion' }"
                        href="#" t-on-click.prevent="() => this.switchTab('discussion')">
-                        Discussion
+                        Historique <t t-esc="state.historyModelName || 'Discussion'"/>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link"
                        t-att-class="{ 'active': state.activeTab === 'history' }"
                        href="#" t-on-click.prevent="() => this.switchTab('history')">
-                        Historique <t t-esc="state.historyModelName || 'partenaire'"/>
+                        Historique partenaire
                     </a>
                 </li>
             </ul>
