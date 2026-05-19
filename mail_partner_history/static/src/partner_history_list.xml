@@ -39,15 +39,9 @@
                             alt="avatar"
                         />
                         <!-- Contenu -->
-                        <div class="flex-grow-1 overflow-hidden position-relative">
-                            <!-- Bubble de couleur (classes CSS natives Odoo) -->
-                            <t t-set="bubbleColor" t-value="getBubbleColor(msg)"/>
-                            <div t-if="bubbleColor"
-                                 class="o-mail-Message-bubble rounded-3 position-absolute top-0 start-0 w-100 h-100 border"
-                                 t-att-class="{ 'o-blue': bubbleColor === 'blue', 'o-green': bubbleColor === 'green' }"/>
-                            <div class="position-relative">
-                            <!-- En-tête : auteur + date + badge document -->
-                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+                        <div class="flex-grow-1 overflow-hidden">
+                            <!-- En-tête : auteur + date (hors bubble, comme le chatter natif) -->
+                            <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-1 lh-1 mb-1">
                                 <div class="d-flex align-items-baseline gap-2 flex-wrap">
                                     <span class="fw-bold small"
                                           t-esc="msg.author_id ? msg.author_id[1] : 'Inconnu'"/>
@@ -69,8 +63,18 @@
                                     </button>
                                 </t>
                             </div>
-                            <!-- Corps du message -->
-                            <div class="small mt-1 text-break" t-out="getMarkupBody(msg.body)"/>
+                            <!-- Zone de contenu avec bubble (structure identique au chatter natif) -->
+                            <div class="o-mail-Message-contentContainer position-relative d-flex">
+                                <div class="o-min-width-0">
+                                    <div class="position-relative d-inline-block text-body">
+                                        <t t-set="bubbleColor" t-value="getBubbleColor(msg)"/>
+                                        <div t-if="bubbleColor"
+                                             class="o-mail-Message-bubble rounded-bottom-3 rounded-end-3 position-absolute top-0 start-0 w-100 h-100 border"
+                                             t-att-class="{ 'o-blue': bubbleColor === 'blue', 'o-green': bubbleColor === 'green' }"/>
+                                        <div class="position-relative text-break o-mail-Message-body mb-0 py-2 align-self-start rounded-end-3 rounded-bottom-3 small"
+                                             t-out="getMarkupBody(msg.body)"/>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
