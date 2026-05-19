@@ -15,7 +15,6 @@ export class PartnerHistoryList extends Component {
     setup() {
         this.orm = useService("orm");
         this.actionService = useService("action");
-        this.user = useService("user");
         this.state = useState({
             messages: [],
             isLoaded: false,
@@ -85,7 +84,6 @@ export class PartnerHistoryList extends Component {
 
     getBubbleColor(msg) {
         if (msg.is_internal) return undefined;
-        if (msg.author_id && msg.author_id[0] === this.user.partnerId) return 'green';
         return 'blue';
     }
 

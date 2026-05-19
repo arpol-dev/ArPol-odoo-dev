@@ -34,8 +34,7 @@
                         <!-- Bubble de couleur (classes CSS natives Odoo) -->
                         <t t-set="bubbleColor" t-value="getBubbleColor(msg)"/>
                         <div t-if="bubbleColor"
-                             class="o-mail-Message-bubble rounded-3 position-absolute top-0 start-0 w-100 h-100 border"
-                             t-att-class="{ 'o-blue': bubbleColor === 'blue', 'o-green': bubbleColor === 'green' }"/>
+                             class="o-mail-Message-bubble rounded-3 position-absolute top-0 start-0 w-100 h-100 border o-blue"/>
                         <!-- Avatar -->
                         <img
                             t-att-src="getAvatarUrl(msg.author_id and msg.author_id[0])"
