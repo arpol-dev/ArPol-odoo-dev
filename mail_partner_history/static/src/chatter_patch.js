@@ -17,6 +17,7 @@ patch(Chatter.prototype, {
             showHistoryTab: false,
             historyPartnerId: false,
             historyPartnerName: "",
+            historyModelName: "",
         });
         onWillStart(async () => {
             if (!this.props.threadId) return;
@@ -28,6 +29,11 @@ patch(Chatter.prototype, {
     async _resolvePartnerHistory() {
         const { threadModel, threadId } = this.props;
         try {
+            const [modelRecord] = await this.orm.searchRead(
+                "ir.model", [["model", "=", threadModel]], ["name"], { limit: 1 }
+            );
+            const modelName = modelRecord?.name || threadModel;
+
             if (threadModel === "res.partner") {
                 const [record] = await this.orm.read("res.partner", [threadId], ["display_name"]);
                 if (!record) return;
@@ -35,6 +41,7 @@ patch(Chatter.prototype, {
                     showHistoryTab: true,
                     historyPartnerId: threadId,
                     historyPartnerName: record.display_name || "",
+                    historyModelName: modelName,
                 });
             } else {
                 const [record] = await this.orm.read(threadModel, [threadId], ["partner_id"]);
@@ -44,6 +51,7 @@ patch(Chatter.prototype, {
                     showHistoryTab: true,
                     historyPartnerId: partnerId,
                     historyPartnerName: partnerName || "",
+                    historyModelName: modelName,
                 });
             }
         } catch {

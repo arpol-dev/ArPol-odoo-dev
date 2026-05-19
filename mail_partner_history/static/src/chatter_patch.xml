@@ -12,7 +12,7 @@
     <!-- B. Onglets : remplacer le div custom par nav-tabs Bootstrap -->
     <xpath expr="//div[hasclass('o-mail-Chatter-content')]" position="before">
         <t t-if="state.showHistoryTab">
-            <ul class="nav nav-tabs px-3">
+            <ul class="nav nav-tabs px-3 justify-content-center">
                 <li class="nav-item">
                     <a class="nav-link"
                        t-att-class="{ 'active': state.activeTab === 'discussion' }"
@@ -24,7 +24,7 @@
                     <a class="nav-link"
                        t-att-class="{ 'active': state.activeTab === 'history' }"
                        href="#" t-on-click.prevent="() => this.switchTab('history')">
-                        Historique partenaire
+                        Historique <t t-esc="state.historyModelName || 'partenaire'"/>
                     </a>
                 </li>
             </ul>
