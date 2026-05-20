@@ -80,6 +80,24 @@ export class PartnerHistoryList extends Component {
         });
     }
 
+    openAuthor(msg) {
+        if (!msg.author_id) return;
+        this.actionService.doAction({
+            type: 'ir.actions.act_window',
+            res_model: 'res.partner',
+            res_id: msg.author_id[0],
+            views: [[false, 'form']],
+        });
+    }
+
+    formatFullDate(isoDate) {
+        if (!isoDate) return "";
+        return new Date(isoDate).toLocaleString(undefined, {
+            year: 'numeric', month: 'numeric', day: 'numeric',
+            hour: 'numeric', minute: '2-digit',
+        });
+    }
+
     getMarkupBody(body) {
         return markup(body || '');
     }

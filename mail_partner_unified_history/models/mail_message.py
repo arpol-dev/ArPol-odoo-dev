@@ -14,8 +14,8 @@ class MailMessage(models.Model):
         filtrés silencieusement selon les droits d'accès aux documents liés."""
         domain = [
             '|',
-            ('author_id', '=', partner_id),
-            ('partner_ids', 'in', [partner_id]),
+            ('author_id', 'child_of', partner_id),
+            ('notification_ids.res_partner_id', 'child_of', [partner_id]),
         ]
         messages = self.search(domain, order='date desc', limit=limit, offset=offset)
 
@@ -49,6 +49,20 @@ class MailMessage(models.Model):
                 except Exception:
                     model_name_cache[model_key] = False
 
+            email_status = None
+            if msg.message_type in ('email', 'email_outgoing'):
+                notifs = msg.notification_ids.filtered(
+                    lambda n: n.notification_type == 'email'
+                )
+                if notifs:
+                    statuses = set(notifs.mapped('notification_status'))
+                    if statuses & {'exception', 'bounce'}:
+                        email_status = 'exception'
+                    elif 'ready' in statuses:
+                        email_status = 'ready'
+                    else:
+                        email_status = 'sent'
+
             result.append({
                 'id': msg.id,
                 'author_id': [msg.author_id.id, msg.author_id.display_name]
@@ -61,5 +75,6 @@ class MailMessage(models.Model):
                 'res_id': msg.res_id or False,
                 'record_name': msg.record_name or '',
                 'model_description': model_name_cache.get(model_key or '', False),
+                'email_status': email_status,
             })
         return result
