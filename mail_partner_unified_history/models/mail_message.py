@@ -61,18 +61,17 @@ class MailMessage(models.Model):
                     model_name_cache[model_key] = False
 
             email_status = None
-            if msg.message_type in ('email', 'email_outgoing'):
-                notifs = msg.notification_ids.filtered(
-                    lambda n: n.notification_type == 'email'
-                )
-                if notifs:
-                    statuses = set(notifs.mapped('notification_status'))
-                    if statuses & {'exception', 'bounce'}:
-                        email_status = 'exception'
-                    elif 'ready' in statuses:
-                        email_status = 'ready'
-                    else:
-                        email_status = 'sent'
+            notifs = msg.notification_ids.filtered(
+                lambda n: n.notification_type == 'email'
+            )
+            if notifs:
+                statuses = set(notifs.mapped('notification_status'))
+                if statuses & {'exception', 'bounce'}:
+                    email_status = 'exception'
+                elif 'ready' in statuses:
+                    email_status = 'ready'
+                else:
+                    email_status = 'sent'
 
             result.append({
                 'id': msg.id,

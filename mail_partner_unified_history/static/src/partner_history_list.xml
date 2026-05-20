@@ -51,9 +51,6 @@
                                         </t>
                                         <t t-else="">Unknown</t>
                                     </span>
-                                    <span class="text-muted o-xsmaller"
-                                          t-esc="getRelativeTime(msg.date)"
-                                          t-att-title="formatFullDate(msg.date)"/>
                                     <t t-if="msg.email_status">
                                         <span class="o-mail-Message-notification"
                                               t-att-class="{ 'text-danger opacity-75': msg.email_status === 'exception', 'opacity-50': msg.email_status !== 'exception' }">
@@ -61,6 +58,9 @@
                                                role="img"/>
                                         </span>
                                     </t>
+                                    <span class="text-muted o-xsmaller"
+                                          t-esc="getRelativeTime(msg.date)"
+                                          t-att-title="formatFullDate(msg.date)"/>
                                     <t t-if="msg.is_internal">
                                         <span class="badge bg-warning text-dark"
                                               style="font-size:0.65rem;">Internal note</span>
