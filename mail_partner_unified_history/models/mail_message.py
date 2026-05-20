@@ -39,6 +39,17 @@ class MailMessage(models.Model):
 
         accessible.sort(key=lambda m: m.date or m.id, reverse=True)
 
+        # Batch-fetch internal user IDs for author partners
+        author_partner_ids = list({m.author_id.id for m in accessible if m.author_id})
+        if author_partner_ids:
+            users_data = self.env['res.users'].sudo().search_read(
+                [('partner_id', 'in', author_partner_ids), ('share', '=', False)],
+                ['partner_id'],
+            )
+            partner_to_user = {u['partner_id'][0]: u['id'] for u in users_data}
+        else:
+            partner_to_user = {}
+
         model_name_cache = {}
         result = []
         for msg in accessible:
@@ -67,6 +78,7 @@ class MailMessage(models.Model):
                 'id': msg.id,
                 'author_id': [msg.author_id.id, msg.author_id.display_name]
                              if msg.author_id else False,
+                'author_user_id': partner_to_user.get(msg.author_id.id) if msg.author_id else None,
                 'date': msg.date.isoformat() if msg.date else False,
                 'body': msg.body or '',
                 'message_type': msg.message_type,

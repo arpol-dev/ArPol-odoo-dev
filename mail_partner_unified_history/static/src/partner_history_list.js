@@ -2,8 +2,10 @@
 
 import { Component, onWillStart, useState, markup } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
+import { usePopover } from "@web/core/popover/popover_hook";
 import { user } from "@web/core/user";
 import { _t } from "@web/core/l10n/translation";
+import { AvatarCardPopover } from "@mail/discuss/web/avatar_card/avatar_card_popover";
 
 const LIMIT = 30;
 
@@ -13,10 +15,12 @@ export class PartnerHistoryList extends Component {
         partnerId: { type: Number },
         partnerName: { type: String },
     };
+    static components = { AvatarCardPopover };
 
     setup() {
         this.orm = useService("orm");
         this.actionService = useService("action");
+        this.avatarCard = usePopover(AvatarCardPopover);
         this.state = useState({
             messages: [],
             isLoaded: false,
@@ -80,14 +84,12 @@ export class PartnerHistoryList extends Component {
         });
     }
 
-    openAuthor(msg) {
-        if (!msg.author_id) return;
-        this.actionService.doAction({
-            type: 'ir.actions.act_window',
-            res_model: 'res.partner',
-            res_id: msg.author_id[0],
-            views: [[false, 'form']],
-        });
+    openAuthor(ev, msg) {
+        if (!msg.author_user_id) return;
+        const target = ev.currentTarget;
+        if (!this.avatarCard.isOpen) {
+            this.avatarCard.open(target, { id: msg.author_user_id });
+        }
     }
 
     formatFullDate(isoDate) {

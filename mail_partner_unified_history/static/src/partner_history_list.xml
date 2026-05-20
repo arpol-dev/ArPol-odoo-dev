@@ -45,8 +45,8 @@
                                 <div class="d-flex align-items-baseline gap-2 flex-wrap">
                                     <span class="fw-bold small">
                                         <t t-if="msg.author_id">
-                                            <a class="o-mail-Message-author text-reset cursor-pointer text-decoration-none"
-                                               t-on-click.prevent="() => this.openAuthor(msg)"
+                                            <a t-att-class="{ 'cursor-pointer o-hover-text-underline text-reset text-decoration-none': msg.author_user_id, 'text-reset text-decoration-none': !msg.author_user_id }"
+                                               t-on-click="(ev) => this.openAuthor(ev, msg)"
                                                t-esc="msg.author_id[1]"/>
                                         </t>
                                         <t t-else="">Unknown</t>
@@ -54,14 +54,12 @@
                                     <span class="text-muted o-xsmaller"
                                           t-esc="getRelativeTime(msg.date)"
                                           t-att-title="formatFullDate(msg.date)"/>
-                                    <t t-if="msg.email_status === 'sent'">
-                                        <i class="fa fa-envelope-o text-success" style="font-size:0.7rem;" title="Sent"/>
-                                    </t>
-                                    <t t-elif="msg.email_status === 'exception'">
-                                        <i class="fa fa-envelope text-danger" style="font-size:0.7rem;" title="Failed"/>
-                                    </t>
-                                    <t t-elif="msg.email_status === 'ready'">
-                                        <i class="fa fa-envelope-o text-warning" style="font-size:0.7rem;" title="Queued"/>
+                                    <t t-if="msg.email_status">
+                                        <span class="o-mail-Message-notification"
+                                              t-att-class="{ 'text-danger opacity-75': msg.email_status === 'exception', 'opacity-50': msg.email_status !== 'exception' }">
+                                            <i t-att-class="msg.email_status === 'exception' ? 'fa fa-envelope' : 'fa fa-envelope-o'"
+                                               role="img"/>
+                                        </span>
                                     </t>
                                     <t t-if="msg.is_internal">
                                         <span class="badge bg-warning text-dark"
