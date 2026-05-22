@@ -1,0 +1,24 @@
+{
+  "info": {
+    "title": "Service de calcul d'itinéraire et d'isochrone",
+    "version": "1.0.0"
+  },
+  "operations": ["itineraire", "isochrone"],
+  "resources": [
+    {
+      "id": "bdtopo-osrm",
+      "profiles": ["car", "pedestrian"],
+      "optimization": ["fastest", "shortest"]
+    },
+    {
+      "id": "bdtopo-valhalla",
+      "profiles": ["car", "pedestrian"],
+      "optimization": ["fastest", "shortest"]
+    },
+    {
+      "id": "bdtopo-pgr",
+      "profiles": ["car", "pedestrian"],
+      "optimization": ["fastest", "shortest"]
+    }
+  ]
+}
