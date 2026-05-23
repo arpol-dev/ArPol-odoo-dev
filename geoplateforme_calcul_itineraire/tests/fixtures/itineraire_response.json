@@ -1,0 +1,30 @@
+{
+  "resource": "bdtopo-osrm",
+  "profile": "car",
+  "optimization": "fastest",
+  "distance": 2350.5,
+  "duration": 312.0,
+  "distanceUnit": "meter",
+  "timeUnit": "second",
+  "bbox": [2.337306, 48.849319, 2.367776, 48.852891],
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [2.337306, 48.849319],
+      [2.350000, 48.851000],
+      [2.367776, 48.852891]
+    ]
+  },
+  "portions": [
+    {
+      "distance": 1175.0,
+      "duration": 156.0,
+      "steps": []
+    },
+    {
+      "distance": 1175.5,
+      "duration": 156.0,
+      "steps": []
+    }
+  ]
+}
