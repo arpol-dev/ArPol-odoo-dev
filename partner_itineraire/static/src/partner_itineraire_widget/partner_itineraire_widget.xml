@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="partner_itineraire.PartnerItineraireMap" owl="1">
+        <div class="o_partner_itineraire_widget">
+            <div t-if="isComputed" class="o_partner_itineraire_map" t-ref="mapContainer"/>
+            <div t-else=""
+                 class="o_partner_itineraire_placeholder alert"
+                 t-attf-class="alert-{{ placeholder.level }}">
+                <i class="fa fa-info-circle me-2"/>
+                <span t-esc="placeholder.text"/>
+            </div>
+        </div>
+    </t>
+
+</templates>
