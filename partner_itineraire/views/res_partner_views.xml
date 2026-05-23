@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_partner_form_inherit_itineraire" model="ir.ui.view">
+        <field name="name">res.partner.form.itineraire</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//notebook" position="inside">
+                <page name="itineraire" string="Itinéraire">
+
+                    <group>
+                        <group string="Itinéraire depuis la société">
+                            <field name="itineraire_state" readonly="1"/>
+                            <field name="itineraire_distance_km"
+                                   attrs="{'invisible': [('itineraire_state', '!=', 'computed')]}"
+                                   readonly="1"/>
+                            <field name="itineraire_duration_min"
+                                   attrs="{'invisible': [('itineraire_state', '!=', 'computed')]}"
+                                   readonly="1"/>
+                            <field name="itineraire_computed_date"
+                                   attrs="{'invisible': [('itineraire_state', '!=', 'computed')]}"
+                                   readonly="1"/>
+                            <field name="itineraire_error_message"
+                                   attrs="{'invisible': [('itineraire_error_message', '=', False)]}"
+                                   readonly="1"/>
+                        </group>
+                        <group string="Coordonnées du partenaire">
+                            <field name="partner_latitude" readonly="1"/>
+                            <field name="partner_longitude" readonly="1"/>
+                            <field name="date_localization"
+                                   string="Mis à jour le"
+                                   readonly="1"
+                                   attrs="{'invisible': [('date_localization', '=', False)]}"/>
+                            <div colspan="2" name="geo_localize_button" class="o_row">
+                                <button name="geo_localize"
+                                        type="object"
+                                        string="Géolocaliser ce contact"
+                                        title="Calculer la géolocalisation à partir de l'adresse"
+                                        icon="fa-cog"
+                                        class="btn btn-link p-0"
+                                        attrs="{'invisible': ['|', ('partner_latitude', '!=', 0), ('partner_longitude', '!=', 0)]}"/>
+                                <button name="geo_localize"
+                                        type="object"
+                                        string="Actualiser la localisation"
+                                        title="Recalculer la géolocalisation"
+                                        icon="fa-refresh"
+                                        class="btn btn-link p-0"
+                                        attrs="{'invisible': [('partner_latitude', '=', 0), ('partner_longitude', '=', 0)]}"/>
+                            </div>
+                        </group>
+                    </group>
+
+                    <div class="o_row mb-2">
+                        <button name="action_compute_itineraire"
+                                string="Calculer l'itinéraire"
+                                type="object"
+                                class="btn-primary"
+                                icon="fa-road"/>
+                        <button name="action_open_company_for_geolocalize"
+                                string="Ouvrir la fiche société"
+                                type="object"
+                                class="btn-secondary"
+                                icon="fa-building"
+                                attrs="{'invisible': [('itineraire_state', '!=', 'no_company_coords')]}"/>
+                    </div>
+
+                    <field name="itineraire_geometry"
+                           widget="partner_itineraire_map"
+                           nolabel="1"
+                           options="{
+                               'bbox_field': 'itineraire_bbox',
+                               'start_lat_field': 'itineraire_start_lat',
+                               'start_lon_field': 'itineraire_start_lon',
+                               'end_lat_field': 'partner_latitude',
+                               'end_lon_field': 'partner_longitude',
+                               'state_field': 'itineraire_state'
+                           }"/>
+
+                    <field name="itineraire_bbox" invisible="1"/>
+                    <field name="itineraire_start_lat" invisible="1"/>
+                    <field name="itineraire_start_lon" invisible="1"/>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

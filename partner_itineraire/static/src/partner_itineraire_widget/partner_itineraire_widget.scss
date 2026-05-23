@@ -1,0 +1,33 @@
+// Odoo wraps custom field widgets in a `<div class="o_field_widget o_field_<widget_name>">`
+// with `display: inline-block`. Placed outside of a <group>, this wrapper collapses
+// to its content's width — which is itself % of the wrapper. Force the wrapper to
+// span its container so Leaflet has real pixels to draw into.
+.o_field_widget.o_field_partner_itineraire_map {
+    display: block;
+    width: 100%;
+}
+
+.o_partner_itineraire_widget {
+    width: 100%;
+    margin-top: 1rem;
+
+    .o_partner_itineraire_map {
+        width: 100%;
+        height: 480px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        z-index: 0; // sinon les tuiles passent au-dessus de la barre d'onglets
+    }
+
+    .o_partner_itineraire_placeholder {
+        margin-bottom: 0;
+    }
+}
+
+// La feuille Leaflet définit ses propres z-index très élevés sur les contrôles ;
+// on les contraint pour rester sous les modales et la sidebar d'Odoo.
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+    z-index: 400 !important;
+}
