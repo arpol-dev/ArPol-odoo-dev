@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <record id="view_order_form_with_mileage_fee" model="ir.ui.view">
+            <field name="name">sale.order.form.view.with_mileage_fee</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="priority" eval="20"/>
+            <field name="arch" type="xml">
+                <data>
+                    <xpath expr="//group[@name='note_group']" position="before">
+                        <div class="oe_right">
+                            <field name="mileage_fee_included" invisible="1"/>
+                            <button
+                                string="Ajouter les frais kilométriques"
+                                name="action_add_mileage_fee"
+                                type="object"
+                                attrs="{'invisible': ['|',('partner_id', '=', False),('mileage_fee_included', '=', True)]}"
+                            />
+                            <button
+                                string="Mettre à jour les frais kilométriques"
+                                name="action_update_mileage_fee"
+                                type="object"
+                                class="text-warning btn-secondary"
+                                attrs="{'invisible': ['|',('partner_id', '=', False),('mileage_fee_included', '=', False)]}"
+                            />
+                        </div>
+                    </xpath>
+                </data>
+            </field>
+        </record>
+
+</odoo>
