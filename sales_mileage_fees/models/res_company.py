@@ -13,5 +13,5 @@ class ResCompany(models.Model):
         string="Config Frais kilométriques")
     mileage_fee_product_id = fields.Many2one(
         "product.product", string="Mileage Fee Product",
-        readonly=False, domain="[('type', '=', 'service')]",
+        domain="[('type', '=', 'service')]",
     )
