@@ -126,7 +126,7 @@ export class PartnerItineraireMap extends Component {
             maxZoom: 19,
         });
 
-        ignLayer.addTo(this.leafletMap);
+        osmLayer.addTo(this.leafletMap);
         L.control
             .layers({ "IGN Plan": ignLayer, OpenStreetMap: osmLayer })
             .addTo(this.leafletMap);
