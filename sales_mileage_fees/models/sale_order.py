@@ -43,7 +43,7 @@ class SaleOrder(models.Model):
             if self.partner_id.itineraire_state != 'computed':
                 self.partner_id.action_compute_itineraire()
 
-            distance = self.partner_id.itineraire_distance_km
+            distance = 2 * self.partner_id.itineraire_distance_km - 10
 
         # Create the sales order line values
         values = {
