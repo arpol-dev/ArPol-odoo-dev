@@ -13,7 +13,11 @@ class AccountMove(models.Model):
             report = self.env['account.move.send']._get_default_pdf_report_id(self)
             content, report_type = self.env['ir.actions.report']._pre_render_qweb_pdf(report.report_name, self.ids)
             content_by_id = self.env['ir.actions.report']._get_splitted_report(report.report_name, content, report_type)
-            return {'filename': self._get_invoice_report_filename(), 'filetype': 'pdf', 'content': content_by_id[self.id]}
+            return {
+                'filename': self._get_invoice_report_filename(),
+                'filetype': 'pdf',
+                'content': content_by_id[self.id],
+            }
         return super()._get_invoice_legal_documents(filetype, allow_fallback=allow_fallback)
 
     def _get_invoice_legal_documents_all(self, allow_fallback=False):
@@ -22,5 +26,9 @@ class AccountMove(models.Model):
             report = self.env['account.move.send']._get_default_pdf_report_id(self)
             content, report_type = self.env['ir.actions.report']._pre_render_qweb_pdf(report.report_name, self.ids)
             content_by_id = self.env['ir.actions.report']._get_splitted_report(report.report_name, content, report_type)
-            return [{'filename': self._get_invoice_report_filename(), 'filetype': 'pdf', 'content': content_by_id[self.id]}]
+            return [{
+                'filename': self._get_invoice_report_filename(),
+                'filetype': 'pdf',
+                'content': content_by_id[self.id],
+            }]
         return super()._get_invoice_legal_documents_all(allow_fallback=allow_fallback)
