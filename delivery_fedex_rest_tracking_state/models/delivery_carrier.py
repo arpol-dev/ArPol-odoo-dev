@@ -49,7 +49,6 @@ class ProviderFedex(models.Model):
                         {"trackingNumberInfo": {"trackingNumber": master_tracking}}
                     ],
                     "includeDetailedScans": True,
-                    "accountNumber": {"value": srm.account_number},
                 },
             )
         except Exception as e:
