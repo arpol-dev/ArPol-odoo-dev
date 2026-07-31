@@ -1,0 +1,8 @@
+
+.website-zoomable {
+    &[data-website-zoom-click] {
+        img {
+            cursor: zoom-in;
+        }
+    }
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="snippet_options" inherit_id="website.snippet_options">
+        <xpath expr="." position="inside">
+            <div data-selector=".s_text_image, .s_picture, .s_image_text, .s_three_columns, .s_masonry_block, .s_media_list, .s_title, .s_text_block">
+                <!-- Image config -->
+                <we-select string="Image Zoom" class="o_we_sublevel_1" data-no-preview="true">
+                    <we-button data-select-class="website-zoomable zoomodoo-next oe_us_website_image_zoom" data-attribute-name="data-website-zoom-click" data-select-attribute="1">Pop-up on Click</we-button>
+                    <we-button data-attribute-name="data-website-zoom-click" data-select-attribute="0">None</we-button>
+                </we-select>
+            </div>
+        </xpath>
+    </template>
+</odoo>
