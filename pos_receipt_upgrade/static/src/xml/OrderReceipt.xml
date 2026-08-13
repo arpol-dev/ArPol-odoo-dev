@@ -7,7 +7,7 @@
             <!-- <t t-if="receipt.company.siret">
                 <div>SIRET : <t t-esc="receipt.company.siret" /></div>
             </t> -->
-            <div>37 rue de l'eglise, 25720 Avanne</div>
+            <div>37A rue de l'église, 25720 Avanne</div>
             <div>SIRET : 98074488200013</div>
             <t t-if="receipt.company.vat">
                 <div><t t-esc="receipt.company.vat_label"/> : <t t-esc="receipt.company.vat" /></div>
@@ -16,6 +16,9 @@
         <xpath expr="//t[@t-if='receipt.company.email']/div" position="replace">
             <div>contact@casaangels.fr</div>
         </xpath>
+
+        <!-- Supprime les stats de fidélité (points/pétales gagnés, dépensés, solde) -->
+        <xpath expr="//t[@t-if='receipt.loyaltyStats']" position="replace"/>
 
         <xpath expr="//div[hasclass('pos-coupon-rewards')]" position="replace">
             <div class="pos-coupon-rewards">
@@ -43,4 +46,4 @@
             </div>
         </xpath>
     </t>
-</template>
+</templates>
