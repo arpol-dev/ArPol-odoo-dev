@@ -1,8 +1,6 @@
 <templates id="template" xml:space="preserve">
     <t t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">     
-        <xpath expr="//img[@class='pos-receipt-logo']" position="replace">
-            <img class="pos-receipt-logo" t-att-src="'/pos_receipt_upgrade/static/img/logo.png'" alt="Logo"/>
-        </xpath>
+        <!-- Logo custom retiré : référençait static/img/logo.png, absent du module (404 à chaque impression de ticket) -->
         <xpath expr="//t[@t-if='receipt.company.vat']" position="replace">
             <!-- <t t-if="receipt.company.siret">
                 <div>SIRET : <t t-esc="receipt.company.siret" /></div>
@@ -20,7 +18,9 @@
         <!-- Supprime les stats de fidélité (points/pétales gagnés, dépensés, solde) -->
         <xpath expr="//t[@t-if='receipt.loyaltyStats']" position="replace"/>
 
-        <xpath expr="//div[hasclass('pos-coupon-rewards')]" position="replace">
+        <!-- Désactivé : receipt.new_coupon_info peut être undefined selon le contexte de la commande,
+             ce qui fait planter le rendu du ticket au moment de l'encaissement -->
+        <!-- <xpath expr="//div[hasclass('pos-coupon-rewards')]" position="replace">
             <div class="pos-coupon-rewards">
                 <div>------------------------</div>
                 <br/>
@@ -44,6 +44,6 @@
                     </div>
                 </t>
             </div>
-        </xpath>
+        </xpath> -->
     </t>
 </templates>

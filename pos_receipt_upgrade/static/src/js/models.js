@@ -8,13 +8,13 @@ odoo.define('pos_receipt_upgrade.models', function (require) {
         class FrApplicableOrder extends Order {
             export_for_printing() {
                 var result = super.export_for_printing(...arguments);
-                debugger;
-                console.log("Company data:", this.pos.company); // Log de débogage
-                
-                result.company.siret = this.pos.company.siret;
-                result.company.street = this.pos.company.street;
-                result.company.zip = this.pos.company.zip;
-                result.company.city = this.pos.company.city;
+                var company = this.pos.company;
+                if (result.company && company) {
+                    result.company.siret = company.siret;
+                    result.company.street = company.street;
+                    result.company.zip = company.zip;
+                    result.company.city = company.city;
+                }
                 return result;
             }
         };
