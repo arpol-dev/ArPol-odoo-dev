@@ -34,8 +34,9 @@ class ClaudeAgentController(http.Controller):
 
         status = payload.get('status')
         session_name = payload.get('name')
+        conclusion = payload.get('conclusion')
         try:
-            activity._ai_agent_handle_callback(status, session_name)
+            activity._ai_agent_handle_callback(status, session_name, conclusion=conclusion)
         except Exception:  # noqa: BLE001 - un souci ici ne doit jamais faire planter l'appelant
             _logger.exception("AI Agent callback: error handling activity %s", activity_id)
             return self._json_response({'error': 'internal error'}, status=500)

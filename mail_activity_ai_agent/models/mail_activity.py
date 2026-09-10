@@ -305,18 +305,27 @@ class MailActivity(models.Model):
 
     # -- Réception du callback ------------------------------------------------
 
-    def _ai_agent_handle_callback(self, status, session_name):
-        """Traite un événement busy->idle ('idle') ou de fin de process ('ended') renvoyé par le
-        webhook pour la session liée à cette activité. Session à tour unique (voir
-        _ai_agent_prompt_process_instructions) : les deux statuts sont traités de façon identique
-        et terminent systématiquement la session, qu'il s'agisse d'une conclusion ou d'une
-        question bloquante — pas de statut 'busy' à gérer, une session tuée ne redémarre jamais
-        toute seule. Le nom de session transmis n'est utilisé que pour du logging : la lecture se
-        base sur ai_session_name, celui qu'on a nous-mêmes enregistré au lancement (le secret
-        suffit à authentifier l'appelant, mais on ne fait pas pour autant confiance à un nom de
-        session arbitraire dans le payload)."""
+    def _ai_agent_handle_callback(self, status, session_name, conclusion=None):
+        """Traite un callback du webhook pour la session liée à cette activité. Deux familles de
+        signal, de fiabilité différente :
+        - `task_done`/`needs_input` : signal EXPLICITE envoyé par `report-status.sh` (et son filet
+          de sécurité, le hook PostToolUse) — l'agent a lui-même déclaré avoir fini ou avoir besoin
+          d'une réponse, `conclusion` porte le vrai texte. C'est la source de vérité à privilégier.
+        - `idle`/`ended` : heuristique busy/waiting/idle de `claude-console` (ps + `claude agents
+          --json --all`), gardée en filet de sécurité pour le cas où l'agent crashe avant d'appeler
+          report-status.sh. Peu fiable en tant que telle (voir ArPol-Mind
+          Projets/application_claude.md piège n°10 : un tour légitimement long — effort élevé, ou
+          un appel qui traîne — peut être classé à tort comme 'idle'/'ended'). Sans conclusion
+          fournie, on retombe sur l'ancien mécanisme `/last-message` (déprécié côté claude-console,
+          conservé ici uniquement pour ce filet de sécurité).
+        Session à tour unique (voir _ai_agent_prompt_process_instructions) : dans tous les cas, la
+        session est terminée après ce callback — pas de statut 'busy' à gérer, une session tuée ne
+        redémarre jamais toute seule. Le nom de session transmis n'est utilisé que pour du logging :
+        la lecture se base sur ai_session_name, celui qu'on a nous-mêmes enregistré au lancement (le
+        secret suffit à authentifier l'appelant, mais on ne fait pas pour autant confiance à un nom
+        de session arbitraire dans le payload)."""
         self.ensure_one()
-        if status not in ('idle', 'ended'):
+        if status not in ('idle', 'ended', 'task_done', 'needs_input'):
             return
         # Le contrôleur tourne en public (auth='public', appelé par un serveur externe) : on
         # bascule sur OdooBot pour que les messages/actions postés soient attribués proprement,
@@ -327,6 +336,14 @@ class MailActivity(models.Model):
                 "AI Agent: callback session name mismatch on activity %s (got %s, expected %s)",
                 self.id, session_name, self.ai_session_name,
             )
+
+        if status in ('task_done', 'needs_input'):
+            text = (conclusion or '').strip() or _("Session ended.")
+            if status == 'task_done':
+                self._ai_agent_close(text)
+            else:
+                self._ai_agent_notify_needs_attention(text)
+            return
 
         last_message = self._ai_agent_fetch(self.ai_session_name, 'last-message').get('text') or ''
         is_done = status == 'ended' or AI_AGENT_DONE_MARKER in last_message
