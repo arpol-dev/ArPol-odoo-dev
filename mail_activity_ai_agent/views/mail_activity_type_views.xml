@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mail_activity_type_view_form_ai_agent" model="ir.ui.view">
+        <field name="name">mail.activity.type.view.form.ai.agent</field>
+        <field name="model">mail.activity.type</field>
+        <field name="inherit_id" ref="mail.mail_activity_type_view_form"/>
+        <field name="arch" type="xml">
+            <field name="category" position="after">
+                <field name="ai_model" invisible="category != 'ai_agent'"/>
+                <field name="ai_permission_mode" invisible="category != 'ai_agent'"/>
+            </field>
+        </field>
+    </record>
+</odoo>

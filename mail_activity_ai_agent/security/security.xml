@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ai_agent_session_rule_own" model="ir.rule">
+        <field name="name">AI Agent Session: own sessions only</field>
+        <field name="model_id" ref="model_ai_agent_session"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+    </record>
+</odoo>

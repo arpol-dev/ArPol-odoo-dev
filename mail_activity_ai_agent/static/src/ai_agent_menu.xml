@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+<t t-name="mail_activity_ai_agent.AiAgentMenu">
+    <Dropdown position="'bottom-end'" state="dropdown">
+        <button class="o-mail-ai-agent-button" title="AI Agent Sessions">
+            <i class="fa fa-lg fa-android" role="img" aria-label="AI Agent Sessions"></i>
+            <span t-if="state.counter" class="o-mail-ai-agent-counter badge rounded-pill bg-danger">
+                <t t-esc="state.counter"/>
+            </span>
+        </button>
+        <t t-set-slot="content">
+            <div class="o-mail-ai-agent-menu">
+                <div t-if="state.sessions.length === 0"
+                     class="d-flex align-items-center justify-content-center text-muted p-3 opacity-50">
+                    <span>No AI agent session yet.</span>
+                </div>
+                <div class="d-flex flex-column list-group list-group-flush">
+                    <t t-foreach="state.sessions" t-as="session" t-key="session.id">
+                        <div t-attf-class="o-mail-ai-agent-item list-group-item list-group-item-action d-flex align-items-start p-2 cursor-pointer status-#{session.status}"
+                             t-on-click="() => this.onClickSession(session)">
+                            <i t-attf-class="o-mail-ai-agent-dot fa fa-circle status-#{session.status} me-2 mt-1"/>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="text-truncate fw-bold" t-esc="session.name"/>
+                                <div class="text-truncate small text-muted" t-esc="session.res_name"/>
+                                <div class="small" t-esc="this.statusLabel(session.status)"/>
+                                <div t-if="session.status !== 'running' and session.conclusion"
+                                     class="small text-muted text-truncate" t-esc="session.conclusion"/>
+                            </div>
+                            <button t-if="session.status !== 'running'"
+                                    class="btn btn-sm btn-link o-mail-ai-agent-dismiss"
+                                    title="Dismiss"
+                                    t-on-click="(ev) => this.onDismiss(session, ev)">
+                                <i class="fa fa-check"/>
+                            </button>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </Dropdown>
+</t>
+
+</templates>

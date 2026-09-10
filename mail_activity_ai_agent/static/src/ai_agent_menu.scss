@@ -1,0 +1,22 @@
+.o-mail-ai-agent-menu {
+    width: 380px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.o-mail-ai-agent-dot {
+    font-size: 10px;
+
+    &.status-running {
+        color: var(--bs-info);
+    }
+    &.status-needs_attention {
+        color: var(--bs-warning);
+    }
+    &.status-done {
+        color: var(--bs-success);
+    }
+    &.status-error {
+        color: var(--bs-danger);
+    }
+}

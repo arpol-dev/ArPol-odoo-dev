@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Onglet dédié dans "Mes préférences" (accessible en self-service à chaque utilisateur,
+         sans droit d'admin — cf. SELF_READABLE/WRITEABLE_FIELDS dans models/res_users.py). -->
+    <record id="view_users_form_simple_modif_ai_agent" model="ir.ui.view">
+        <field name="name">res.users.preferences.form.ai.agent</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form_simple_modif"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='page_devices']" position="after">
+                <page string="AI Agent" name="page_ai_agent">
+                    <div class="text-muted mb-3">
+                        Connect an "AI Agent Session" activity to your own Claude Code webhook
+                        server. Scheduling that activity type on any record's chatter will call
+                        this webhook to start an agent session for you.
+                    </div>
+                    <group>
+                        <field name="claude_webhook_url" readonly="0"
+                               placeholder="https://your-server.example.com"/>
+                        <field name="claude_webhook_token" readonly="0" password="True"/>
+                        <field name="claude_webhook_cwd" readonly="0"
+                               placeholder="/home/you/some-directory"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Même onglet côté Réglages > Utilisateurs, pour qu'un admin puisse aussi le configurer
+         pour un autre utilisateur. -->
+    <record id="view_users_form_ai_agent" model="ir.ui.view">
+        <field name="name">res.users.form.ai.agent</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='preferences']" position="after">
+                <page string="AI Agent" name="page_ai_agent">
+                    <group>
+                        <field name="claude_webhook_url" placeholder="https://your-server.example.com"/>
+                        <field name="claude_webhook_token" password="True"/>
+                        <field name="claude_webhook_cwd" placeholder="/home/you/some-directory"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

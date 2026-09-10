@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- activity_category (related='activity_type_id.category') est un champ core déjà chargé
+         invisible dans la vue de base : pas besoin de le rajouter ici. -->
+    <record id="mail_activity_view_form_popup_ai_agent" model="ir.ui.view">
+        <field name="name">mail.activity.view.form.popup.ai.agent</field>
+        <field name="model">mail.activity</field>
+        <field name="inherit_id" ref="mail.mail_activity_view_form_popup"/>
+        <field name="arch" type="xml">
+            <field name="note" position="before">
+                <group invisible="activity_category != 'ai_agent'" string="AI Agent">
+                    <field name="ai_model" readonly="id"/>
+                    <field name="ai_permission_mode" readonly="id"/>
+                </group>
+                <div class="alert alert-info" role="alert" invisible="activity_category != 'ai_agent'">
+                    The description below is the main request sent to the agent. It also
+                    receives the full record data, the chatter history, and can freely explore
+                    the database if it has its own access. Model and permission mode default from
+                    the activity type — once the session has started, they can no longer be
+                    changed here.
+                </div>
+            </field>
+
+            <field name="note" position="after">
+                <group invisible="activity_category != 'ai_agent' or not id" string="AI Agent Status">
+                    <field name="ai_status" widget="badge"
+                           decoration-info="ai_status == 'running'"
+                           decoration-warning="ai_status == 'needs_attention'"
+                           decoration-danger="ai_status == 'error'"
+                           decoration-success="ai_status == 'to_launch'"/>
+                    <field name="ai_remote_url" widget="url" string="Remote Session"
+                           invisible="not ai_remote_url"/>
+                </group>
+            </field>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="mail_activity_type_ai_agent" model="mail.activity.type">
+        <field name="name">AI Agent Session</field>
+        <field name="summary">Ask the AI agent to...</field>
+        <field name="icon">fa-android</field>
+        <field name="category">ai_agent</field>
+        <field name="ai_model">sonnet</field>
+        <field name="ai_permission_mode">acceptEdits</field>
+        <field name="delay_count">0</field>
+        <field name="delay_unit">days</field>
+        <field name="delay_from">current_date</field>
+    </record>
+</odoo>
