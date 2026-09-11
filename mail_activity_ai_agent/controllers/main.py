@@ -27,18 +27,35 @@ class ClaudeAgentController(http.Controller):
         if not activity_id or not secret:
             return self._json_response({'error': 'missing activity_id/secret'}, status=400)
 
-        activity = request.env['mail.activity'].sudo().browse(activity_id)
-        if not activity.exists() or not activity.ai_callback_secret or activity.ai_callback_secret != secret:
-            _logger.warning("AI Agent callback: rejected (activity_id=%s)", activity_id)
-            return self._json_response({'error': 'forbidden'}, status=403)
-
         status = payload.get('status')
         session_name = payload.get('name')
         conclusion = payload.get('conclusion')
+
+        activity = request.env['mail.activity'].sudo().browse(activity_id)
+        if activity.exists() and activity.ai_callback_secret and activity.ai_callback_secret == secret:
+            try:
+                activity._ai_agent_handle_callback(status, session_name, conclusion=conclusion)
+            except Exception:  # noqa: BLE001 - un souci ici ne doit jamais faire planter l'appelant
+                _logger.exception("AI Agent callback: error handling activity %s", activity_id)
+                return self._json_response({'error': 'internal error'}, status=500)
+            return self._json_response({'ok': True})
+
+        # L'activité n'existe plus (annulée entretemps, ou disparue hors flux normal) : avant de
+        # rejeter, chercher la trace de suivi correspondante — elle survit à la suppression de
+        # l'activité (voir ai_agent_session.py) et porte sa propre copie du secret, justement pour
+        # absorber ce cas plutôt que de laisser un callback tardif se perdre en 403.
+        session = request.env['ai.agent.session'].sudo().search([
+            ('source_activity_id', '=', activity_id),
+            ('callback_secret', '=', secret),
+        ], limit=1)
+        if not session:
+            _logger.warning("AI Agent callback: rejected (activity_id=%s)", activity_id)
+            return self._json_response({'error': 'forbidden'}, status=403)
+
         try:
-            activity._ai_agent_handle_callback(status, session_name, conclusion=conclusion)
+            session._handle_late_callback(status, conclusion)
         except Exception:  # noqa: BLE001 - un souci ici ne doit jamais faire planter l'appelant
-            _logger.exception("AI Agent callback: error handling activity %s", activity_id)
+            _logger.exception("AI Agent callback: error handling late session %s", session.id)
             return self._json_response({'error': 'internal error'}, status=500)
 
         return self._json_response({'ok': True})

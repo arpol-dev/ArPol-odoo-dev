@@ -69,6 +69,43 @@ class MailActivity(models.Model):
                 activity._ai_agent_launch()
         return activities
 
+    def write(self, vals):
+        # Une session en cours (ai_status == 'running') travaille sur un contexte figé (dump JSON
+        # + chatter capturés au lancement, voir _ai_agent_build_prompt) : si Armand modifie
+        # note/summary pendant qu'elle tourne encore, elle ne le verrait jamais sans ça. On calcule
+        # la liste AVANT le write (ai_status/activity_category ne font pas partie de ce qui change
+        # ici) pour ne notifier que les activités concernées.
+        to_notify = self.env['mail.activity']
+        if 'note' in vals or 'summary' in vals:
+            to_notify = self.filtered(
+                lambda a: a.activity_category == 'ai_agent' and a.ai_status == 'running'
+            )
+        result = super().write(vals)
+        for activity in to_notify:
+            activity._ai_agent_notify_update()
+        return result
+
+    def unlink(self):
+        # Annulation manuelle (suppression de l'activité, trash icon ou JSON-RPC) pendant qu'une
+        # session tourne encore : sans ça, la session distante continue de tourner indéfiniment et
+        # le ai.agent.session lié reste bloqué en 'running' pour toujours — trou documenté dans
+        # ArPol-Mind Projets/application_claude.md. À faire AVANT le super().unlink() :
+        # ai_session_name/ai_agent_session_id ne sont plus lisibles une fois l'activité supprimée.
+        #
+        # Restreint à 'running' : une activité 'needs_attention' a déjà sa session tuée et son
+        # ai.agent.session correctement finalisé (voir _ai_agent_notify_needs_attention) — la
+        # laisser telle quelle si elle est supprimée plus tard évite d'écraser sa vraie conclusion.
+        #
+        # Garde de contexte 'ai_agent_closing' : _ai_agent_close() appelle action_feedback(), qui
+        # unlink l'activité en interne une fois la tâche terminée avec succès — sans cette garde, ce
+        # unlink "normal" serait traité à tort comme une annulation et écraserait le statut 'done'
+        # tout juste écrit en 'cancelled'.
+        if not self.env.context.get('ai_agent_closing'):
+            for activity in self:
+                if activity.activity_category == 'ai_agent' and activity.ai_status == 'running':
+                    activity._ai_agent_cancel()
+        return super().unlink()
+
     @api.depends('activity_type_id')
     def _compute_ai_model(self):
         for activity in self:
@@ -126,6 +163,9 @@ class MailActivity(models.Model):
         })
         self._ai_agent_sync_session_record(
             status='running', session_name=data.get('name'), remote_url=data.get('remoteControlUrl'),
+            # Copies non-relationnelles : doivent survivre à la suppression de cette activité (voir
+            # controllers/main.py, fallback de callback quand activity_id ne résout plus rien).
+            source_activity_id=self.id, callback_secret=secret,
         )
 
     def _ai_agent_report_error(self, message):
@@ -390,8 +430,12 @@ class MailActivity(models.Model):
         # Idem pour la trace de suivi : ai_agent_session_id doit encore être lisible sur self.
         self._ai_agent_sync_session_record(status='done', conclusion=conclusion)
         # action_feedback déplace les pièces jointes liées à l'activité sur le message final,
-        # puis supprime l'activité : ne plus rien lire sur self après cet appel.
-        self.sudo().action_feedback(feedback=conclusion, attachment_ids=attachment_ids)
+        # puis supprime l'activité : ne plus rien lire sur self après cet appel. Contexte
+        # 'ai_agent_closing' : voir unlink() — évite que ce unlink interne soit traité à tort comme
+        # une annulation manuelle.
+        self.sudo().with_context(ai_agent_closing=True).action_feedback(
+            feedback=conclusion, attachment_ids=attachment_ids,
+        )
 
     def _ai_agent_kill_session(self):
         user = self.user_id
@@ -423,3 +467,44 @@ class MailActivity(models.Model):
             "<p>%s</p>"
         ) % (self.summary or self.activity_type_id.name, last_message)
         record.message_post(body=body)
+
+    # -- Annulation / modification pendant que la session tourne encore -------
+
+    def _ai_agent_cancel(self):
+        """Activité IA supprimée manuellement (pas via action_feedback/_ai_agent_close) pendant que
+        la session tourne encore ou attend une réponse : tuer la session côté serveur et clore la
+        trace de suivi en 'cancelled' plutôt que de la laisser orpheline pour toujours."""
+        self.ensure_one()
+        self._ai_agent_kill_session()
+        self._ai_agent_sync_session_record(
+            status='cancelled', conclusion=_("Activity cancelled from Odoo before completion."),
+        )
+
+    def _ai_agent_notify_update(self):
+        """Best-effort : transmet la modification (note/summary) à la session en cours via le
+        webhook, pour qu'elle ne travaille pas sur un contexte figé (voir _ai_agent_build_prompt).
+        N'interrompt jamais l'agent — le texte est injecté dans son terminal et lu à son prochain
+        tour (voir ArPol-Mind Projets/application_claude.md, évolution 2026-09-10)."""
+        self.ensure_one()
+        user = self.user_id
+        if not self.ai_session_name or not user.claude_webhook_url:
+            return
+        note = html2plaintext(self.note) if self.note else ''
+        text = (
+            "[Update from Armand while you were working — the Odoo activity that triggered this "
+            "session was just edited]\n"
+            f"Summary: {self.summary or ''}\n"
+            f"Note: {note}"
+        )
+        try:
+            response = requests.post(
+                f'{user.claude_webhook_url.rstrip("/")}/api/webhook/sessions/{self.ai_session_name}/message',
+                json={'text': text},
+                headers={'X-Webhook-Token': user.claude_webhook_token},
+                timeout=15,
+            )
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            _logger.warning(
+                "AI Agent: could not push activity update to session %s: %s", self.ai_session_name, exc,
+            )

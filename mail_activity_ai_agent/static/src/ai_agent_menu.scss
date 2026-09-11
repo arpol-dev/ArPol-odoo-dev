@@ -16,6 +16,9 @@
     &.status-done {
         color: var(--bs-success);
     }
+    &.status-cancelled {
+        color: var(--bs-secondary);
+    }
     &.status-error {
         color: var(--bs-danger);
     }

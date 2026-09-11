@@ -36,6 +36,7 @@ export class AiAgentMenu extends Component {
             running: "En cours",
             needs_attention: "Attend votre réponse",
             done: "Terminée",
+            cancelled: "Annulée",
             error: "Erreur",
         }[status] ?? status;
     }
