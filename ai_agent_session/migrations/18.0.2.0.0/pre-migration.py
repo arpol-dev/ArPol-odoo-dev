@@ -12,13 +12,22 @@ def migrate(cr, version):
     # Sessions encore en cours liées à une activité : leur callback (activity_id=...) n'aura plus
     # de route. Les marquer annulées plutôt que de les laisser 'running' pour toujours (la
     # session distante, elle, doit être arrêtée à la main : pas d'appel réseau dans une migration).
+    # Le schéma installé dépend de la version 1.x d'origine : source_activity_id n'existe que
+    # depuis la gestion de l'annulation, activity_id depuis le départ.
     cr.execute("""
-        UPDATE ai_agent_session
-           SET status = 'cancelled',
-               conclusion = 'Cancelled: activity-based AI Agent sessions were removed.'
-         WHERE status IN ('running', 'needs_attention')
-           AND source_activity_id IS NOT NULL
+        SELECT column_name FROM information_schema.columns
+         WHERE table_name = 'ai_agent_session'
+           AND column_name IN ('source_activity_id', 'activity_id')
     """)
+    linked = ' OR '.join(f'{name} IS NOT NULL' for (name,) in cr.fetchall())
+    if linked:
+        cr.execute(f"""
+            UPDATE ai_agent_session
+               SET status = 'cancelled',
+                   conclusion = 'Cancelled: activity-based AI Agent sessions were removed.'
+             WHERE status IN ('running', 'needs_attention')
+               AND ({linked})
+        """)
     cr.execute("""
         DELETE FROM mail_activity
          WHERE activity_type_id IN (SELECT id FROM mail_activity_type WHERE category = 'ai_agent')
