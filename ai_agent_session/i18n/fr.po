@@ -1,0 +1,494 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* ai_agent_session
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0-20260926\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-04 13:22+0000\n"
+"PO-Revision-Date: 2026-10-04 13:22+0000\n"
+"Last-Translator: \n"
+"Language-Team: French\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "%(user)s has no AI Agent webhook configured (Preferences > AI Agent)."
+msgstr "%(user)s n'a aucun webhook d'agent IA configuré (Préférences > Agent IA)."
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_ai_agent
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_simple_modif_ai_agent
+msgid "/home/you/some-directory"
+msgstr "/home/vous/mon-dossier"
+
+#. module: ai_agent_session
+#. odoo-javascript
+#: code:addons/ai_agent_session/static/src/chatter_ai_agent.xml:0
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_ai_agent
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_simple_modif_ai_agent
+msgid "AI Agent"
+msgstr "Agent IA"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_user_id
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_cron__ai_agent_user_id
+msgid "AI Agent Of"
+msgstr "Agent IA de"
+
+#. module: ai_agent_session
+#: model:ir.model,name:ai_agent_session.model_ai_agent_prompt_mixin
+msgid "AI Agent Prompt Builder"
+msgstr "Constructeur de prompt d'agent IA"
+
+#. module: ai_agent_session
+#: model:ir.actions.act_window,name:ai_agent_session.ai_agent_session_wizard_action
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
+msgid "AI Agent Session"
+msgstr "Session d'agent IA"
+
+#. module: ai_agent_session
+#: model:ir.model,name:ai_agent_session.model_ai_agent_session
+msgid "AI Agent Session (notification tracking)"
+msgstr "Session d'agent IA (suivi des notifications)"
+
+#. module: ai_agent_session
+#. odoo-javascript
+#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
+msgid "AI Agent Sessions"
+msgstr "Sessions d'agent IA"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_res_users__claude_webhook_token
+msgid "AI Agent Webhook Token"
+msgstr "Jeton webhook de l'agent IA"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_res_users__claude_webhook_url
+msgid "AI Agent Webhook URL"
+msgstr "URL webhook de l'agent IA"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_res_users__claude_webhook_cwd
+msgid "AI Agent Working Directory"
+msgstr "Dossier de travail de l'agent IA"
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session_wizard.py:0
+msgid "AI Agent session started. You will be notified here when it finishes."
+msgstr "Session d'agent IA démarrée. Vous serez notifié ici lorsqu'elle sera terminée."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__ai_model
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_model
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_cron__ai_agent_model
+msgid "AI Model"
+msgstr "Modèle d'IA"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__acceptedits
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__acceptedits
+msgid "Accept edits automatically (recommended)"
+msgstr "Accepter les modifications automatiquement (recommandé)"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_request
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_cron__ai_agent_request
+msgid "Agent Request"
+msgstr "Demande à l'agent"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__default
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__default
+msgid "Ask for everything"
+msgstr "Tout demander"
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.view_server_action_form_ai_agent
+msgid "Ask the AI agent to..."
+msgstr "Demandez à l'agent IA de..."
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__auto
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__auto
+msgid "Auto — the model decides what needs confirmation"
+msgstr "Auto — le modèle décide de ce qui nécessite une confirmation"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_res_users__claude_webhook_url
+msgid "Base URL of your personal Claude Code webhook server (e.g. https://iassistant.arpol.fr). Leave empty to disable AI Agent sessions for your account."
+msgstr "URL de base de votre serveur webhook Claude Code personnel (ex. https://iassistant.arpol.fr). Laissez vide pour désactiver les sessions d'agent IA pour votre compte."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__callback_secret
+msgid "Callback Secret"
+msgstr "Secret de rappel"
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
+msgid "Cancel"
+msgstr "Annuler"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session__status__cancelled
+msgid "Cancelled"
+msgstr "Annulée"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__session_name
+msgid "Claude Session"
+msgstr "Session Claude"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__conclusion
+msgid "Conclusion"
+msgstr "Conclusion"
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_simple_modif_ai_agent
+msgid ""
+"Connect the \"AI Agent\" button of the chatter (and the \"Launch AI Agent\n"
+"                        Session\" server action) to your own Claude Code webhook server. Launching\n"
+"                        a session on any record will call this webhook to start an agent for you."
+msgstr "Connectez le bouton « Agent IA » du chatter (et l'action serveur « Lancer une session d'agent IA ») à votre propre serveur webhook Claude Code. Lancer une session sur un enregistrement appellera ce webhook pour démarrer un agent à votre place."
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "Could not reach the AI Agent webhook: %s"
+msgstr "Impossible de joindre le webhook de l'agent IA : %s"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__create_uid
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__create_uid
+msgid "Created by"
+msgstr "Créé par"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__create_date
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__create_date
+msgid "Created on"
+msgstr "Créé le"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_res_users__claude_webhook_token
+msgid "Dedicated webhook token for your server (distinct from any personal app token). Find it in ~/.claude-console/config.json on your server."
+msgstr "Jeton webhook dédié à votre serveur (distinct de tout jeton d'application personnel). Vous le trouverez dans ~/.claude-console/config.json sur votre serveur."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_res_users__claude_webhook_cwd
+msgid "Directory the agent opens when a session starts (must be inside the directories allowed by your webhook server's configuration). The agent reads and writes files relative to this directory."
+msgstr "Dossier que l'agent ouvre au démarrage d'une session (il doit se trouver dans les dossiers autorisés par la configuration de votre serveur webhook). L'agent lit et écrit des fichiers relativement à ce dossier."
+
+#. module: ai_agent_session
+#. odoo-javascript
+#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
+msgid "Dismiss"
+msgstr "Masquer"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__display_name
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__display_name
+msgid "Display Name"
+msgstr "Nom affiché"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session__status__done
+msgid "Done"
+msgstr "Terminée"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session__status__error
+msgid "Error"
+msgstr "Erreur"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_model__fable
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__fable
+msgid "Fable — newest, less proven yet"
+msgstr "Fable — le plus récent, encore peu éprouvé"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_model__haiku
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__haiku
+msgid "Haiku — fastest & cheapest"
+msgstr "Haiku — le plus rapide et le moins cher"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__ai_permission_mode
+#: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__ai_agent_permission_mode
+#: model:ir.model.fields,help:ai_agent_session.field_ir_cron__ai_agent_permission_mode
+msgid ""
+"How much the agent can do without asking you first:\n"
+"• Auto — a classifier approves routine actions and only blocks risky ones, so the agent can run unattended without the blanket risk of 'No confirmation at all'.\n"
+"• Accept edits automatically — recommended. File edits run without confirmation, but shell commands and other sensitive actions still ask (you can step in via the remote session if needed).\n"
+"• Ask for everything — the agent pauses for your confirmation before each sensitive action. Safer but the session will need you to connect often.\n"
+"• Plan only — the agent reads and proposes a plan but makes no change at all.\n"
+"• No confirmation at all — fastest but the agent can run shell commands and edit files with zero oversight. Use only for directories/tasks you fully trust."
+msgstr ""
+"Ce que l'agent peut faire sans vous demander au préalable :\n"
+"• Auto — un classificateur approuve les actions courantes et ne bloque que celles qui sont risquées : l'agent peut tourner sans surveillance sans le risque d'« Aucune confirmation ».\n"
+"• Accepter les modifications automatiquement — recommandé. Les modifications de fichiers s'exécutent sans confirmation, mais les commandes shell et autres actions sensibles demandent toujours confirmation (vous pouvez intervenir via la session distante si besoin).\n"
+"• Tout demander — l'agent attend votre confirmation avant chaque action sensible. Plus sûr, mais vous devrez vous connecter souvent.\n"
+"• Plan uniquement — l'agent lit et propose un plan, sans rien modifier.\n"
+"• Aucune confirmation — le plus rapide, mais l'agent peut exécuter des commandes shell et modifier des fichiers sans aucun contrôle. À réserver aux dossiers et tâches de toute confiance."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__id
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__id
+msgid "ID"
+msgstr "ID"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__is_dismissed
+msgid "Is Dismissed"
+msgstr "Masquée"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__write_uid
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__write_uid
+msgid "Last Updated by"
+msgstr "Dernière mise à jour par"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__write_date
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__write_date
+msgid "Last Updated on"
+msgstr "Dernière mise à jour le"
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
+msgid "Launch"
+msgstr "Lancer"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__state__ai_agent
+msgid "Launch AI Agent Session"
+msgstr "Lancer une session d'agent IA"
+
+#. module: ai_agent_session
+#: model:ir.model,name:ai_agent_session.model_ai_agent_session_wizard
+msgid "Launch an AI Agent session from the chatter"
+msgstr "Lancer une session d'agent IA depuis le chatter"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__ai_agent_request
+#: model:ir.model.fields,help:ai_agent_session.field_ir_cron__ai_agent_request
+msgid "Main task sent to the agent. It also receives the full data of the record the action runs on, and its chatter history."
+msgstr "Tâche principale envoyée à l'agent. Il reçoit aussi toutes les données de l'enregistrement sur lequel l'action s'exécute, ainsi que son historique de chatter."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__name
+msgid "Name"
+msgstr "Nom"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session__status__needs_attention
+msgid "Needs your attention"
+msgstr "Requiert votre attention"
+
+#. module: ai_agent_session
+#. odoo-javascript
+#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
+msgid "No AI agent session yet."
+msgstr "Aucune session d'agent IA pour le moment."
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__bypasspermissions
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__bypasspermissions
+msgid "No confirmation at all (risky)"
+msgstr "Aucune confirmation (risqué)"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__summary
+msgid "Optional. Names the session in Claude Code and in the notifications menu."
+msgstr "Facultatif. Nomme la session dans Claude Code et dans le menu des notifications."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__ai_agent_title
+#: model:ir.model.fields,help:ai_agent_session.field_ir_cron__ai_agent_title
+msgid "Optional. Names the session; defaults to the first line of the request."
+msgstr "Facultatif. Nomme la session ; par défaut, la première ligne de la demande."
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_model__opus
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__opus
+msgid "Opus — deepest reasoning"
+msgstr "Opus — raisonnement le plus poussé"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__ai_permission_mode
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_permission_mode
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_cron__ai_agent_permission_mode
+msgid "Permission Mode"
+msgstr "Mode de permissions"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__plan
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__plan
+msgid "Plan only, no changes"
+msgstr "Plan uniquement, aucune modification"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__remote_url
+msgid "Remote Session URL"
+msgstr "URL de la session distante"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__request
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
+msgid "Request"
+msgstr "Demande"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__res_id
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__res_id
+msgid "Res"
+msgstr "ID de l'enregistrement"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__res_model
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__res_model
+msgid "Res Model"
+msgstr "Modèle de l'enregistrement"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__res_name
+msgid "Res Name"
+msgstr "Nom de l'enregistrement"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session__status__running
+msgid "Running"
+msgstr "En cours"
+
+#. module: ai_agent_session
+#: model:ir.model,name:ai_agent_session.model_ir_actions_server
+msgid "Server Action"
+msgstr "Action serveur"
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_model__
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__
+msgid "Server default"
+msgstr "Défaut du serveur"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_title
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_cron__ai_agent_title
+msgid "Session Title"
+msgstr "Titre de la session"
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "Session ended."
+msgstr "Session terminée."
+
+#. module: ai_agent_session
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_model__sonnet
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__sonnet
+msgid "Sonnet — balanced (recommended)"
+msgstr "Sonnet — équilibré (recommandé)"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__status
+msgid "Status"
+msgstr "Statut"
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "The AI Agent finished session <b>%s</b>:"
+msgstr "L'agent IA a terminé la session <b>%s</b> :"
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "The AI Agent stopped on session <b>%s</b>, waiting for your input:"
+msgstr "L'agent IA s'est arrêté sur la session <b>%s</b>, en attente de votre réponse :"
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
+msgid ""
+"The request below is the main task sent to the agent. It also receives the\n"
+"                    full record data and the chatter history, and can freely explore the database\n"
+"                    if it has its own access. The result will be posted as an internal note on\n"
+"                    this record."
+msgstr "La demande ci-dessous est la tâche principale envoyée à l'agent. Il reçoit aussi toutes les données de l'enregistrement et l'historique du chatter, et peut explorer librement la base de données s'il dispose de ses propres accès. Le résultat sera publié en note interne sur cet enregistrement."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__summary
+msgid "Title"
+msgstr "Titre"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__state
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_cron__state
+msgid "Type"
+msgstr "Type"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__state
+#: model:ir.model.fields,help:ai_agent_session.field_ir_cron__state
+msgid ""
+"Type of server action. The following values are available:\n"
+"- 'Update a Record': update the values of a record\n"
+"- 'Create Activity': create an activity (Discuss)\n"
+"- 'Send Email': post a message, a note or send an email (Discuss)\n"
+"- 'Send SMS': send SMS, log them on documents (SMS)- 'Add/Remove Followers': add or remove followers to a record (Discuss)\n"
+"- 'Create Record': create a new record with new values\n"
+"- 'Execute Code': a block of Python code that will be executed\n"
+"- 'Send Webhook Notification': send a POST request to an external system, also known as a Webhook\n"
+"- 'Execute Existing Actions': define an action that triggers several other server actions\n"
+msgstr ""
+
+#. module: ai_agent_session
+#: model:ir.model,name:ai_agent_session.model_res_users
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__user_id
+msgid "User"
+msgstr "Utilisateur"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__ai_agent_user_id
+#: model:ir.model.fields,help:ai_agent_session.field_ir_cron__ai_agent_user_id
+msgid "User whose AI Agent webhook (Preferences > AI Agent) runs the session. Needed because automated actions run as OdooBot, which has no webhook."
+msgstr "Utilisateur dont le webhook d'agent IA (Préférences > Agent IA) exécute la session. Nécessaire car les actions automatisées s'exécutent en tant qu'OdooBot, qui n'a pas de webhook."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__ai_model
+#: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__ai_agent_model
+#: model:ir.model.fields,help:ai_agent_session.field_ir_cron__ai_agent_model
+msgid ""
+"Which Claude model handles this task:\n"
+"• Server default — whatever the webhook server is configured to use.\n"
+"• Haiku — fastest and cheapest. Best for simple, well-defined tasks (classification, extraction, short factual answers).\n"
+"• Sonnet — balanced speed/quality. Recommended default for most tasks (analysis, everyday coding, drafting).\n"
+"• Opus — most capable for complex or ambiguous reasoning, deep analysis. Slower and more expensive: reserve for tasks that actually need it.\n"
+"• Fable — newest model family member. Use based on your own testing; its specific strengths are less established yet than Sonnet/Opus/Haiku."
+msgstr ""
+"Quel modèle Claude traite cette tâche :\n"
+"• Défaut du serveur — celui que le serveur webhook est configuré pour utiliser.\n"
+"• Haiku — le plus rapide et le moins cher. Idéal pour les tâches simples et bien définies (classification, extraction, réponses factuelles courtes).\n"
+"• Sonnet — équilibre vitesse/qualité. Choix par défaut recommandé pour la plupart des tâches (analyse, code courant, rédaction).\n"
+"• Opus — le plus capable pour les raisonnements complexes ou ambigus et les analyses approfondies. Plus lent et plus cher : à réserver aux tâches qui en ont vraiment besoin.\n"
+"• Fable — dernier membre de la famille de modèles. À utiliser selon vos propres essais ; ses points forts sont moins établis que ceux de Sonnet/Opus/Haiku."
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
+msgid "e.g. Analyse this ticket"
+msgstr "ex. Analyser ce ticket"
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_ai_agent
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_simple_modif_ai_agent
+msgid "https://your-server.example.com"
+msgstr "https://votre-serveur.exemple.com"

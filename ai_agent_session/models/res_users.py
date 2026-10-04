@@ -11,7 +11,7 @@ class ResUsers(models.Model):
         string="AI Agent Webhook URL",
         help="Base URL of your personal Claude Code webhook server "
              "(e.g. https://iassistant.arpol.fr). Leave empty to disable AI Agent "
-             "activities for your account.",
+             "sessions for your account.",
     )
     claude_webhook_token = fields.Char(
         string="AI Agent Webhook Token",
