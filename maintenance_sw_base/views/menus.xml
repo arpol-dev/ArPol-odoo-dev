@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_sw_config" name="Software"
+              parent="maintenance.menu_maintenance_configuration" sequence="50"/>
+    <menuitem id="menu_software_product" action="software_product_action"
+              parent="menu_sw_config" sequence="10"/>
+    <menuitem id="menu_software_version" action="software_version_action"
+              parent="menu_sw_config" sequence="20"/>
+    <menuitem id="menu_software_deployment_method" action="software_deployment_method_action"
+              parent="menu_sw_config" sequence="30"/>
+</odoo>

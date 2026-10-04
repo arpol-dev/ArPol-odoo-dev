@@ -1,0 +1,426 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* maintenance_sw_base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0-20260926\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-04 20:36+0000\n"
+"PO-Revision-Date: 2026-10-04 20:36+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: maintenance_sw_base
+#: model:ir.model.constraint,message:maintenance_sw_base.constraint_software_deployment_method_name_uniq
+msgid "A deployment method with this name already exists."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.constraint,message:maintenance_sw_base.constraint_software_product_name_uniq
+msgid "A software product with this name already exists."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__active
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__active
+msgid "Active"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_deployment_method_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_search
+msgid "Archived"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__changelog_url
+msgid "Changelog URL"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__channel
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_search
+msgid "Channel"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__install_type__compose_stack
+msgid "Compose Stack"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__create_uid
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__create_uid
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__create_date
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__create_date
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__deployment_method_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+msgid "Deployment Method"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.actions.act_window,name:maintenance_sw_base.software_deployment_method_action
+#: model:ir.ui.menu,name:maintenance_sw_base.menu_software_deployment_method
+msgid "Deployment Methods"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__display_name
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__display_name
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__install_type__docker_container
+msgid "Docker Container"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__documentation_url
+msgid "Documentation URL"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__end_of_support_date
+msgid "End of Support"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_search
+msgid "End of Support Reached"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__version_note
+msgid "Free-form version, when it is not in the catalog."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__install_type__git_checkout
+msgid "Git Checkout"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_search
+msgid "Group By"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__equipment_kind__hardware
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+msgid "Hardware"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_software_deployment_method__update_procedure
+msgid "How to update software deployed this way, known pitfalls."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__id
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__id
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__id
+msgid "ID"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__install_path
+msgid "Install Path"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__install_type
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+msgid "Install Type"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__installation_count
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__installation_count
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__installation_count
+msgid "Installation Count"
+msgstr ""
+
+#. module: maintenance_sw_base
+#. odoo-python
+#: code:addons/maintenance_sw_base/models/software_product.py:0
+#: code:addons/maintenance_sw_base/models/software_version.py:0
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__installation_ids
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__installation_ids
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__installation_ids
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_form
+msgid "Installations"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__equipment_kind
+msgid "Kind"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__software_version__channel__lts
+msgid "LTS"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__write_uid
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__write_uid
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__write_date
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__write_date
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__is_latest
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_search
+msgid "Latest"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_software_version__is_latest
+msgid "Latest known version of the product. Only one version per product."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model,name:maintenance_sw_base.model_maintenance_equipment
+msgid "Maintenance Equipment"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__managed_by_provider
+msgid "Managed By Provider"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+msgid "Managed by Provider"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__install_type__manual
+msgid "Manual"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__name
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__name
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__name
+msgid "Name"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__note
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__note
+msgid "Note"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_form
+msgid "Notes"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__install_type__os
+msgid "Operating System"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_software_version__sequence
+msgid ""
+"Orders the versions of a product: the higher, the more recent. Version names"
+" do not sort reliably as text (9 comes after 12)."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__software_version__channel__other
+msgid "Other"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__install_type__package
+msgid "Package"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__product_id
+msgid "Product"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__release_date
+msgid "Release Date"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_form
+msgid "Release notes, upgrade warnings..."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__install_type__saas
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__software_version__channel__saas
+msgid "SaaS"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__sequence
+msgid "Sequence"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__software_product_id
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__equipment_kind__software
+#: model:ir.ui.menu,name:maintenance_sw_base.menu_sw_config
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_search
+msgid "Software"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model,name:maintenance_sw_base.model_software_deployment_method
+msgid "Software Deployment Method"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model,name:maintenance_sw_base.model_software_product
+msgid "Software Product"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.actions.act_window,name:maintenance_sw_base.software_product_action
+#: model:ir.ui.menu,name:maintenance_sw_base.menu_software_product
+msgid "Software Products"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model,name:maintenance_sw_base.model_software_version
+msgid "Software Version"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.actions.act_window,name:maintenance_sw_base.software_version_action
+#: model:ir.ui.menu,name:maintenance_sw_base.menu_software_version
+msgid "Software Versions"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__needs_attachment
+msgid ""
+"Software with no parent equipment whose deployment method is not managed by "
+"the provider: the server it runs on is missing."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__software_version__channel__stable
+msgid "Stable"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_software_deployment_method__managed_by_provider
+msgid ""
+"The provider runs and updates the software (SaaS): there is no server of "
+"ours to attach it to, and its updates are not ours to plan."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_form
+msgid ""
+"This software is attached to no equipment: set the server it runs on as\n"
+"                    parent, or a deployment method managed by the provider."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.constraint,message:maintenance_sw_base.constraint_software_version_product_name_uniq
+msgid "This version already exists for this software."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__needs_attachment
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+msgid "To Attach"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__update_procedure
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_deployment_method_view_form
+msgid "Update Procedure"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__vendor
+msgid "Vendor"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__software_version_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+msgid "Version"
+msgstr ""
+
+#. module: maintenance_sw_base
+#. odoo-python
+#: code:addons/maintenance_sw_base/models/maintenance_equipment.py:0
+msgid "Version %(version)s does not belong to %(product)s."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__version_note
+msgid "Version Note"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__version_ids
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_form
+msgid "Versions"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__website
+msgid "Website"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__install_path
+msgid "Where it is installed, e.g. /opt/apps/myc-deploy."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_deployment_method_view_form
+msgid "e.g. Cloudron"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_form
+msgid "e.g. Debian"
+msgstr ""
+
+#. module: maintenance_sw_base
+#. odoo-python
+#: code:addons/maintenance_sw_base/models/maintenance_equipment.py:0
+msgid "no software"
+msgstr ""

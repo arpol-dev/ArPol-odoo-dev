@@ -20,6 +20,12 @@ how it is updated.
     "depends": ["maintenance", "maintenance_equipment_hierarchy"],
     "data": [
         "security/ir.model.access.csv",
+        "data/software_deployment_method_data.xml",
+        "views/software_product_views.xml",
+        "views/software_version_views.xml",
+        "views/software_deployment_method_views.xml",
+        "views/maintenance_equipment_views.xml",
+        "views/menus.xml",
     ],
     "license": "AGPL-3",
     "installable": True,

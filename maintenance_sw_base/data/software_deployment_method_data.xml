@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="deployment_method_myc" model="software.deployment.method">
+        <field name="name">0k / myc (compose)</field>
+        <field name="update_procedure"><![CDATA[<p>Rebuild or pull the image, then <code>compose down &amp;&amp; compose --debug up</code> on the whole stack. Never run <code>compose up</code> on a single service in production: it can remove orphan containers.</p>]]></field>
+    </record>
+    <record id="deployment_method_cloudron" model="software.deployment.method">
+        <field name="name">Cloudron</field>
+        <field name="update_procedure"><![CDATA[<p>Updated from the Cloudron dashboard (or automatically, depending on the app settings). Check the app backup before a major update.</p>]]></field>
+    </record>
+    <record id="deployment_method_odoo_online" model="software.deployment.method">
+        <field name="name">Odoo Online</field>
+        <field name="managed_by_provider" eval="True"/>
+    </record>
+    <record id="deployment_method_odoo_sh" model="software.deployment.method">
+        <field name="name">Odoo.sh</field>
+        <field name="managed_by_provider" eval="True"/>
+    </record>
+    <record id="deployment_method_manual" model="software.deployment.method">
+        <field name="name">Manual</field>
+    </record>
+</odoo>

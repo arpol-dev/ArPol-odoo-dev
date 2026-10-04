@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="software_product_view_list" model="ir.ui.view">
+        <field name="name">software.product.list</field>
+        <field name="model">software.product</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="vendor"/>
+                <field name="installation_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="software_product_view_form" model="ir.ui.view">
+        <field name="name">software.product.form</field>
+        <field name="model">software.product</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_installations" type="object"
+                                class="oe_stat_button" icon="fa-server">
+                            <field name="installation_count" widget="statinfo" string="Installations"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Debian"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="vendor"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="website" widget="url"/>
+                            <field name="changelog_url" widget="url"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Versions" name="versions">
+                            <field name="version_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="channel"/>
+                                    <field name="release_date"/>
+                                    <field name="end_of_support_date"/>
+                                    <field name="is_latest"/>
+                                    <field name="sequence"/>
+                                    <field name="installation_count"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="software_product_view_search" model="ir.ui.view">
+        <field name="name">software.product.search</field>
+        <field name="model">software.product</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="vendor"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="software_product_action" model="ir.actions.act_window">
+        <field name="name">Software Products</field>
+        <field name="res_model">software.product</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

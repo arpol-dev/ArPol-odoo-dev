@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="software_version_view_list" model="ir.ui.view">
+        <field name="name">software.version.list</field>
+        <field name="model">software.version</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="product_id"/>
+                <field name="name"/>
+                <field name="channel"/>
+                <field name="release_date"/>
+                <field name="end_of_support_date"/>
+                <field name="is_latest"/>
+                <field name="installation_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="software_version_view_form" model="ir.ui.view">
+        <field name="name">software.version.form</field>
+        <field name="model">software.version</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_installations" type="object"
+                                class="oe_stat_button" icon="fa-server">
+                            <field name="installation_count" widget="statinfo" string="Installations"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="name"/>
+                            <field name="channel"/>
+                            <field name="is_latest"/>
+                        </group>
+                        <group>
+                            <field name="release_date"/>
+                            <field name="end_of_support_date"/>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Release notes, upgrade warnings..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="software_version_view_search" model="ir.ui.view">
+        <field name="name">software.version.search</field>
+        <field name="model">software.version</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="product_id"/>
+                <filter string="Latest" name="latest" domain="[('is_latest', '=', True)]"/>
+                <filter string="End of Support Reached" name="end_of_support"
+                        domain="[('end_of_support_date', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Software" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Channel" name="group_channel" context="{'group_by': 'channel'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="software_version_action" model="ir.actions.act_window">
+        <field name="name">Software Versions</field>
+        <field name="res_model">software.version</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_group_product': 1}</field>
+    </record>
+</odoo>
