@@ -3,17 +3,18 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 {
     'name': 'Mail Activity - AI Agent Session',
-    'version': '18.0.1.0.0',
-    'summary': 'Schedule an activity that dispatches a Claude Code agent session via webhook',
+    'version': '18.0.2.0.0',
+    'summary': 'Launch a Claude Code agent session from the chatter or a server action, via webhook',
     'description': """
-AI Agent Session activity type
-===============================
+AI Agent Session
+================
 
-Adds an "AI Agent Session" activity type to the chatter. When scheduled, it calls an
-external webhook (Claude Code running on a personal server, configured per user) with
-a prompt built from the record's data, its full chatter history and the activity
-description. The agent works in the background; Odoo is notified via callback when it
-needs the user's attention or when the task is complete.
+Adds an "AI Agent" button next to "Activities" in every chatter, and a "Launch AI Agent
+Session" server action type. Both call an external webhook (Claude Code running on a personal
+server, configured per user) with a prompt built from the record's data, its full chatter
+history and the request typed by the user. The agent works in the background; the conclusion
+(or its question) is posted as an internal note on the record, and a systray menu tracks the
+sessions.
 """,
     'author': 'Armand Polmard',
     'website': 'https://arpol.fr',
@@ -26,16 +27,16 @@ needs the user's attention or when the task is complete.
         'security/ir.model.access.csv',
         'security/security.xml',
         'views/res_users_views.xml',
-        'views/mail_activity_type_views.xml',
-        'views/mail_activity_views.xml',
-        'views/mail_activity_schedule_views.xml',
-        'data/mail_activity_type_data.xml',
+        'views/ai_agent_session_wizard_views.xml',
+        'views/ir_actions_server_views.xml',
     ],
     'assets': {
         'web.assets_backend': [
             'mail_activity_ai_agent/static/src/ai_agent_menu.js',
             'mail_activity_ai_agent/static/src/ai_agent_menu.xml',
             'mail_activity_ai_agent/static/src/ai_agent_menu.scss',
+            'mail_activity_ai_agent/static/src/chatter_ai_agent.js',
+            'mail_activity_ai_agent/static/src/chatter_ai_agent.xml',
         ],
     },
     'license': 'AGPL-3',

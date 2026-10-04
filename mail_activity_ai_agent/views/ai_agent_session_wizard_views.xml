@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ai_agent_session_wizard_view_form" model="ir.ui.view">
+        <field name="name">ai.agent.session.wizard.form</field>
+        <field name="model">ai.agent.session.wizard</field>
+        <field name="arch" type="xml">
+            <form string="AI Agent Session">
+                <field name="res_model" invisible="1"/>
+                <field name="res_id" invisible="1"/>
+                <div class="alert alert-info" role="alert">
+                    The request below is the main task sent to the agent. It also receives the
+                    full record data and the chatter history, and can freely explore the database
+                    if it has its own access. The result will be posted as an internal note on
+                    this record.
+                </div>
+                <group>
+                    <field name="summary" placeholder="e.g. Analyse this ticket"/>
+                    <field name="ai_model"/>
+                    <field name="ai_permission_mode"/>
+                </group>
+                <separator string="Request"/>
+                <field name="request" nolabel="1" placeholder="Ask the AI agent to..."/>
+                <footer>
+                    <button string="Launch" name="action_launch" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancel" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="ai_agent_session_wizard_action" model="ir.actions.act_window">
+        <field name="name">AI Agent Session</field>
+        <field name="res_model">ai.agent.session.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

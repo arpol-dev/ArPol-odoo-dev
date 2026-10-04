@@ -9,14 +9,14 @@ _logger = logging.getLogger(__name__)
 
 
 class ClaudeAgentController(http.Controller):
-    """Reçoit les callbacks du webhook Claude Code (claude-console) pour les sessions
-    déclenchées depuis une activité mail.activity. Authentifié par un secret aléatoire
-    généré par activité (transmis en query string lors du déclenchement), pas par une
-    session Odoo classique : l'appelant est un serveur externe, pas un navigateur."""
+    """Reçoit les callbacks du webhook Claude Code (claude-console) pour les sessions lancées
+    depuis le chatter ou une action serveur. Authentifié par un secret aléatoire généré par
+    session (transmis en query string lors du lancement), pas par une session Odoo classique :
+    l'appelant est un serveur externe, pas un navigateur."""
 
     @http.route('/claude_agent/callback', type='http', auth='public', methods=['POST'], csrf=False)
     def callback(self, **kwargs):
-        activity_id = request.httprequest.args.get('activity_id', type=int)
+        session_id = request.httprequest.args.get('session_id', type=int)
         secret = request.httprequest.args.get('secret')
 
         try:
@@ -24,40 +24,18 @@ class ClaudeAgentController(http.Controller):
         except ValueError:
             return self._json_response({'error': 'invalid JSON body'}, status=400)
 
-        if not activity_id or not secret:
-            return self._json_response({'error': 'missing activity_id/secret'}, status=400)
+        if not session_id or not secret:
+            return self._json_response({'error': 'missing session_id/secret'}, status=400)
 
-        status = payload.get('status')
-        session_name = payload.get('name')
-        conclusion = payload.get('conclusion')
-
-        activity = request.env['mail.activity'].sudo().browse(activity_id)
-        if activity.exists() and activity.ai_callback_secret and activity.ai_callback_secret == secret:
-            try:
-                activity._ai_agent_handle_callback(status, session_name, conclusion=conclusion)
-            except Exception:  # noqa: BLE001 - un souci ici ne doit jamais faire planter l'appelant
-                _logger.exception("AI Agent callback: error handling activity %s", activity_id)
-                return self._json_response({'error': 'internal error'}, status=500)
-            return self._json_response({'ok': True})
-
-        # L'activité n'existe plus (annulée entretemps, ou disparue hors flux normal) : avant de
-        # rejeter, chercher la trace de suivi correspondante — elle survit à la suppression de
-        # l'activité (voir ai_agent_session.py) et porte sa propre copie du secret, justement pour
-        # absorber ce cas plutôt que de laisser un callback tardif se perdre en 403.
-        session = request.env['ai.agent.session'].sudo().search([
-            ('source_activity_id', '=', activity_id),
-            ('callback_secret', '=', secret),
-        ], limit=1)
-        if not session:
-            _logger.warning("AI Agent callback: rejected (activity_id=%s)", activity_id)
+        session = request.env['ai.agent.session'].sudo().browse(session_id)
+        if not (session.exists() and session.callback_secret and session.callback_secret == secret):
+            _logger.warning("AI Agent callback: rejected (session_id=%s)", session_id)
             return self._json_response({'error': 'forbidden'}, status=403)
-
         try:
-            session._handle_late_callback(status, conclusion)
+            session._handle_callback(payload.get('status'), conclusion=payload.get('conclusion'))
         except Exception:  # noqa: BLE001 - un souci ici ne doit jamais faire planter l'appelant
-            _logger.exception("AI Agent callback: error handling late session %s", session.id)
+            _logger.exception("AI Agent callback: error handling session %s", session_id)
             return self._json_response({'error': 'internal error'}, status=500)
-
         return self._json_response({'ok': True})
 
     def _json_response(self, data, status=200):

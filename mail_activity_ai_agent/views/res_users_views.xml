@@ -10,9 +10,9 @@
             <xpath expr="//page[@name='page_devices']" position="after">
                 <page string="AI Agent" name="page_ai_agent">
                     <div class="text-muted mb-3">
-                        Connect an "AI Agent Session" activity to your own Claude Code webhook
-                        server. Scheduling that activity type on any record's chatter will call
-                        this webhook to start an agent session for you.
+                        Connect the "AI Agent" button of the chatter (and the "Launch AI Agent
+                        Session" server action) to your own Claude Code webhook server. Launching
+                        a session on any record will call this webhook to start an agent for you.
                     </div>
                     <group>
                         <field name="claude_webhook_url" readonly="0"

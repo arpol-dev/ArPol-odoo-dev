@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# Constantes partagées entre mail.activity et le wizard mail.activity.schedule (le "Schedule
-# Activity" ouvert depuis le chatter passe par ce wizard en Odoo 18, pas directement par le
-# formulaire mail.activity — les deux ont donc besoin des mêmes champs/aides).
+# Constantes partagées entre le wizard du chatter (ai.agent.session.wizard) et l'action serveur
+# (ir.actions.server) : mêmes options, mêmes aides.
+AI_MODEL_DEFAULT = 'sonnet'
 AI_MODEL_SELECTION = [
     ('', "Server default"),
     ('haiku', "Haiku — fastest & cheapest"),
@@ -23,6 +23,7 @@ AI_MODEL_HELP = (
 )
 
 AI_PERMISSION_MODE_SELECTION = [
+    ('auto', "Auto — the model decides what needs confirmation"),
     ('acceptEdits', "Accept edits automatically (recommended)"),
     ('default', "Ask for everything"),
     ('plan', "Plan only, no changes"),
@@ -30,6 +31,8 @@ AI_PERMISSION_MODE_SELECTION = [
 ]
 AI_PERMISSION_MODE_HELP = (
     "How much the agent can do without asking you first:\n"
+    "• Auto — a classifier approves routine actions and only blocks risky ones, so the "
+    "agent can run unattended without the blanket risk of 'No confirmation at all'.\n"
     "• Accept edits automatically — recommended. File edits run without confirmation, "
     "but shell commands and other sensitive actions still ask (you can step in via the "
     "remote session if needed).\n"

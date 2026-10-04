@@ -44,7 +44,7 @@ export class AiAgentMenu extends Component {
     onClickSession(session) {
         this.dropdown.close();
         // Une session "needs_attention" est déjà terminée côté serveur (tour unique, voir
-        // mail_activity.py::_ai_agent_notify_needs_attention) : plus rien à rejoindre en live,
+        // ai_agent_session.py::_handle_callback) : plus rien à rejoindre en live,
         // seul "running" a encore un remote_url valide.
         if (session.status === "running" && session.remote_url) {
             window.open(session.remote_url, "_blank");

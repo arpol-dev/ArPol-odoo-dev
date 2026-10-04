@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_server_action_form_ai_agent" model="ir.ui.view">
+        <field name="name">ir.actions.server.form.ai.agent</field>
+        <field name="model">ir.actions.server</field>
+        <field name="inherit_id" ref="base.view_server_action_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='action_content']" position="inside">
+                <field name="ai_agent_user_id" invisible="state != 'ai_agent'"
+                       required="state == 'ai_agent'" options="{'no_create': True}"/>
+                <field name="ai_agent_title" invisible="state != 'ai_agent'"/>
+                <field name="ai_agent_model" invisible="state != 'ai_agent'"/>
+                <field name="ai_agent_permission_mode" invisible="state != 'ai_agent'"
+                       required="state == 'ai_agent'"/>
+                <field name="ai_agent_request" invisible="state != 'ai_agent'"
+                       required="state == 'ai_agent'" colspan="2"
+                       placeholder="Ask the AI agent to..."/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

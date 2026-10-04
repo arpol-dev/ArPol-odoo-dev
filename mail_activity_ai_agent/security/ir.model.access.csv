@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_ai_agent_session_user,ai.agent.session.user,model_ai_agent_session,base.group_user,1,1,1,0
+access_ai_agent_session_wizard_user,ai.agent.session.wizard.user,model_ai_agent_session_wizard,base.group_user,1,1,1,1
