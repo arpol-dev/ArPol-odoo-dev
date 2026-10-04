@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_software_product_user,software.product.user,model_software_product,base.group_user,1,0,0,0
+access_software_product_manager,software.product.manager,model_software_product,maintenance.group_equipment_manager,1,1,1,1
+access_software_version_user,software.version.user,model_software_version,base.group_user,1,0,0,0
+access_software_version_manager,software.version.manager,model_software_version,maintenance.group_equipment_manager,1,1,1,1
+access_software_deployment_method_user,software.deployment.method.user,model_software_deployment_method,base.group_user,1,0,0,0
+access_software_deployment_method_manager,software.deployment.method.manager,model_software_deployment_method,maintenance.group_equipment_manager,1,1,1,1
