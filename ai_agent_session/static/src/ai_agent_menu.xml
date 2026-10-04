@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
 
-<t t-name="mail_activity_ai_agent.AiAgentMenu">
+<t t-name="ai_agent_session.AiAgentMenu">
     <Dropdown position="'bottom-end'" state="dropdown">
         <button class="o-mail-ai-agent-button" title="AI Agent Sessions">
             <i class="fa fa-lg fa-android" role="img" aria-label="AI Agent Sessions"></i>

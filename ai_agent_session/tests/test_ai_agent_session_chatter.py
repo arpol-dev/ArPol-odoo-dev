@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from odoo.exceptions import UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
 
-SESSION_REQUESTS = 'odoo.addons.mail_activity_ai_agent.models.ai_agent_session.requests'
+SESSION_REQUESTS = 'odoo.addons.ai_agent_session.models.ai_agent_session.requests'
 
 
 def _response(data):

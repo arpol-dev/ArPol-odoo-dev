@@ -8,7 +8,7 @@ import { useService } from "@web/core/utils/hooks";
 export class AiAgentMenu extends Component {
     static components = { Dropdown };
     static props = [];
-    static template = "mail_activity_ai_agent.AiAgentMenu";
+    static template = "ai_agent_session.AiAgentMenu";
 
     setup() {
         this.orm = useService("orm");
@@ -22,7 +22,7 @@ export class AiAgentMenu extends Component {
         // ai_agent_session.py::_notify_systray), pas seulement à l'ouverture du menu. Le canal
         // bus du partenaire courant est déjà rejoint par défaut par le webclient (mail) — pas
         // besoin de l'ajouter nous-mêmes.
-        this.busService.subscribe("mail_activity_ai_agent/session_update", () => this.fetchData());
+        this.busService.subscribe("ai_agent_session/session_update", () => this.fetchData());
     }
 
     async fetchData() {
@@ -71,4 +71,4 @@ export class AiAgentMenu extends Component {
 
 registry
     .category("systray")
-    .add("mail_activity_ai_agent.AiAgentMenu", { Component: AiAgentMenu }, { sequence: 21 });
+    .add("ai_agent_session.AiAgentMenu", { Component: AiAgentMenu }, { sequence: 21 });

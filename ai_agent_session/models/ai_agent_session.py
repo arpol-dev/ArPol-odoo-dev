@@ -88,7 +88,7 @@ class AiAgentSession(models.Model):
         """Signale au(x) navigateur(s) ouvert(s) de l'utilisateur qu'il faut rafraîchir le menu
         (voir static/src/ai_agent_menu.js) — évite d'attendre un rechargement de page."""
         for user in self.user_id:
-            self.env['bus.bus']._sendone(user.partner_id, 'mail_activity_ai_agent/session_update', {})
+            self.env['bus.bus']._sendone(user.partner_id, 'ai_agent_session/session_update', {})
 
     def _kill_remote_session(self):
         self.ensure_one()

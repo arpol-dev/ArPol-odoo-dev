@@ -1,8 +1,8 @@
-# mail_activity_ai_agent/__manifest__.py
+# ai_agent_session/__manifest__.py
 # @author: Armand Polmard (contact@arpol.fr)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 {
-    'name': 'Mail Activity - AI Agent Session',
+    'name': 'AI Agent Session',
     'version': '18.0.2.0.0',
     'summary': 'Launch a Claude Code agent session from the chatter or a server action, via webhook',
     'description': """
@@ -32,11 +32,11 @@ sessions.
     ],
     'assets': {
         'web.assets_backend': [
-            'mail_activity_ai_agent/static/src/ai_agent_menu.js',
-            'mail_activity_ai_agent/static/src/ai_agent_menu.xml',
-            'mail_activity_ai_agent/static/src/ai_agent_menu.scss',
-            'mail_activity_ai_agent/static/src/chatter_ai_agent.js',
-            'mail_activity_ai_agent/static/src/chatter_ai_agent.xml',
+            'ai_agent_session/static/src/ai_agent_menu.js',
+            'ai_agent_session/static/src/ai_agent_menu.xml',
+            'ai_agent_session/static/src/ai_agent_menu.scss',
+            'ai_agent_session/static/src/chatter_ai_agent.js',
+            'ai_agent_session/static/src/chatter_ai_agent.xml',
         ],
     },
     'license': 'AGPL-3',

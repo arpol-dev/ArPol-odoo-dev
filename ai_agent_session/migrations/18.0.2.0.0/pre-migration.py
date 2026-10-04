@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Le module s'appelait mail_activity_ai_agent jusqu'à la 1.x ; le renommage en base (ir_module_module,
+# ir_model_data...) est fait avant la mise à jour, d'où les deux noms acceptés ci-dessous.
 # La 2.0.0 supprime le lancement via mail.activity (type d'activité "AI Agent Session", champs
 # ai_* sur mail.activity / mail.activity.type, wizard d'activité) au profit du bouton du chatter.
 # À faire AVANT le chargement : mail_activity.activity_type_id est en ondelete='restrict', donc le
@@ -24,5 +26,6 @@ def migrate(cr, version):
     cr.execute("DELETE FROM mail_activity_type WHERE category = 'ai_agent'")
     cr.execute("""
         DELETE FROM ir_model_data
-         WHERE module = 'mail_activity_ai_agent' AND model = 'mail.activity.type'
+         WHERE module IN ('mail_activity_ai_agent', 'ai_agent_session')
+           AND model = 'mail.activity.type'
     """)

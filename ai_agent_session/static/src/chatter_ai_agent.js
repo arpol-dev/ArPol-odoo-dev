@@ -12,7 +12,7 @@ patch(Chatter.prototype, {
     async launchAiAgent() {
         this.closeSearch();
         const launch = (thread) =>
-            this.aiAgentAction.doAction("mail_activity_ai_agent.ai_agent_session_wizard_action", {
+            this.aiAgentAction.doAction("ai_agent_session.ai_agent_session_wizard_action", {
                 additionalContext: { default_res_model: thread.model, default_res_id: thread.id },
                 // Rafraîchit le chatter à la fermeture (rien de visible tant que la session
                 // tourne, mais cohérent avec le bouton "Activities").
