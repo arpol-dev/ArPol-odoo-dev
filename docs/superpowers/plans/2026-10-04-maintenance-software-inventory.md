@@ -2798,8 +2798,11 @@ container = upsert("maintenance.equipment", [("name", "=", CONTAINER)], {
                        "/opt/odoo/auto/dev/ovh_connector/ovh_api ajouté à la main le 2026-10-04 "
                        "(perdu si le conteneur est recréé).",
 })
-addons_path = next(arg for arg in inspect["Config"]["Cmd"] if arg.startswith("--addons-path="))
-in_path = [p.strip() for p in addons_path.split("=", 1)[1].split(",")]
+# 0k: the addons path is declared in compose.yml (service odoo-v18, docker-compose.command),
+# which is the source of truth to edit; read it there rather than from the running container.
+service = ssh("sed -n '/^odoo-v18:/,/^[a-z]/p' /opt/apps/myc-deploy/compose.yml")
+addons_path = re.search(r'--addons-path=([^"\n]+)', service).group(1)
+in_path = [p.strip() for p in addons_path.split(",")]
 usages = {DEV: "repos", "/var/log/odoo": "logs", "/var/lib/odoo": "data"}
 for mount in inspect["Mounts"]:
     mount_id = upsert("docker.mount", [("equipment_id", "=", container), ("destination", "=", mount["Destination"])], {
