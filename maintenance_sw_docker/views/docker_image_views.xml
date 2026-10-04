@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="docker_image_view_list" model="ir.ui.view">
+        <field name="name">docker.image.list</field>
+        <field name="model">docker.image</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="registry" optional="hide"/>
+                <field name="repository"/>
+                <field name="tag"/>
+                <field name="digest" optional="hide"/>
+                <field name="build_date"/>
+                <field name="version_id"/>
+                <field name="parent_id" optional="hide"/>
+                <field name="container_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="docker_image_view_form" model="ir.ui.view">
+        <field name="name">docker.image.form</field>
+        <field name="model">docker.image</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_containers" type="object"
+                                class="oe_stat_button" icon="fa-cube">
+                            <field name="container_count" widget="statinfo" string="Containers"/>
+                        </button>
+                    </div>
+                    <div class="alert alert-warning" role="alert" invisible="not duplicate_warning">
+                        <field name="duplicate_warning"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="registry"/>
+                            <field name="repository"/>
+                            <field name="tag"/>
+                            <field name="digest"/>
+                            <field name="build_date"/>
+                        </group>
+                        <group>
+                            <field name="parent_id"/>
+                            <field name="product_id"/>
+                            <field name="version_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Components" name="components">
+                            <field name="component_ids">
+                                <list editable="bottom">
+                                    <field name="repository_id"/>
+                                    <field name="path"/>
+                                    <field name="ref"/>
+                                    <field name="commit"/>
+                                    <field name="role"/>
+                                    <field name="merges" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="docker_image_view_search" model="ir.ui.view">
+        <field name="name">docker.image.search</field>
+        <field name="model">docker.image</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="repository"/>
+                <field name="tag"/>
+                <field name="digest"/>
+                <field name="version_id"/>
+                <group expand="0" string="Group By">
+                    <filter string="Repository" name="group_repository" context="{'group_by': 'repository'}"/>
+                    <filter string="Version" name="group_version" context="{'group_by': 'version_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="docker_image_action" model="ir.actions.act_window">
+        <field name="name">Docker Images</field>
+        <field name="res_model">docker.image</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

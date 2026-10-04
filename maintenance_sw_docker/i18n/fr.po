@@ -1,0 +1,549 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* maintenance_sw_docker
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: Armand Polmard\n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: n > 1;\n"
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/docker_component.py:0
+msgid ""
+"A component belongs either to an image or to a mount: exactly one of "
+"them."
+msgstr ""
+"Un composant appartient soit à une image, soit à un montage : exactement"
+" l'un des deux."
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/docker_component.py:0
+msgid "A mount component can only override a component of an image."
+msgstr "Un composant de montage ne peut remplacer qu'un composant d'image."
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/git_repository.py:0
+msgid "A repository cannot be its own upstream."
+msgstr "Un dépôt ne peut pas être sa propre origine amont."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.constraint,message:maintenance_sw_docker.constraint_git_repository_url_uniq
+msgid "A repository with this URL already exists."
+msgstr "Un dépôt avec cette URL existe déjà."
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/docker_image.py:0
+msgid "An image cannot be built from itself."
+msgstr "Une image ne peut pas être construite à partir d'elle-même."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.constraint,message:maintenance_sw_docker.constraint_docker_image_repository_digest_uniq
+msgid "An image with this digest is already recorded for this repository."
+msgstr "Une image avec ce digest est déjà enregistrée pour ce dépôt."
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/docker_image.py:0
+msgid ""
+"Another image %(repository)s:%(tag)s has no digest either: it may be the"
+" same image recorded twice."
+msgstr ""
+"Une autre image %(repository)s:%(tag)s n'a pas non plus de digest : il "
+"peut s'agir de la même image enregistrée deux fois."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__parent_id
+msgid "Base Image"
+msgstr "Image de base"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_mount__mount_type__bind
+msgid "Bind"
+msgstr "Bind"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__ref
+msgid "Branch / Tag"
+msgstr "Branche / Tag"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__build_date
+msgid "Build Date"
+msgstr "Date de build"
+
+#. module: maintenance_sw_docker
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.hr_equipment_view_form
+msgid "Changes made by hand inside the container, lost if it is recreated"
+msgstr ""
+"Modifications faites à la main dans le conteneur, perdues s'il est "
+"recréé"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_maintenance_equipment__runtime_changes
+msgid ""
+"Changes made inside the running container, outside the image and the "
+"declared mounts (e.g. a symlink added by hand). They are lost when the "
+"container is recreated."
+msgstr ""
+"Modifications faites dans le conteneur en cours d'exécution, en dehors "
+"de l'image et des montages déclarés (par ex. un lien symbolique ajouté à"
+" la main). Elles sont perdues lorsque le conteneur est recréé."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_mount__usage__repos
+msgid "Code Repositories"
+msgstr "Dépôts de code"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__commit
+msgid "Commit"
+msgstr "Commit"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__component_ids
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__component_ids
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__component_ids
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.docker_image_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.git_repository_view_form
+msgid "Components"
+msgstr "Composants"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_mount__usage__config
+msgid "Configuration"
+msgstr "Configuration"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__equipment_id
+msgid "Container"
+msgstr "Conteneur"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__container_count
+msgid "Container Count"
+msgstr "Nombre de conteneurs"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_maintenance_equipment__container_name
+msgid "Container Name"
+msgstr "Nom du conteneur"
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/docker_image.py:0
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__container_ids
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.docker_image_view_form
+msgid "Containers"
+msgstr "Conteneurs"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_component__role__core
+msgid "Core"
+msgstr "Cœur"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__create_uid
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__create_uid
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__create_uid
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__create_uid
+msgid "Created by"
+msgstr "Créé par"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__create_date
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__create_date
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__create_date
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__create_date
+msgid "Created on"
+msgstr "Créé le"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_component__role__custom
+msgid "Custom"
+msgstr "Spécifique"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_mount__usage__data
+msgid "Data"
+msgstr "Données"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__destination
+msgid "Destination"
+msgstr "Destination"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__digest
+msgid "Digest"
+msgstr "Digest"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__display_name
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__display_name
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__display_name
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__display_name
+msgid "Display Name"
+msgstr "Nom affiché"
+
+#. module: maintenance_sw_docker
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.hr_equipment_view_form
+msgid "Docker"
+msgstr "Docker"
+
+#. module: maintenance_sw_docker
+#: model:ir.model,name:maintenance_sw_docker.model_docker_component
+msgid "Docker Component"
+msgstr "Composant Docker"
+
+#. module: maintenance_sw_docker
+#: model:ir.model,name:maintenance_sw_docker.model_docker_image
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_maintenance_equipment__docker_image_id
+msgid "Docker Image"
+msgstr "Image Docker"
+
+#. module: maintenance_sw_docker
+#: model:ir.actions.act_window,name:maintenance_sw_docker.docker_image_action
+#: model:ir.ui.menu,name:maintenance_sw_docker.menu_docker_image
+msgid "Docker Images"
+msgstr "Images Docker"
+
+#. module: maintenance_sw_docker
+#: model:ir.model,name:maintenance_sw_docker.model_docker_mount
+msgid "Docker Mount"
+msgstr "Montage Docker"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__duplicate_warning
+msgid "Duplicate Warning"
+msgstr "Avertissement de doublon"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_maintenance_equipment__effective_component_ids
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.hr_equipment_view_form
+msgid "Effective Components"
+msgstr "Composants effectifs"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_component__role__enterprise
+msgid "Enterprise"
+msgstr "Enterprise"
+
+#. module: maintenance_sw_docker
+#: model:ir.actions.act_window,name:maintenance_sw_docker.git_repository_action
+#: model:ir.ui.menu,name:maintenance_sw_docker.menu_git_repository
+msgid "Git Repositories"
+msgstr "Dépôts git"
+
+#. module: maintenance_sw_docker
+#: model:ir.model,name:maintenance_sw_docker.model_git_repository
+msgid "Git Repository"
+msgstr "Dépôt git"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__git_repository__host__github
+msgid "GitHub"
+msgstr "GitHub"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__git_repository__host__gitlab
+msgid "GitLab"
+msgstr "GitLab"
+
+#. module: maintenance_sw_docker
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.docker_image_view_search
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.git_repository_view_search
+msgid "Group By"
+msgstr "Regrouper par"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__host
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.git_repository_view_search
+msgid "Host"
+msgstr "Hébergeur"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_mount__source
+msgid "Host path, or volume name."
+msgstr "Chemin sur l'hôte, ou nom du volume."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__id
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__id
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__id
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__id
+msgid "ID"
+msgstr "ID"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__image_id
+msgid "Image"
+msgstr "Image"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_component__overrides_id
+msgid ""
+"Image component this mount component replaces in the running container."
+msgstr ""
+"Composant d'image que ce composant de montage remplace dans le conteneur"
+" en cours d'exécution."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__write_uid
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__write_uid
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__write_uid
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__write_uid
+msgid "Last Updated by"
+msgstr "Dernière mise à jour par"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__write_date
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__write_date
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__write_date
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__write_date
+msgid "Last Updated on"
+msgstr "Dernière mise à jour le"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_mount__usage__logs
+msgid "Logs"
+msgstr "Journaux"
+
+#. module: maintenance_sw_docker
+#: model:ir.model,name:maintenance_sw_docker.model_maintenance_equipment
+msgid "Maintenance Equipment"
+msgstr "Équipement de maintenance"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__merges
+msgid "Merges"
+msgstr "Fusions"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__mode
+msgid "Mode"
+msgstr "Mode"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__mount_id
+msgid "Mount"
+msgstr "Montage"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_maintenance_equipment__mount_ids
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.hr_equipment_view_form
+msgid "Mounts"
+msgstr "Montages"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__name
+msgid "Name"
+msgstr "Nom"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__note
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__note
+msgid "Note"
+msgstr "Note"
+
+#. module: maintenance_sw_docker
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.docker_image_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.git_repository_view_form
+msgid "Notes"
+msgstr "Notes"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_component__role__oca
+msgid "OCA"
+msgstr "OCA"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_git_repository__upstream_id
+msgid "Official origin of a fork or of a mirror."
+msgstr "Origine officielle d'un fork ou d'un miroir."
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/docker_component.py:0
+msgid "Only a component brought by a mount can override another one."
+msgstr "Seul un composant apporté par un montage peut en remplacer un autre."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_mount__usage__other
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__git_repository__host__other
+msgid "Other"
+msgstr "Autre"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__overrides_id
+msgid "Overrides"
+msgstr "Remplace"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__path
+msgid "Path"
+msgstr "Chemin"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_component__path
+msgid "Path inside the container, e.g. /opt/odoo/custom/src/server-ux"
+msgstr "Chemin dans le conteneur, par ex. /opt/odoo/custom/src/server-ux"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_mount__destination
+msgid "Path inside the container."
+msgstr "Chemin dans le conteneur."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_component__merges
+msgid "Pull requests or branches merged on top of the reference."
+msgstr "Pull requests ou branches fusionnées par-dessus la référence."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_mount__mode__ro
+msgid "Read-only"
+msgstr "Lecture seule"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_mount__mode__rw
+msgid "Read-write"
+msgstr "Lecture-écriture"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__registry
+msgid "Registry"
+msgstr "Registre"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__repository_id
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__repository
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.docker_image_view_search
+msgid "Repository"
+msgstr "Dépôt"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_component__role
+msgid "Role"
+msgstr "Rôle"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_maintenance_equipment__runtime_changes
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.hr_equipment_view_form
+msgid "Runtime Changes"
+msgstr "Modifications hors image"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__product_id
+msgid "Software"
+msgstr "Logiciel"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__source
+msgid "Source"
+msgstr "Source"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__tag
+msgid "Tag"
+msgstr "Tag"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_git_repository__url
+msgid "The URL actually used, mirror included."
+msgstr "L'URL réellement utilisée, miroir compris."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_image__parent_id
+msgid "The image this one is built FROM."
+msgstr "L'image à partir de laquelle celle-ci est construite (FROM)."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_component__role__third_party
+msgid "Third Party"
+msgstr "Tiers"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__mount_type
+msgid "Type"
+msgstr "Type"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__url
+msgid "URL"
+msgstr "URL"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_git_repository__upstream_id
+msgid "Upstream"
+msgstr "Origine amont"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__usage
+msgid "Usage"
+msgstr "Usage"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__version_id
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_maintenance_equipment__software_version_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.docker_image_view_search
+msgid "Version"
+msgstr "Version"
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/docker_image.py:0
+msgid "Version %(version)s does not belong to %(product)s."
+msgstr "La version %(version)s n'appartient pas à %(product)s."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_mount__mount_type__volume
+msgid "Volume"
+msgstr "Volume"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_maintenance_equipment__effective_component_ids
+msgid ""
+"What really runs in the container: the components of the image chain, "
+"then the mounts, which add components or override image ones."
+msgstr ""
+"Ce qui s'exécute réellement dans le conteneur : les composants de la "
+"chaîne d'images, puis les montages, qui ajoutent des composants ou "
+"remplacent ceux de l'image."
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_git_repository__name
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.git_repository_view_form
+msgid "e.g. OCA/server-ux"
+msgstr "par ex. OCA/server-ux"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_maintenance_equipment__container_name
+msgid "e.g. myc_odoo-v18_1"
+msgstr "par ex. myc_odoo-v18_1"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_image__repository
+msgid "e.g. tecnativa/odoo"
+msgstr "par ex. tecnativa/odoo"
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/docker_image.py:0
+msgid "no software"
+msgstr "aucun logiciel"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_image__digest
+msgid "sha256:... — one record per digest: a tag moves, a digest does not."
+msgstr ""
+"sha256:... — un enregistrement par digest : un tag bouge, un digest non."

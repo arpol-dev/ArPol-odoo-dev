@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="git_repository_view_list" model="ir.ui.view">
+        <field name="name">git.repository.list</field>
+        <field name="model">git.repository</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="url"/>
+                <field name="host"/>
+                <field name="upstream_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="git_repository_view_form" model="ir.ui.view">
+        <field name="name">git.repository.form</field>
+        <field name="model">git.repository</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. OCA/server-ux"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="url" widget="url"/>
+                            <field name="host"/>
+                        </group>
+                        <group>
+                            <field name="upstream_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Components" name="components">
+                            <field name="component_ids" readonly="1">
+                                <list>
+                                    <field name="image_id"/>
+                                    <field name="mount_id"/>
+                                    <field name="path"/>
+                                    <field name="ref"/>
+                                    <field name="commit"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="git_repository_view_search" model="ir.ui.view">
+        <field name="name">git.repository.search</field>
+        <field name="model">git.repository</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="url"/>
+                <group expand="0" string="Group By">
+                    <filter string="Host" name="group_host" context="{'group_by': 'host'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="git_repository_action" model="ir.actions.act_window">
+        <field name="name">Git Repositories</field>
+        <field name="res_model">git.repository</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

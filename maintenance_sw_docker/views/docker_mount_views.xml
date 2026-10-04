@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="docker_mount_view_form" model="ir.ui.view">
+        <field name="name">docker.mount.form</field>
+        <field name="model">docker.mount</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <group>
+                        <field name="source"/>
+                        <field name="destination"/>
+                    </group>
+                    <group>
+                        <field name="mount_type"/>
+                        <field name="mode"/>
+                        <field name="usage"/>
+                    </group>
+                </group>
+                <field name="component_ids" invisible="usage != 'repos'">
+                    <list editable="bottom">
+                        <field name="repository_id"/>
+                        <field name="path"/>
+                        <field name="ref"/>
+                        <field name="commit"/>
+                        <field name="role"/>
+                        <field name="overrides_id"/>
+                    </list>
+                </field>
+            </form>
+        </field>
+    </record>
+</odoo>

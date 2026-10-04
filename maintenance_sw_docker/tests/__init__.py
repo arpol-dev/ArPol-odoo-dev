@@ -1,1 +1,1 @@
-from . import test_image, test_component, test_equipment
+from . import test_image, test_component, test_equipment, test_views

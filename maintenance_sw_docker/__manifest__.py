@@ -19,6 +19,11 @@ time. The container's effective components are computed from all of them.
     "depends": ["maintenance_sw_base"],
     "data": [
         "security/ir.model.access.csv",
+        "views/git_repository_views.xml",
+        "views/docker_image_views.xml",
+        "views/docker_mount_views.xml",
+        "views/maintenance_equipment_views.xml",
+        "views/menus.xml",
     ],
     "license": "AGPL-3",
     "installable": True,

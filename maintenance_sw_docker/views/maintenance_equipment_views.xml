@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="hr_equipment_view_form" model="ir.ui.view">
+        <field name="name">equipment.form.docker</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="maintenance_sw_base.hr_equipment_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='software']" position="after">
+                <page string="Docker" name="docker"
+                      invisible="install_type not in ('docker_container', 'compose_stack')">
+                    <group>
+                        <group>
+                            <field name="docker_image_id"/>
+                            <field name="container_name"/>
+                        </group>
+                    </group>
+                    <separator string="Mounts"/>
+                    <field name="mount_ids">
+                        <list>
+                            <field name="source"/>
+                            <field name="destination"/>
+                            <field name="mount_type"/>
+                            <field name="mode"/>
+                            <field name="usage"/>
+                        </list>
+                    </field>
+                    <separator string="Effective Components"/>
+                    <field name="effective_component_ids" readonly="1">
+                        <list>
+                            <field name="repository_id"/>
+                            <field name="path"/>
+                            <field name="ref"/>
+                            <field name="commit"/>
+                            <field name="role"/>
+                            <field name="image_id"/>
+                            <field name="mount_id"/>
+                        </list>
+                    </field>
+                    <separator string="Runtime Changes"/>
+                    <field name="runtime_changes"
+                           placeholder="Changes made by hand inside the container, lost if it is recreated"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

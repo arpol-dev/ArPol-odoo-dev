@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_docker_image" action="docker_image_action"
+              parent="maintenance_sw_base.menu_sw_config" sequence="40"/>
+    <menuitem id="menu_git_repository" action="git_repository_action"
+              parent="maintenance_sw_base.menu_sw_config" sequence="50"/>
+</odoo>
