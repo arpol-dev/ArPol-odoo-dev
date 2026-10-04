@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_git_repository_user,git.repository.user,model_git_repository,base.group_user,1,0,0,0
+access_git_repository_manager,git.repository.manager,model_git_repository,maintenance.group_equipment_manager,1,1,1,1
+access_docker_image_user,docker.image.user,model_docker_image,base.group_user,1,0,0,0
+access_docker_image_manager,docker.image.manager,model_docker_image,maintenance.group_equipment_manager,1,1,1,1
+access_docker_mount_user,docker.mount.user,model_docker_mount,base.group_user,1,0,0,0
+access_docker_mount_manager,docker.mount.manager,model_docker_mount,maintenance.group_equipment_manager,1,1,1,1
+access_docker_component_user,docker.component.user,model_docker_component,base.group_user,1,0,0,0
+access_docker_component_manager,docker.component.manager,model_docker_component,maintenance.group_equipment_manager,1,1,1,1
