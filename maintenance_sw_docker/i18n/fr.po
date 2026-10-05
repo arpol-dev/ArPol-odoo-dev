@@ -12,7 +12,15 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: n > 1;\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/docker_component.py:0
+msgid ""
+"%(component)s is not a component of the image of container %(container)s "
+"(nor of the images it is built from): it cannot be overridden there."
+msgstr "%(component)s n'est pas un composant de l'image du conteneur %(container)s (ni des images dont elle est construite) : il ne peut pas y être remplacé."
 
 #. module: maintenance_sw_docker
 #. odoo-python
@@ -118,6 +126,13 @@ msgstr "Commit"
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.git_repository_view_form
 msgid "Components"
 msgstr "Composants"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_mount__image_component_ids
+msgid ""
+"Components of the container's image and of the images it is built from: the "
+"only ones a component of this mount can override."
+msgstr "Composants de l'image du conteneur et des images dont elle est construite : les seuls qu'un composant de ce montage peut remplacer."
 
 #. module: maintenance_sw_docker
 #: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_mount__usage__config
@@ -291,6 +306,17 @@ msgid "Image"
 msgstr "Image"
 
 #. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__chain_ids
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.docker_image_view_form
+msgid "Image Chain"
+msgstr "Chaîne d'images"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__image_component_ids
+msgid "Image Components"
+msgstr "Composants d'image"
+
+#. module: maintenance_sw_docker
 #: model:ir.model.fields,help:maintenance_sw_docker.field_docker_component__overrides_id
 msgid ""
 "Image component this mount component replaces in the running container."
@@ -444,8 +470,8 @@ msgstr "Modifications hors image"
 
 #. module: maintenance_sw_docker
 #: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__product_id
-msgid "Software"
-msgstr "Logiciel"
+msgid "Software Product"
+msgstr "Produit logiciel"
 
 #. module: maintenance_sw_docker
 #: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__source
@@ -471,6 +497,13 @@ msgstr "L'image à partir de laquelle celle-ci est construite (FROM)."
 #: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_component__role__third_party
 msgid "Third Party"
 msgstr "Tiers"
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_image__chain_ids
+msgid ""
+"This image and the images it is built from, the most distant base image "
+"first."
+msgstr "Cette image et les images dont elle est construite, de l'image de base la plus lointaine à celle-ci."
 
 #. module: maintenance_sw_docker
 #: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__mount_type
@@ -540,7 +573,7 @@ msgstr "par ex. tecnativa/odoo"
 #. odoo-python
 #: code:addons/maintenance_sw_docker/models/docker_image.py:0
 msgid "no software"
-msgstr "aucun logiciel"
+msgstr "aucun produit logiciel"
 
 #. module: maintenance_sw_docker
 #: model:ir.model.fields,help:maintenance_sw_docker.field_docker_image__digest

@@ -6,14 +6,22 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0-20260926\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-04 20:53+0000\n"
-"PO-Revision-Date: 2026-10-04 20:53+0000\n"
+"POT-Creation-Date: 2026-10-05 07:01+0000\n"
+"PO-Revision-Date: 2026-10-05 07:01+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
+
+#. module: maintenance_sw_docker
+#. odoo-python
+#: code:addons/maintenance_sw_docker/models/docker_component.py:0
+msgid ""
+"%(component)s is not a component of the image of container %(container)s "
+"(nor of the images it is built from): it cannot be overridden there."
+msgstr ""
 
 #. module: maintenance_sw_docker
 #. odoo-python
@@ -108,6 +116,13 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.docker_image_view_form
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.git_repository_view_form
 msgid "Components"
+msgstr ""
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_mount__image_component_ids
+msgid ""
+"Components of the container's image and of the images it is built from: the "
+"only ones a component of this mount can override."
 msgstr ""
 
 #. module: maintenance_sw_docker
@@ -282,6 +297,17 @@ msgid "Image"
 msgstr ""
 
 #. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__chain_ids
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_docker.docker_image_view_form
+msgid "Image Chain"
+msgstr ""
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_mount__image_component_ids
+msgid "Image Components"
+msgstr ""
+
+#. module: maintenance_sw_docker
 #: model:ir.model.fields,help:maintenance_sw_docker.field_docker_component__overrides_id
 msgid ""
 "Image component this mount component replaces in the running container."
@@ -433,7 +459,7 @@ msgstr ""
 
 #. module: maintenance_sw_docker
 #: model:ir.model.fields,field_description:maintenance_sw_docker.field_docker_image__product_id
-msgid "Software"
+msgid "Software Product"
 msgstr ""
 
 #. module: maintenance_sw_docker
@@ -459,6 +485,13 @@ msgstr ""
 #. module: maintenance_sw_docker
 #: model:ir.model.fields.selection,name:maintenance_sw_docker.selection__docker_component__role__third_party
 msgid "Third Party"
+msgstr ""
+
+#. module: maintenance_sw_docker
+#: model:ir.model.fields,help:maintenance_sw_docker.field_docker_image__chain_ids
+msgid ""
+"This image and the images it is built from, the most distant base image "
+"first."
 msgstr ""
 
 #. module: maintenance_sw_docker

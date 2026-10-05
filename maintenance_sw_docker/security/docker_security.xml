@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Images and repositories are shared catalogs; mounts, and the components they bring,
+         follow the company of their container. -->
+    <record id="docker_mount_comp_rule" model="ir.rule">
+        <field name="name">Docker Mount Multi-company rule</field>
+        <field name="model_id" ref="model_docker_mount"/>
+        <field name="domain_force">[('equipment_id.company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <record id="docker_component_comp_rule" model="ir.rule">
+        <field name="name">Docker Component Multi-company rule</field>
+        <field name="model_id" ref="model_docker_component"/>
+        <field name="domain_force">['|', ('mount_id', '=', False), ('mount_id.equipment_id.company_id', 'in', company_ids + [False])]</field>
+    </record>
+</odoo>

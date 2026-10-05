@@ -61,6 +61,20 @@ class TestDockerImage(TransactionCase):
         image = self.Image.create({"repository": "mirror/odoo", "parent_id": parent.id})
         self.assertEqual(image._image_chain().ids, [grand.id, parent.id, image.id])
 
+    def test_chain_ids(self):
+        grand = self.Image.create({"repository": "python"})
+        parent = self.Image.create({"repository": "tecnativa/doodba", "parent_id": grand.id})
+        image = self.Image.create({"repository": "mirror/odoo", "parent_id": parent.id})
+        self.assertEqual(image.chain_ids.ids, [grand.id, parent.id, image.id])
+        self.assertEqual(grand.chain_ids, grand)
+
+    def test_product_follows_version_moved_to_other_product(self):
+        version = self.env["software.version"].create({"product_id": self.odoo.id, "name": "19.0"})
+        image = self.Image.create({"repository": "mirror/odoo", "version_id": version.id})
+        nextcloud = self.env["software.product"].create({"name": "Nextcloud test"})
+        version.product_id = nextcloud
+        self.assertEqual(image.product_id, nextcloud)
+
     def test_version_sets_product(self):
         image = self.Image.create({"repository": "mirror/odoo", "version_id": self.odoo18.id})
         self.assertEqual(image.product_id, self.odoo)

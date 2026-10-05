@@ -59,6 +59,16 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Image Chain" name="chain">
+                            <field name="chain_ids">
+                                <list>
+                                    <field name="repository"/>
+                                    <field name="tag"/>
+                                    <field name="digest"/>
+                                    <field name="build_date"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Notes" name="notes">
                             <field name="note"/>
                         </page>

@@ -126,6 +126,18 @@ class TestDockerEquipment(TransactionCase):
         image.version_id = self.odoo18
         self.assertEqual(container.software_version_id, self.odoo18)
 
+    def test_product_follows_image_version_moved_to_other_product(self):
+        version = self.env["software.version"].create({"product_id": self.odoo.id, "name": "19.0"})
+        image = self.Image.create({"repository": "mirror/odoo", "version_id": version.id})
+        container = self._container(docker_image_id=image.id)
+        nextcloud = self.env["software.product"].create({"name": "Nextcloud test"})
+        version.product_id = nextcloud
+        self.env.flush_all()
+        self.env.invalidate_all()
+        self.assertEqual(image.product_id, nextcloud)
+        self.assertEqual(container.software_version_id, version)
+        self.assertEqual(container.software_product_id, nextcloud)
+
     def test_image_without_version_keeps_manual_version(self):
         image = self.Image.create({"repository": "postgres"})
         container = self._container(software_version_id=self.odoo17.id)

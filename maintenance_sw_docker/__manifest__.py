@@ -19,6 +19,7 @@ time. The container's effective components are computed from all of them.
     "depends": ["maintenance_sw_base"],
     "data": [
         "security/ir.model.access.csv",
+        "security/docker_security.xml",
         "views/git_repository_views.xml",
         "views/docker_image_views.xml",
         "views/docker_mount_views.xml",

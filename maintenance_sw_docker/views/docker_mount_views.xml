@@ -16,6 +16,7 @@
                         <field name="usage"/>
                     </group>
                 </group>
+                <field name="image_component_ids" invisible="1"/>
                 <field name="component_ids" invisible="usage != 'repos'">
                     <list editable="bottom">
                         <field name="repository_id"/>
@@ -23,7 +24,8 @@
                         <field name="ref"/>
                         <field name="commit"/>
                         <field name="role"/>
-                        <field name="overrides_id"/>
+                        <field name="overrides_id"
+                               domain="[('id', 'in', parent.image_component_ids)]"/>
                     </list>
                 </field>
             </form>

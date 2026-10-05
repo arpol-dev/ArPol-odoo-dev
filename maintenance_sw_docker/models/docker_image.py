@@ -6,6 +6,7 @@ class DockerImage(models.Model):
     _name = "docker.image"
     _description = "Docker Image"
     _order = "repository, build_date desc, id desc"
+    _rec_names_search = ["repository", "tag", "digest"]
 
     registry = fields.Char(default="docker.io")
     repository = fields.Char(required=True, help="e.g. tecnativa/odoo")
@@ -18,7 +19,7 @@ class DockerImage(models.Model):
     )
     product_id = fields.Many2one(
         "software.product",
-        string="Software",
+        string="Software Product",
         ondelete="restrict",
         compute="_compute_product_id",
         store=True,
@@ -31,6 +32,12 @@ class DockerImage(models.Model):
         domain="[('product_id', '=?', product_id)]",
     )
     component_ids = fields.One2many("docker.component", "image_id", string="Components")
+    chain_ids = fields.Many2many(
+        "docker.image",
+        compute="_compute_chain_ids",
+        string="Image Chain",
+        help="This image and the images it is built from, the most distant base image first.",
+    )
     container_ids = fields.One2many("maintenance.equipment", "docker_image_id", string="Containers")
     container_count = fields.Integer(compute="_compute_container_count")
     duplicate_warning = fields.Char(compute="_compute_duplicate_warning")
@@ -68,13 +75,20 @@ class DockerImage(models.Model):
                 name += f" ({image.digest.split(':')[-1][:12]})"
             image.display_name = name
 
-    @api.depends("version_id")
+    @api.depends("version_id.product_id")
     def _compute_product_id(self):
         for image in self:
             if image.version_id:
                 image.product_id = image.version_id.product_id
             else:
                 image.product_id = image.product_id
+
+    @api.depends("parent_id")
+    def _compute_chain_ids(self):
+        for image in self:
+            # _origin: an image being created in a form is not listed (it has no id yet).
+            bases = image.parent_id._image_chain() if image.parent_id else image.browse()
+            image.chain_ids = bases | image._origin
 
     @api.depends("container_ids")
     def _compute_container_count(self):

@@ -34,7 +34,7 @@ class MaintenanceEquipment(models.Model):
             else:
                 equipment.software_version_id = equipment.software_version_id
 
-    @api.depends("docker_image_id.version_id")
+    @api.depends("docker_image_id.version_id.product_id")
     def _compute_software_product_id(self):
         # The product of an image version is taken from the image, without reading
         # software_version_id: when the product is computed first, reading it computes the

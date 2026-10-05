@@ -14,6 +14,7 @@ class DockerComponent(models.Model):
     _name = "docker.component"
     _description = "Docker Component"
     _order = "path, id"
+    _rec_names_search = ["repository_id.name", "path", "ref", "commit"]
 
     image_id = fields.Many2one("docker.image", string="Image", ondelete="cascade", index=True)
     mount_id = fields.Many2one("docker.mount", string="Mount", ondelete="cascade", index=True)
@@ -33,7 +34,7 @@ class DockerComponent(models.Model):
         help="Image component this mount component replaces in the running container.",
     )
 
-    @api.depends("repository_id.name", "ref", "commit")
+    @api.depends("repository_id.name", "ref", "commit", "path")
     def _compute_display_name(self):
         for component in self:
             name = component.repository_id.name or ""
@@ -41,6 +42,10 @@ class DockerComponent(models.Model):
                 name += f"@{component.ref}"
             if component.commit:
                 name += f" ({component.commit[:8]})"
+            if component.path:
+                # The same repository and ref are often found in several images: the path
+                # tells them apart where an override target is chosen.
+                name += f" — {component.path}"
             component.display_name = name
 
     # repository_id is listed so that the check also runs on a create that sets
@@ -63,6 +68,15 @@ class DockerComponent(models.Model):
             if not component.overrides_id.image_id:
                 raise ValidationError(
                     _("A mount component can only override a component of an image.")
+                )
+            if component.overrides_id not in component.mount_id.image_component_ids:
+                raise ValidationError(
+                    _(
+                        "%(component)s is not a component of the image of container %(container)s "
+                        "(nor of the images it is built from): it cannot be overridden there.",
+                        component=component.overrides_id.display_name,
+                        container=component.mount_id.equipment_id.display_name,
+                    )
                 )
 
     def _effective_key(self):
