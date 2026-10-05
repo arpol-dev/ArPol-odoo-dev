@@ -1,3 +1,4 @@
+from odoo.exceptions import ValidationError
 from odoo.tests import TransactionCase
 
 SRC = "/opt/odoo/custom/src"
@@ -55,6 +56,69 @@ class TestDockerEquipment(TransactionCase):
         container = self._container(docker_image_id=image.id)
         self.assertEqual(container.software_version_id, self.odoo18)
         self.assertEqual(container.software_product_id, self.odoo)
+
+    def _real_container_values(self, image):
+        """Values of the container upsert used on real data (stack parent, method, no
+        product nor version)."""
+        stack = self.env["maintenance.equipment"].create({
+            "name": "Stack 0k myc-deploy", "equipment_kind": "software", "install_type": "compose_stack",
+        })
+        method = self.env.ref("maintenance_sw_base.deployment_method_myc")
+        return {
+            "deployment_method_id": method.id,
+            "docker_image_id": image.id,
+            "container_name": "myc_odoo-v18_1",
+            "parent_id": stack.id,
+            "runtime_changes": "symlink ovh_api added by hand",
+        }
+
+    def test_version_and_product_from_image_on_create_then_flush(self):
+        """Nothing reads the container before the flush (as with an RPC create): the
+        product must not be recomputed from an unset version."""
+        image = self.Image.create({"repository": "mirror/odoo", "version_id": self.odoo18.id})
+        container = self._container(**self._real_container_values(image))
+        self.env.flush_all()
+        self.env.invalidate_all()
+        self.assertEqual(container.software_version_id, self.odoo18)
+        self.assertEqual(container.software_product_id, self.odoo)
+
+    def test_version_and_product_from_image_on_write_then_flush(self):
+        image = self.Image.create({"repository": "mirror/odoo", "version_id": self.odoo18.id})
+        container = self._container()
+        self.env.flush_all()
+        container.write(self._real_container_values(image))
+        self.env.flush_all()
+        self.env.invalidate_all()
+        self.assertEqual(container.software_version_id, self.odoo18)
+        self.assertEqual(container.software_product_id, self.odoo)
+
+    def test_version_and_product_in_batch_then_flush(self):
+        """Containers whose version comes from the image, created with others whose image has
+        no version (manual version or none)."""
+        image = self.Image.create({"repository": "mirror/odoo", "version_id": self.odoo18.id})
+        postgres = self.Image.create({"repository": "postgres"})
+        values = {"equipment_kind": "software", "install_type": "docker_container"}
+        no_version, from_image, manual = self.env["maintenance.equipment"].create([
+            {**values, "name": "myc_postgres_1", "docker_image_id": postgres.id},
+            {**values, "name": "myc_odoo-v18_1", "docker_image_id": image.id},
+            {**values, "name": "myc_odoo-v17_1", "docker_image_id": postgres.id,
+             "software_version_id": self.odoo17.id},
+        ])
+        self.env.flush_all()
+        self.env.invalidate_all()
+        self.assertFalse(no_version.software_version_id)
+        self.assertFalse(no_version.software_product_id)
+        self.assertEqual(from_image.software_version_id, self.odoo18)
+        self.assertEqual(from_image.software_product_id, self.odoo)
+        self.assertEqual(manual.software_version_id, self.odoo17)
+        self.assertEqual(manual.software_product_id, self.odoo)
+
+    def test_image_version_of_other_product_rejected(self):
+        nextcloud = self.env["software.product"].create({"name": "Nextcloud test"})
+        image = self.Image.create({"repository": "mirror/odoo", "version_id": self.odoo18.id})
+        with self.assertRaises(ValidationError):
+            self._container(docker_image_id=image.id, software_product_id=nextcloud.id)
+            self.env.flush_all()
 
     def test_image_version_change_propagates(self):
         image = self.Image.create({"repository": "mirror/odoo", "version_id": self.odoo17.id})

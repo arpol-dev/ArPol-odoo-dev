@@ -34,6 +34,16 @@ class MaintenanceEquipment(models.Model):
             else:
                 equipment.software_version_id = equipment.software_version_id
 
+    @api.depends("docker_image_id.version_id")
+    def _compute_software_product_id(self):
+        # The product of an image version is taken from the image, without reading
+        # software_version_id: when the product is computed first, reading it computes the
+        # version, whose constraint is then checked against a product not yet assigned.
+        with_image_version = self.filtered(lambda equipment: equipment.docker_image_id.version_id)
+        for equipment in with_image_version:
+            equipment.software_product_id = equipment.docker_image_id.version_id.product_id
+        super(MaintenanceEquipment, self - with_image_version)._compute_software_product_id()
+
     @api.depends(
         "docker_image_id.parent_id",
         "docker_image_id.component_ids",
