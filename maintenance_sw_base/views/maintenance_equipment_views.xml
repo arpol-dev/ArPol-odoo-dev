@@ -62,7 +62,7 @@
                 <separator/>
             </xpath>
             <xpath expr="//filter[@name='vendor']" position="after">
-                <filter string="Software" name="group_software" context="{'group_by': 'software_product_id'}"/>
+                <filter string="Software Product" name="group_software" context="{'group_by': 'software_product_id'}"/>
                 <filter string="Version" name="group_version" context="{'group_by': 'software_version_id'}"/>
                 <filter string="Deployment Method" name="group_deployment_method"
                         context="{'group_by': 'deployment_method_id'}"/>

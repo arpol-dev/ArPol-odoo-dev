@@ -12,7 +12,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: n > 1;\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #. module: maintenance_sw_base
 #: model:ir.model.constraint,message:maintenance_sw_base.constraint_software_deployment_method_name_uniq
@@ -22,7 +22,7 @@ msgstr "Une méthode de déploiement portant ce nom existe déjà."
 #. module: maintenance_sw_base
 #: model:ir.model.constraint,message:maintenance_sw_base.constraint_software_product_name_uniq
 msgid "A software product with this name already exists."
-msgstr "Un logiciel portant ce nom existe déjà."
+msgstr "Un produit logiciel portant ce nom existe déjà."
 
 #. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__active
@@ -32,6 +32,7 @@ msgstr "Actif"
 
 #. module: maintenance_sw_base
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_deployment_method_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_deployment_method_view_search
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_form
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_search
 msgid "Archived"
@@ -202,7 +203,7 @@ msgstr "Dernière version"
 #. module: maintenance_sw_base
 #: model:ir.model.fields,help:maintenance_sw_base.field_software_version__is_latest
 msgid "Latest known version of the product. Only one version per product."
-msgstr "Dernière version connue du logiciel. Une seule version par logiciel."
+msgstr "Dernière version connue du produit logiciel. Une seule version par produit logiciel."
 
 #. module: maintenance_sw_base
 #: model:ir.model,name:maintenance_sw_base.model_maintenance_equipment
@@ -252,7 +253,7 @@ msgstr "Système d'exploitation"
 msgid ""
 "Orders the versions of a product: the higher, the more recent. Version names"
 " do not sort reliably as text (9 comes after 12)."
-msgstr "Ordonne les versions d'un logiciel : plus la valeur est élevée, plus la version est récente. Les noms de version ne se trient pas de façon fiable en tant que texte (9 arrive après 12)."
+msgstr "Ordonne les versions d'un produit logiciel : plus la valeur est élevée, plus la version est récente. Les noms de version ne se trient pas de façon fiable en tant que texte (9 arrive après 12)."
 
 #. module: maintenance_sw_base
 #: model:ir.model.fields.selection,name:maintenance_sw_base.selection__software_version__channel__other
@@ -267,7 +268,7 @@ msgstr "Paquet"
 #. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__product_id
 msgid "Product"
-msgstr "Logiciel"
+msgstr "Produit logiciel"
 
 #. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__release_date
@@ -291,12 +292,10 @@ msgid "Sequence"
 msgstr "Séquence"
 
 #. module: maintenance_sw_base
-#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__software_product_id
 #: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__equipment_kind__software
 #: model:ir.ui.menu,name:maintenance_sw_base.menu_sw_config
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_form
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
-#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_search
 msgid "Software"
 msgstr "Logiciel"
 
@@ -307,14 +306,17 @@ msgstr "Méthode de déploiement logiciel"
 
 #. module: maintenance_sw_base
 #: model:ir.model,name:maintenance_sw_base.model_software_product
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__software_product_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_search
 msgid "Software Product"
-msgstr "Logiciel"
+msgstr "Produit logiciel"
 
 #. module: maintenance_sw_base
 #: model:ir.actions.act_window,name:maintenance_sw_base.software_product_action
 #: model:ir.ui.menu,name:maintenance_sw_base.menu_software_product
 msgid "Software Products"
-msgstr "Logiciels"
+msgstr "Produits logiciels"
 
 #. module: maintenance_sw_base
 #: model:ir.model,name:maintenance_sw_base.model_software_version
@@ -356,7 +358,7 @@ msgstr "Ce logiciel n'est rattaché à aucun équipement : renseignez le serveur
 #. module: maintenance_sw_base
 #: model:ir.model.constraint,message:maintenance_sw_base.constraint_software_version_product_name_uniq
 msgid "This version already exists for this software."
-msgstr "Cette version existe déjà pour ce logiciel."
+msgstr "Cette version existe déjà pour ce produit logiciel."
 
 #. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__needs_attachment
@@ -422,4 +424,4 @@ msgstr "p. ex. Debian"
 #. odoo-python
 #: code:addons/maintenance_sw_base/models/maintenance_equipment.py:0
 msgid "no software"
-msgstr "aucun logiciel"
+msgstr "aucun produit logiciel"

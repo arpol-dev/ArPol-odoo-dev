@@ -28,7 +28,7 @@ class MaintenanceEquipment(models.Model):
     )
     software_product_id = fields.Many2one(
         "software.product",
-        string="Software",
+        string="Software Product",
         ondelete="restrict",
         compute="_compute_software_product_id",
         store=True,
@@ -52,7 +52,7 @@ class MaintenanceEquipment(models.Model):
         "the provider: the server it runs on is missing.",
     )
 
-    @api.depends("software_version_id")
+    @api.depends("software_version_id.product_id")
     def _compute_software_product_id(self):
         for equipment in self:
             if equipment.software_version_id:

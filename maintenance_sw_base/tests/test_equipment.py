@@ -62,6 +62,12 @@ class TestSoftwareEquipment(TransactionCase):
         self.assertEqual(software.software_product_id, self.odoo)
         self.assertFalse(software.software_version_id)
 
+    def test_product_follows_version_moved_to_other_product(self):
+        version = self.env["software.version"].create({"product_id": self.debian.id, "name": "13"})
+        software = self._software(software_version_id=version.id)
+        version.product_id = self.odoo
+        self.assertEqual(software.software_product_id, self.odoo)
+
     def test_version_of_other_product_rejected(self):
         software = self._software(software_version_id=self.debian12.id)
         with self.assertRaises(ValidationError):

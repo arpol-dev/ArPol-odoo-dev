@@ -58,7 +58,7 @@
                 <filter string="End of Support Reached" name="end_of_support"
                         domain="[('end_of_support_date', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
                 <group expand="0" string="Group By">
-                    <filter string="Software" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Software Product" name="group_product" context="{'group_by': 'product_id'}"/>
                     <filter string="Channel" name="group_channel" context="{'group_by': 'channel'}"/>
                 </group>
             </search>

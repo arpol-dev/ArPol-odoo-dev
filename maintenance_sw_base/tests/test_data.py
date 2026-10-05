@@ -14,3 +14,8 @@ class TestShippedData(TransactionCase):
         arch = self.env["maintenance.equipment"].get_view(view_type="form")["arch"]
         self.assertIn('name="software"', arch)
         self.assertIn('name="equipment_kind"', arch)
+
+    def test_deployment_method_search_view_reaches_archived(self):
+        arch = self.env["software.deployment.method"].get_view(view_type="search")["arch"]
+        self.assertIn('name="name"', arch)
+        self.assertIn("('active', '=', False)", arch)
