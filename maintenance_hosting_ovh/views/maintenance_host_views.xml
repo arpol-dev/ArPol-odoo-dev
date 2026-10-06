@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="maintenance_host_view_form" model="ir.ui.view">
+        <field name="name">maintenance.host.form.ovh</field>
+        <field name="model">maintenance.host</field>
+        <field name="inherit_id" ref="maintenance_sw_base.maintenance_host_view_form"/>
+        <field name="arch" type="xml">
+            <group name="main" position="inside">
+                <field name="ovh_service_id" groups="ovh_api.group_ovh_user"/>
+                <field name="ovh_expiration_date" groups="ovh_api.group_ovh_user"/>
+            </group>
+        </field>
+    </record>
+</odoo>

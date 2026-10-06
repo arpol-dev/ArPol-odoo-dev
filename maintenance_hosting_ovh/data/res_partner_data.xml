@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="partner_ovhcloud" model="res.partner">
+        <field name="name">OVHcloud</field>
+        <field name="is_company" eval="True"/>
+        <field name="website">https://www.ovhcloud.com</field>
+    </record>
+</odoo>

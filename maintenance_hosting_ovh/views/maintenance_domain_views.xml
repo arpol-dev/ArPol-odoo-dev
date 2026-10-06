@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="maintenance_domain_view_form" model="ir.ui.view">
+        <field name="name">maintenance.domain.form.ovh</field>
+        <field name="model">maintenance.domain</field>
+        <field name="inherit_id" ref="maintenance_sw_base.maintenance_domain_view_form"/>
+        <field name="arch" type="xml">
+            <group name="renewal" position="inside">
+                <field name="is_ovh_managed"/>
+                <field name="ovh_service_id" groups="ovh_api.group_ovh_user"/>
+            </group>
+            <field name="expiration_date" position="attributes">
+                <attribute name="readonly">is_ovh_managed</attribute>
+            </field>
+            <field name="auto_renew" position="attributes">
+                <attribute name="readonly">is_ovh_managed</attribute>
+            </field>
+        </field>
+    </record>
+</odoo>

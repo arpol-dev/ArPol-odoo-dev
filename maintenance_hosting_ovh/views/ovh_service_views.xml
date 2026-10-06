@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ovh_service_view_form" model="ir.ui.view">
+        <field name="name">ovh.service.form.maintenance</field>
+        <field name="model">ovh.service</field>
+        <field name="inherit_id" ref="ovh_api.ovh_service_view_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button name="action_view_maintenance_links" type="object"
+                        class="oe_stat_button" icon="fa-wrench"
+                        invisible="not maintenance_link_count">
+                    <field name="maintenance_link_count" widget="statinfo" string="Maintenance"/>
+                </button>
+            </div>
+        </field>
+    </record>
+</odoo>

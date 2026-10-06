@@ -1,0 +1,83 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* maintenance_hosting_ovh
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: Armand Polmard\n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model,name:maintenance_hosting_ovh.model_maintenance_domain
+msgid "Domain Name"
+msgstr "Nom de domaine"
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model.fields,field_description:maintenance_hosting_ovh.field_ovh_service__maintenance_domain_ids
+msgid "Domain Names"
+msgstr "Noms de domaine"
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model.fields,help:maintenance_hosting_ovh.field_maintenance_domain__is_ovh_managed
+msgid ""
+"Expiration and renewal come from OVH and are rewritten at each "
+"synchronization."
+msgstr ""
+"L'expiration et le renouvellement proviennent d'OVH et sont réécrits à "
+"chaque synchronisation."
+
+#. module: maintenance_hosting_ovh
+#. odoo-python
+#: code:addons/maintenance_hosting_ovh/models/ovh_service.py:0
+#: model_terms:ir.ui.view,arch_db:maintenance_hosting_ovh.ovh_service_view_form
+msgid "Maintenance"
+msgstr "Maintenance"
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model.fields,field_description:maintenance_hosting_ovh.field_ovh_service__maintenance_link_count
+msgid "Maintenance Link Count"
+msgstr "Nombre de liens de maintenance"
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model.fields,field_description:maintenance_hosting_ovh.field_maintenance_domain__is_ovh_managed
+msgid "Managed at OVH"
+msgstr "Géré chez OVH"
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model.fields,field_description:maintenance_hosting_ovh.field_maintenance_host__ovh_expiration_date
+msgid "OVH Expiration"
+msgstr "Expiration OVH"
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model,name:maintenance_hosting_ovh.model_ovh_service
+#: model:ir.model.fields,field_description:maintenance_hosting_ovh.field_maintenance_domain__ovh_service_id
+#: model:ir.model.fields,field_description:maintenance_hosting_ovh.field_maintenance_host__ovh_service_id
+msgid "OVH Service"
+msgstr "Service OVH"
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model,name:maintenance_hosting_ovh.model_maintenance_host
+msgid "Physical Host"
+msgstr "Support physique"
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model.fields,field_description:maintenance_hosting_ovh.field_ovh_service__maintenance_host_ids
+msgid "Physical Hosts"
+msgstr "Supports physiques"
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model.constraint,message:maintenance_hosting_ovh.constraint_maintenance_domain_ovh_service_uniq
+msgid "This OVH service is already linked to a domain name."
+msgstr "Ce service OVH est déjà lié à un nom de domaine."
+
+#. module: maintenance_hosting_ovh
+#: model:ir.model.constraint,message:maintenance_hosting_ovh.constraint_maintenance_host_ovh_service_uniq
+msgid "This OVH service is already linked to a physical host."
+msgstr "Ce service OVH est déjà lié à un support physique."
