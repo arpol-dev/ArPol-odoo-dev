@@ -115,11 +115,33 @@ class TestAiAgentSessionChatter(AiAgentChatterCommon, TransactionCase):
             session.action_reply('too early')
 
     def test_reply_when_session_is_gone(self):
+        # 400 : session retirée du suivi (arrêtée par DELETE) ; 404 : disparue de `claude agents`.
+        for status_code in (400, 404):
+            session, __ = self._launch()
+            self._wait_for_answer(session)
+            with patch(SESSION_REQUESTS) as requests_mock:
+                requests_mock.post.return_value = MagicMock(status_code=status_code)
+                self.assertFalse(session.action_reply('hello?'))
+            self.assertEqual(session.status, 'cancelled')
+            self.assertIn('no longer exists', session.conclusion)
+            session.unlink()
+
+    def test_reply_wizard_warns_when_session_is_gone(self):
         session, __ = self._launch()
         self._wait_for_answer(session)
-        gone = MagicMock(status_code=404)
+        with patch(SESSION_REQUESTS) as requests_mock:
+            requests_mock.post.return_value = MagicMock(status_code=400)
+            action = self.env['ai.agent.session.reply'].create({
+                'session_id': session.id, 'answer': 'hello?',
+            }).action_send()
+        self.assertEqual(action['params']['type'], 'warning')
+
+    def test_reply_network_failure_is_a_clear_error(self):
+        session, __ = self._launch()
+        self._wait_for_answer(session)
         with self.assertRaises(UserError), patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.post.return_value = gone
+            requests_mock.RequestException = ConnectionError
+            requests_mock.post.side_effect = ConnectionError('boom')
             session.action_reply('hello?')
         self.assertEqual(session.status, 'needs_attention')
 

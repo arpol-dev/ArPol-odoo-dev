@@ -232,7 +232,9 @@ class AiAgentSession(models.Model):
     def action_reply(self, text):
         """Transmet la réponse de l'utilisateur à la session restée vivante après une question
         (`/message` du webhook) ; la session repasse 'En cours' et le callback suivant (fin de tâche
-        ou nouvelle question) est posté comme d'habitude."""
+        ou nouvelle question) est posté comme d'habitude. Renvoie False (et passe la session en
+        'Annulée') si elle n'existe plus côté serveur : cas des sessions arrêtées avant que les
+        questions la laissent vivante, ou arrêtées depuis."""
         self.ensure_one()
         session = self.sudo()
         text = (text or '').strip()
@@ -256,16 +258,22 @@ class AiAgentSession(models.Model):
         except requests.RequestException as exc:
             _logger.warning("AI Agent: could not send the answer to session %s: %s", session.session_name, exc)
             raise UserError(_("Could not reach the AI Agent webhook: %s", exc)) from exc
-        if response.status_code == 404:
-            raise UserError(_(
-                "The session no longer exists on the agent server (it was probably stopped). "
-                "Start a new session instead."
-            ))
+        # claude-console répond 400 « nom de session invalide » (et non 404) dès qu'une session a été
+        # retirée de son suivi — c'est ce que fait l'arrêt par DELETE — et 404 si elle a disparu de
+        # `claude agents` : dans les deux cas elle n'existe plus, ce n'est pas un souci réseau.
+        if response.status_code in (400, 404):
+            session.write({
+                'status': 'cancelled',
+                'conclusion': _("The session no longer exists on the agent server (it was probably stopped)."),
+            })
+            session._notify_systray()
+            return False
         try:
             response.raise_for_status()
         except requests.RequestException as exc:
             raise UserError(_("Could not reach the AI Agent webhook: %s", exc)) from exc
         session._notify_systray()
+        return True
 
     def _fetch(self, endpoint):
         user = self.user_id

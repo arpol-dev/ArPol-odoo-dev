@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0-20260926\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-06 11:09+0000\n"
-"PO-Revision-Date: 2026-10-06 11:09+0000\n"
+"POT-Creation-Date: 2026-10-06 12:20+0000\n"
+"PO-Revision-Date: 2026-10-06 12:20+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -497,6 +497,13 @@ msgstr ""
 #. module: ai_agent_session
 #. odoo-python
 #: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid ""
+"The session no longer exists on the agent server (it was probably stopped)."
+msgstr ""
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session_reply.py:0
 msgid ""
 "The session no longer exists on the agent server (it was probably stopped). "
 "Start a new session instead."

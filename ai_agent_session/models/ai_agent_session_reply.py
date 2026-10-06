@@ -14,7 +14,19 @@ class AiAgentSessionReply(models.TransientModel):
 
     def action_send(self):
         self.ensure_one()
-        self.session_id.action_reply(self.answer)
+        if not self.session_id.action_reply(self.answer):
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'type': 'warning',
+                    'message': _(
+                        "The session no longer exists on the agent server (it was probably stopped). "
+                        "Start a new session instead."
+                    ),
+                    'next': {'type': 'ir.actions.act_window_close'},
+                },
+            }
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
