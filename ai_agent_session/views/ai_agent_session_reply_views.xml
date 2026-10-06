@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ai_agent_session_reply_view_form" model="ir.ui.view">
+        <field name="name">ai.agent.session.reply.form</field>
+        <field name="model">ai.agent.session.reply</field>
+        <field name="arch" type="xml">
+            <form string="Answer the AI Agent">
+                <field name="session_id" invisible="1"/>
+                <separator string="Question from the agent"/>
+                <field name="question" readonly="1" nolabel="1"/>
+                <separator string="Your answer"/>
+                <field name="answer" nolabel="1" placeholder="Type your answer to the agent..."/>
+                <footer>
+                    <button string="Send" name="action_send" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancel" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="ai_agent_session_reply_action" model="ir.actions.act_window">
+        <field name="name">Answer the AI Agent</field>
+        <field name="res_model">ai.agent.session.reply</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

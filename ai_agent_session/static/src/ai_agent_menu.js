@@ -43,13 +43,20 @@ export class AiAgentMenu extends Component {
 
     onClickSession(session) {
         this.dropdown.close();
-        // Une session "needs_attention" est déjà terminée côté serveur (tour unique, voir
-        // ai_agent_session.py::_handle_callback) : plus rien à rejoindre en live,
-        // seul "running" a encore un remote_url valide.
-        if (session.status === "running" && session.remote_url) {
-            window.open(session.remote_url, "_blank");
+        // Session vivante (en cours ou en attente de réponse) : ouvre sa page dans IAssistant, pour
+        // la suivre ou y répondre directement. Sinon (terminée, erreur...) : l'enregistrement
+        // d'origine. Le lien vers l'enregistrement reste accessible pour les sessions vivantes via
+        // le bouton dédié.
+        if (session.session_url) {
+            window.open(session.session_url, "_blank");
             return;
         }
+        this.onOpenRecord(session);
+    }
+
+    onOpenRecord(session, ev) {
+        ev?.stopPropagation();
+        this.dropdown.close();
         if (session.res_model && session.res_id) {
             this.action.doAction({
                 type: "ir.actions.act_window",
@@ -58,8 +65,16 @@ export class AiAgentMenu extends Component {
                 views: [[false, "form"]],
                 target: "current",
             });
-            this.dropdown.close();
         }
+    }
+
+    onReply(session, ev) {
+        ev.stopPropagation();
+        this.dropdown.close();
+        this.action.doAction("ai_agent_session.ai_agent_session_reply_action", {
+            additionalContext: { default_session_id: session.id },
+            onClose: () => this.fetchData(),
+        });
     }
 
     async onDismiss(session, ev) {

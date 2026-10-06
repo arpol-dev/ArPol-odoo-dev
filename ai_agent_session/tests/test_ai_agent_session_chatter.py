@@ -83,12 +83,90 @@ class TestAiAgentSessionChatter(AiAgentChatterCommon, TransactionCase):
         session._handle_callback('task_done', conclusion='again')
         self.assertEqual(len(self.partner.message_ids), count)
 
-    def test_needs_input_posts_question(self):
-        session, __ = self._launch()
-        with patch(SESSION_REQUESTS):
+    def _wait_for_answer(self, session):
+        with patch(SESSION_REQUESTS) as requests_mock:
             session._handle_callback('needs_input', conclusion='Which company?')
+        return requests_mock
+
+    def test_needs_input_posts_question_and_keeps_session_alive(self):
+        session, __ = self._launch()
+        requests_mock = self._wait_for_answer(session)
         self.assertEqual(session.status, 'needs_attention')
         self.assertIn('Which company?', self.partner.message_ids[0].body)
+        # La session reste vivante : on doit pouvoir lui répondre.
+        requests_mock.delete.assert_not_called()
+
+    def test_reply_sends_message_and_resumes(self):
+        session, __ = self._launch()
+        self._wait_for_answer(session)
+        with patch(SESSION_REQUESTS) as requests_mock:
+            requests_mock.post.return_value = _response({'ok': True})
+            self.env['ai.agent.session.reply'].create({
+                'session_id': session.id, 'answer': 'Company A',
+            }).action_send()
+        call = requests_mock.post.call_args
+        self.assertEqual(call.args[0], 'https://webhook.example.com/api/webhook/sessions/ccm-1/message')
+        self.assertEqual(call.kwargs['json'], {'text': 'Company A'})
+        self.assertEqual(session.status, 'running')
+
+    def test_reply_requires_a_waiting_session(self):
+        session, __ = self._launch()
+        with self.assertRaises(UserError), patch(SESSION_REQUESTS):
+            session.action_reply('too early')
+
+    def test_reply_when_session_is_gone(self):
+        session, __ = self._launch()
+        self._wait_for_answer(session)
+        gone = MagicMock(status_code=404)
+        with self.assertRaises(UserError), patch(SESSION_REQUESTS) as requests_mock:
+            requests_mock.post.return_value = gone
+            session.action_reply('hello?')
+        self.assertEqual(session.status, 'needs_attention')
+
+    def test_task_done_after_waiting_closes_and_stops_session(self):
+        session, __ = self._launch()
+        self._wait_for_answer(session)
+        with patch(SESSION_REQUESTS) as requests_mock:
+            requests_mock.get.return_value = _response({'text': 'log'})
+            session._handle_callback('task_done', conclusion='Finished anyway')
+            requests_mock.delete.assert_called_once()
+        self.assertEqual(session.status, 'done')
+
+    def test_idle_heuristic_ignored_while_waiting(self):
+        session, __ = self._launch()
+        self._wait_for_answer(session)
+        count = len(self.partner.message_ids)
+        with patch(SESSION_REQUESTS) as requests_mock:
+            requests_mock.get.return_value = _response({'text': 'something'})
+            session._handle_callback('idle')
+        self.assertEqual(len(self.partner.message_ids), count)
+
+    def test_dismissing_a_waiting_session_stops_it(self):
+        session, __ = self._launch()
+        self._wait_for_answer(session)
+        with patch(SESSION_REQUESTS) as requests_mock:
+            session.action_dismiss()
+            requests_mock.delete.assert_called_once()
+        self.assertEqual((session.status, session.is_dismissed), ('cancelled', True))
+
+    def test_systray_links_live_sessions_to_iassistant(self):
+        session, __ = self._launch()
+        data = self.env['ai.agent.session'].get_systray_data()['sessions'][0]
+        self.assertEqual(data['session_url'], 'https://webhook.example.com/s/ccm-1')
+        self._wait_for_answer(session)
+        data = self.env['ai.agent.session'].get_systray_data()['sessions'][0]
+        self.assertEqual(data['session_url'], 'https://webhook.example.com/s/ccm-1')
+        with patch(SESSION_REQUESTS) as requests_mock:
+            requests_mock.get.return_value = _response({'text': 'log'})
+            session._handle_callback('task_done', conclusion='ok')
+        data = self.env['ai.agent.session'].get_systray_data()['sessions'][0]
+        self.assertFalse(data['session_url'])
+
+    def test_prompt_tells_the_agent_the_session_stays_open(self):
+        __, call = self._launch()
+        prompt = call.kwargs['json']['prompt']
+        self.assertIn('his answer will reach you as a new message', prompt)
+        self.assertNotIn('automatically terminated', prompt)
 
     def test_server_action_launches_session_for_configured_user(self):
         other = self.env['res.users'].create({

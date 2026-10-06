@@ -46,6 +46,11 @@ class AiAgentSession(models.Model):
     callback_secret = fields.Char(readonly=True, copy=False)
 
     def action_dismiss(self):
+        # Une session en attente est toujours vivante côté serveur : la masquer sans l'arrêter la
+        # laisserait tourner indéfiniment sans que plus personne ne la suive.
+        for session in self.sudo().filtered(lambda s: s.status == 'needs_attention'):
+            session._kill_remote_session()
+            session.write({'status': 'cancelled'})
         self.write({'is_dismissed': True})
 
     def action_open_record(self):
@@ -70,6 +75,8 @@ class AiAgentSession(models.Model):
             ('is_dismissed', '=', False),
         ], limit=50)
         counter = len(sessions.filtered(lambda s: s.status in ('needs_attention', 'done', 'error')))
+        user = self.env.user.sudo()
+        base_url = (user.claude_webhook_url or '').rstrip('/')
         return {
             'counter': counter,
             'sessions': [{
@@ -80,6 +87,11 @@ class AiAgentSession(models.Model):
                 'res_id': s.res_id,
                 'res_name': s.res_name,
                 'remote_url': s.remote_url,
+                # Page de la session dans IAssistant (même serveur que le webhook) : seule cible
+                # exploitable, l'URL Remote Control de claude.ai n'existe pas avec `--bg`.
+                'session_url': (f'{base_url}/s/{s.session_name}'
+                                if base_url and s.session_name and s.status in ('running', 'needs_attention')
+                                else False),
                 'conclusion': s.conclusion,
             } for s in sessions],
         }
@@ -183,10 +195,20 @@ class AiAgentSession(models.Model):
 
     def _handle_callback(self, status, conclusion=None):
         """Traite un callback du webhook : la conclusion est postée en note interne sur l'enregistrement
-        d'origine (log complet en pièce jointe). Même sémantique de signaux : task_done/needs_input
-        explicites en priorité, idle/ended en filet de sécurité."""
+        d'origine (log complet en pièce jointe). Deux familles de signaux :
+        - task_done/needs_input : explicites (report-status.sh), source de vérité. Acceptés aussi
+          quand la session est déjà en attente : l'utilisateur a pu reprendre la main depuis
+          IAssistant, la suite doit alors être suivie dans Odoo comme après une réponse d'ici.
+        - idle/ended : heuristique busy/idle de claude-console, simple filet de sécurité si l'agent
+          plante avant d'appeler report-status.sh. Ignorée dès que la session est en attente : une
+          session vivante repasse 'idle' après chaque tour, ce serait un doublon du needs_input.
+        Une question (needs_input) laisse la session VIVANTE pour qu'on puisse y répondre (depuis
+        Odoo, voir action_reply, ou depuis IAssistant) ; seule la fin de tâche la termine."""
         self.ensure_one()
-        if self.status != 'running' or status not in ('idle', 'ended', 'task_done', 'needs_input'):
+        if status not in ('idle', 'ended', 'task_done', 'needs_input'):
+            return
+        explicit = status in ('task_done', 'needs_input')
+        if self.status != 'running' and not (explicit and self.status == 'needs_attention'):
             return  # déjà finalisée (callback dédoublonné) ou signal ignoré
         # Le contrôleur tourne en public : OdooBot pour que le message soit attribué proprement.
         self = self.with_user(self.env.ref('base.user_root')).sudo()
@@ -197,12 +219,53 @@ class AiAgentSession(models.Model):
             is_done = status in ('task_done', 'ended')
         text = (conclusion or '').replace(AI_AGENT_DONE_MARKER, '').strip() or _("Session ended.")
 
-        # Session à tour unique : dans tous les cas on la termine côté serveur après le callback.
-        self._kill_remote_session()
-        attachment_ids = self._attach_transcript() if is_done else []
+        attachment_ids = []
+        if is_done:
+            attachment_ids = self._attach_transcript()
+            self._kill_remote_session()
         self.write({'status': 'done' if is_done else 'needs_attention', 'conclusion': text})
         self._notify_systray()
         self._post_conclusion(text, is_done, attachment_ids)
+
+    # -- Réponse / fin depuis Odoo ---------------------------------------------
+
+    def action_reply(self, text):
+        """Transmet la réponse de l'utilisateur à la session restée vivante après une question
+        (`/message` du webhook) ; la session repasse 'En cours' et le callback suivant (fin de tâche
+        ou nouvelle question) est posté comme d'habitude."""
+        self.ensure_one()
+        session = self.sudo()
+        text = (text or '').strip()
+        if not text:
+            raise UserError(_("Please type your answer."))
+        # Verrou de ligne : le callback de l'agent peut arriver avant le commit de cette requête ;
+        # sans verrou il verrait l'ancien statut puis notre 'running' écraserait son 'done'.
+        self.env.cr.execute("SELECT id FROM ai_agent_session WHERE id = %s FOR UPDATE", [session.id])
+        session.invalidate_recordset(['status'])
+        if session.status != 'needs_attention':
+            raise UserError(_("This session is not waiting for an answer."))
+        user = session.user_id
+        session.write({'status': 'running'})
+        try:
+            response = requests.post(
+                f'{user.claude_webhook_url.rstrip("/")}/api/webhook/sessions/{session.session_name}/message',
+                json={'text': text},
+                headers={'X-Webhook-Token': user.claude_webhook_token},
+                timeout=15,
+            )
+        except requests.RequestException as exc:
+            _logger.warning("AI Agent: could not send the answer to session %s: %s", session.session_name, exc)
+            raise UserError(_("Could not reach the AI Agent webhook: %s", exc)) from exc
+        if response.status_code == 404:
+            raise UserError(_(
+                "The session no longer exists on the agent server (it was probably stopped). "
+                "Start a new session instead."
+            ))
+        try:
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            raise UserError(_("Could not reach the AI Agent webhook: %s", exc)) from exc
+        session._notify_systray()
 
     def _fetch(self, endpoint):
         user = self.user_id

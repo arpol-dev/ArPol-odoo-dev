@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0-20260926\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-04 13:22+0000\n"
-"PO-Revision-Date: 2026-10-04 13:22+0000\n"
+"POT-Creation-Date: 2026-10-06 11:09+0000\n"
+"PO-Revision-Date: 2026-10-06 11:09+0000\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -105,6 +105,29 @@ msgid "Agent Request"
 msgstr "Demande à l'agent"
 
 #. module: ai_agent_session
+#. odoo-javascript
+#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
+msgid "Answer"
+msgstr "Répondre"
+
+#. module: ai_agent_session
+#: model:ir.model,name:ai_agent_session.model_ai_agent_session_reply
+msgid "Answer an AI Agent session"
+msgstr "Répondre à une session d'agent IA"
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session_reply.py:0
+msgid "Answer sent. The agent resumes its work."
+msgstr "Réponse envoyée. L'agent reprend son travail."
+
+#. module: ai_agent_session
+#: model:ir.actions.act_window,name:ai_agent_session.ai_agent_session_reply_action
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
+msgid "Answer the AI Agent"
+msgstr "Répondre à l'agent IA"
+
+#. module: ai_agent_session
 #: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__default
 #: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__default
 msgid "Ask for everything"
@@ -133,6 +156,7 @@ msgid "Callback Secret"
 msgstr "Secret de rappel"
 
 #. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
 msgid "Cancel"
 msgstr "Annuler"
@@ -168,12 +192,14 @@ msgstr "Impossible de joindre le webhook de l'agent IA : %s"
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__create_uid
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__create_uid
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__create_uid
 msgid "Created by"
 msgstr "Créé par"
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__create_date
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__create_date
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__create_date
 msgid "Created on"
 msgstr "Créé le"
@@ -195,7 +221,14 @@ msgid "Dismiss"
 msgstr "Masquer"
 
 #. module: ai_agent_session
+#. odoo-javascript
+#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
+msgid "Dismiss and stop the session"
+msgstr "Masquer et arrêter la session"
+
+#. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__display_name
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__display_name
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__display_name
 msgid "Display Name"
 msgstr "Nom affiché"
@@ -243,6 +276,7 @@ msgstr ""
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__id
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__id
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__id
 msgid "ID"
 msgstr "ID"
@@ -254,12 +288,14 @@ msgstr "Masquée"
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__write_uid
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__write_uid
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__write_uid
 msgid "Last Updated by"
 msgstr "Dernière mise à jour par"
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__write_date
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__write_date
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__write_date
 msgid "Last Updated on"
 msgstr "Dernière mise à jour le"
@@ -308,6 +344,12 @@ msgid "No confirmation at all (risky)"
 msgstr "Aucune confirmation (risqué)"
 
 #. module: ai_agent_session
+#. odoo-javascript
+#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
+msgid "Open record"
+msgstr "Ouvrir l'enregistrement"
+
+#. module: ai_agent_session
 #: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__summary
 msgid "Optional. Names the session in Claude Code and in the notifications menu."
 msgstr "Facultatif. Nomme la session dans Claude Code et dans le menu des notifications."
@@ -336,6 +378,18 @@ msgstr "Mode de permissions"
 #: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__plan
 msgid "Plan only, no changes"
 msgstr "Plan uniquement, aucune modification"
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "Please type your answer."
+msgstr "Veuillez saisir votre réponse."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__question
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
+msgid "Question from the agent"
+msgstr "Question de l'agent"
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__remote_url
@@ -371,6 +425,11 @@ msgid "Running"
 msgstr "En cours"
 
 #. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
+msgid "Send"
+msgstr "Envoyer"
+
+#. module: ai_agent_session
 #: model:ir.model,name:ai_agent_session.model_ir_actions_server
 msgid "Server Action"
 msgstr "Action serveur"
@@ -380,6 +439,11 @@ msgstr "Action serveur"
 #: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__
 msgid "Server default"
 msgstr "Défaut du serveur"
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__session_id
+msgid "Session"
+msgstr "Session"
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_title
@@ -426,6 +490,18 @@ msgid ""
 msgstr "La demande ci-dessous est la tâche principale envoyée à l'agent. Il reçoit aussi toutes les données de l'enregistrement et l'historique du chatter, et peut explorer librement la base de données s'il dispose de ses propres accès. Le résultat sera publié en note interne sur cet enregistrement."
 
 #. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "The session no longer exists on the agent server (it was probably stopped). Start a new session instead."
+msgstr "La session n'existe plus sur le serveur de l'agent (elle a probablement été arrêtée). Lancez une nouvelle session à la place."
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "This session is not waiting for an answer."
+msgstr "Cette session n'attend pas de réponse."
+
+#. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__summary
 msgid "Title"
 msgstr "Titre"
@@ -450,6 +526,11 @@ msgid ""
 "- 'Send Webhook Notification': send a POST request to an external system, also known as a Webhook\n"
 "- 'Execute Existing Actions': define an action that triggers several other server actions\n"
 msgstr ""
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
+msgid "Type your answer to the agent..."
+msgstr "Saisissez votre réponse à l'agent..."
 
 #. module: ai_agent_session
 #: model:ir.model,name:ai_agent_session.model_res_users
@@ -481,6 +562,12 @@ msgstr ""
 "• Sonnet — équilibre vitesse/qualité. Choix par défaut recommandé pour la plupart des tâches (analyse, code courant, rédaction).\n"
 "• Opus — le plus capable pour les raisonnements complexes ou ambigus et les analyses approfondies. Plus lent et plus cher : à réserver aux tâches qui en ont vraiment besoin.\n"
 "• Fable — dernier membre de la famille de modèles. À utiliser selon vos propres essais ; ses points forts sont moins établis que ceux de Sonnet/Opus/Haiku."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__answer
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
+msgid "Your answer"
+msgstr "Votre réponse"
 
 #. module: ai_agent_session
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
