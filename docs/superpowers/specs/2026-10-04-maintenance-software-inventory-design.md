@@ -280,8 +280,8 @@ paquets installés, licences, ports/URL de services, supervision, comparaison de
 
 1. `maintenance_sw_base` + `maintenance_sw_docker` — ce document.
 2. `maintenance_sw_odoo` — série, bases de données, puis modules installés.
-3. `maintenance_hosting_ovh` — pont avec `ovh_api` : services OVH → équipements matériels, client
-   (`partner_id`), échéance.
+3. `maintenance_hosting_ovh` — pont avec `ovh_api` : voir
+   `2026-10-06-maintenance-host-domain-ovh-design.md` (support physique, client, noms de domaine).
 4. `maintenance_sw_discovery` — collecte (`os-release`, `docker inspect`, `repos.yaml`) poussée en
    JSON-RPC.
 5. `maintenance_sw_lifecycle` — installé vs dernière version / fin de support (éventuellement via
