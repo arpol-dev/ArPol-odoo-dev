@@ -5,3 +5,7 @@ access_software_version_user,software.version.user,model_software_version,base.g
 access_software_version_manager,software.version.manager,model_software_version,maintenance.group_equipment_manager,1,1,1,1
 access_software_deployment_method_user,software.deployment.method.user,model_software_deployment_method,base.group_user,1,0,0,0
 access_software_deployment_method_manager,software.deployment.method.manager,model_software_deployment_method,maintenance.group_equipment_manager,1,1,1,1
+access_maintenance_host_user,maintenance.host.user,model_maintenance_host,base.group_user,1,0,0,0
+access_maintenance_host_manager,maintenance.host.manager,model_maintenance_host,maintenance.group_equipment_manager,1,1,1,1
+access_maintenance_domain_user,maintenance.domain.user,model_maintenance_domain,base.group_user,1,0,0,0
+access_maintenance_domain_manager,maintenance.domain.manager,model_maintenance_domain,maintenance.group_equipment_manager,1,1,1,1
