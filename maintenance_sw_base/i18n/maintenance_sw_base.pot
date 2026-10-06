@@ -6,14 +6,20 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0-20260926\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-05 07:01+0000\n"
-"PO-Revision-Date: 2026-10-05 07:01+0000\n"
+"POT-Creation-Date: 2026-10-06 21:45+0000\n"
+"PO-Revision-Date: 2026-10-06 21:45+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
+
+#. module: maintenance_sw_base
+#. odoo-python
+#: code:addons/maintenance_sw_base/models/maintenance_domain.py:0
+msgid "%(name)r is not a valid domain name."
+msgstr ""
 
 #. module: maintenance_sw_base
 #: model:ir.model.constraint,message:maintenance_sw_base.constraint_software_deployment_method_name_uniq
@@ -26,17 +32,28 @@ msgid "A software product with this name already exists."
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__active
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__active
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__active
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__active
 msgid "Active"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_domain_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_domain_view_search
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_host_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_host_view_search
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_deployment_method_view_form
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_deployment_method_view_search
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_form
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_search
 msgid "Archived"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__auto_renew
+msgid "Automatic Renewal"
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -56,6 +73,13 @@ msgid "Compose Stack"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model,name:maintenance_sw_base.model_res_partner
+msgid "Contact"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__create_uid
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__create_uid
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__create_uid
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__create_uid
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__create_uid
@@ -63,10 +87,28 @@ msgid "Created by"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__create_date
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__create_date
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__create_date
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__create_date
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__create_date
 msgid "Created on"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__effective_customer_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+msgid "Customer"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__customer_id
+msgid "Customer of this equipment, when it is not the one of its parent."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_domain__partner_id
+msgid "Customer who owns the domain, even when no equipment serves it."
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -82,6 +124,8 @@ msgid "Deployment Methods"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__display_name
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__display_name
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__display_name
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__display_name
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__display_name
@@ -99,6 +143,23 @@ msgid "Documentation URL"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model,name:maintenance_sw_base.model_maintenance_domain
+msgid "Domain Name"
+msgstr ""
+
+#. module: maintenance_sw_base
+#. odoo-python
+#: code:addons/maintenance_sw_base/models/res_partner.py:0
+#: model:ir.actions.act_window,name:maintenance_sw_base.maintenance_domain_action
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__domain_ids
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_res_partner__maintenance_domain_ids
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_res_users__maintenance_domain_ids
+#: model:ir.ui.menu,name:maintenance_sw_base.menu_maintenance_domain
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.view_partner_form
+msgid "Domain Names"
+msgstr ""
+
+#. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__end_of_support_date
 msgid "End of Support"
 msgstr ""
@@ -106,6 +167,11 @@ msgstr ""
 #. module: maintenance_sw_base
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_search
 msgid "End of Support Reached"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__expiration_date
+msgid "Expiration Date"
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -119,6 +185,8 @@ msgid "Git Checkout"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_domain_view_search
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_host_view_search
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_version_view_search
 msgid "Group By"
 msgstr ""
@@ -130,15 +198,33 @@ msgid "Hardware"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__equipment_id
+msgid "Hardware Equipment"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_host__provider_id
+msgid ""
+"Hosting company (OVHcloud, Alwaysdata...). Empty for a machine of your own."
+msgstr ""
+
+#. module: maintenance_sw_base
 #: model:ir.model.fields,help:maintenance_sw_base.field_software_deployment_method__update_procedure
 msgid "How to update software deployed this way, known pitfalls."
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__id
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__id
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__id
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__id
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__id
 msgid "ID"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_form
+msgid "Inherited from the parent"
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -182,6 +268,8 @@ msgid "LTS"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__write_uid
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__write_uid
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__write_uid
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__write_uid
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__write_uid
@@ -189,6 +277,8 @@ msgid "Last Updated by"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__write_date
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__write_date
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__write_date
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__write_date
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__write_date
@@ -204,6 +294,17 @@ msgstr ""
 #. module: maintenance_sw_base
 #: model:ir.model.fields,help:maintenance_sw_base.field_software_version__is_latest
 msgid "Latest known version of the product. Only one version per product."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__location
+msgid "Location"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_res_partner__maintenance_domain_count
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_res_users__maintenance_domain_count
+msgid "Maintenance Domain Count"
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -227,6 +328,8 @@ msgid "Manual"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__name
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__name
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__name
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__name
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__name
@@ -234,12 +337,16 @@ msgid "Name"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__note
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__note
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__note
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__note
 msgid "Note"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_domain_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_host_view_form
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_form
 msgid "Notes"
 msgstr ""
@@ -257,8 +364,15 @@ msgid ""
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_host__host_type__other
 #: model:ir.model.fields.selection,name:maintenance_sw_base.selection__software_version__channel__other
 msgid "Other"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__partner_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_domain_view_search
+msgid "Owner"
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -267,8 +381,48 @@ msgid "Package"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model,name:maintenance_sw_base.model_maintenance_host
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__physical_host_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+msgid "Physical Host"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.actions.act_window,name:maintenance_sw_base.maintenance_host_action
+#: model:ir.ui.menu,name:maintenance_sw_base.menu_maintenance_host
+msgid "Physical Hosts"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_host__host_type__physical
+msgid "Physical Server"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__host_id
+msgid "Physical host of this equipment, when it is not the one of its parent."
+msgstr ""
+
+#. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__product_id
 msgid "Product"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__provider_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_host_view_search
+msgid "Provider"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_domain__name
+msgid "Registered domain, e.g. example.fr (no subdomain)."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__registrar_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_domain_view_search
+msgid "Registrar"
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -293,11 +447,40 @@ msgid "Sequence"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__equipment_ids
+msgid "Served By"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__customer_id
+msgid "Set Customer"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__host_id
+msgid "Set Physical Host"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_host__host_type__shared_hosting
+msgid "Shared Hosting"
+msgstr ""
+
+#. module: maintenance_sw_base
+#. odoo-python
+#: code:addons/maintenance_sw_base/models/maintenance_host.py:0
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__software_ids
 #: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__equipment_kind__software
 #: model:ir.ui.menu,name:maintenance_sw_base.menu_sw_config
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_form
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_host_view_form
 msgid "Software"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__software_count
+msgid "Software Count"
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -333,13 +516,18 @@ msgstr ""
 #. module: maintenance_sw_base
 #: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__needs_attachment
 msgid ""
-"Software with no parent equipment whose deployment method is not managed by "
-"the provider: the server it runs on is missing."
+"Software with no physical host (set on it or on a parent) whose deployment "
+"method is not managed by the provider."
 msgstr ""
 
 #. module: maintenance_sw_base
 #: model:ir.model.fields.selection,name:maintenance_sw_base.selection__software_version__channel__stable
 msgid "Stable"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_host__equipment_id
+msgid "The hardware equipment, when you maintain the machine yourself."
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -350,10 +538,25 @@ msgid ""
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__effective_customer_id
+msgid "The set customer, or else the one of the parent equipment."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__physical_host_id
+msgid "The set physical host, or else the one of the parent equipment."
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.constraint,message:maintenance_sw_base.constraint_maintenance_domain_name_uniq
+msgid "This domain name already exists."
+msgstr ""
+
+#. module: maintenance_sw_base
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_form
 msgid ""
-"This software is attached to no equipment: set the server it runs on as\n"
-"                    parent, or a deployment method managed by the provider."
+"This software has no physical host: set it on this software or on one of its\n"
+"                    parents, or use a deployment method managed by the provider."
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -368,9 +571,20 @@ msgid "To Attach"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__host_type
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_host_view_search
+msgid "Type"
+msgstr ""
+
+#. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__update_procedure
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_deployment_method_view_form
 msgid "Update Procedure"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_host__host_type__vps
+msgid "VPS"
 msgstr ""
 
 #. module: maintenance_sw_base
@@ -402,6 +616,11 @@ msgid "Versions"
 msgstr ""
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_host__host_type__vm
+msgid "Virtual Machine"
+msgstr ""
+
+#. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_product__website
 msgid "Website"
 msgstr ""
@@ -419,6 +638,16 @@ msgstr ""
 #. module: maintenance_sw_base
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.software_product_view_form
 msgid "e.g. Debian"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_domain_view_form
+msgid "e.g. example.fr"
+msgstr ""
+
+#. module: maintenance_sw_base
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_host_view_form
+msgid "e.g. vps-1234 (OVH)"
 msgstr ""
 
 #. module: maintenance_sw_base

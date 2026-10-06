@@ -7,12 +7,14 @@
         <field name="arch" type="xml">
             <xpath expr="//div[@name='button_box']" position="after">
                 <div class="alert alert-warning" role="alert" invisible="not needs_attachment">
-                    This software is attached to no equipment: set the server it runs on as
-                    parent, or a deployment method managed by the provider.
+                    This software has no physical host: set it on this software or on one of its
+                    parents, or use a deployment method managed by the provider.
                 </div>
             </xpath>
             <field name="category_id" position="after">
                 <field name="equipment_kind" widget="radio" options="{'horizontal': true}"/>
+                <field name="effective_customer_id"/>
+                <field name="customer_id" placeholder="Inherited from the parent"/>
             </field>
             <xpath expr="//notebook" position="inside">
                 <page string="Software" name="software" invisible="equipment_kind != 'software'">
@@ -26,8 +28,13 @@
                             <field name="software_product_id"/>
                             <field name="software_version_id"/>
                             <field name="version_note"/>
+                            <field name="physical_host_id"/>
+                            <field name="host_id" placeholder="Inherited from the parent"/>
                             <field name="needs_attachment" invisible="1"/>
                         </group>
+                    </group>
+                    <group>
+                        <field name="domain_ids" widget="many2many_tags"/>
                     </group>
                 </page>
             </xpath>
@@ -43,6 +50,8 @@
                 <field name="equipment_kind" optional="show"/>
                 <field name="software_version_id" optional="show"/>
                 <field name="deployment_method_id" optional="hide"/>
+                <field name="physical_host_id" optional="show"/>
+                <field name="effective_customer_id" optional="show"/>
             </field>
         </field>
     </record>
@@ -67,10 +76,15 @@
                 <filter string="Deployment Method" name="group_deployment_method"
                         context="{'group_by': 'deployment_method_id'}"/>
                 <filter string="Install Type" name="group_install_type" context="{'group_by': 'install_type'}"/>
+                <filter string="Physical Host" name="group_physical_host" context="{'group_by': 'physical_host_id'}"/>
+                <filter string="Customer" name="group_customer" context="{'group_by': 'effective_customer_id'}"/>
             </xpath>
             <field name="category_id" position="after">
                 <field name="software_product_id"/>
                 <field name="software_version_id"/>
+                <field name="physical_host_id"/>
+                <field name="effective_customer_id"/>
+                <field name="domain_ids"/>
             </field>
         </field>
     </record>

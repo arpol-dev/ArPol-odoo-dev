@@ -19,3 +19,13 @@ class TestShippedData(TransactionCase):
         arch = self.env["software.deployment.method"].get_view(view_type="search")["arch"]
         self.assertIn('name="name"', arch)
         self.assertIn("('active', '=', False)", arch)
+
+    def test_equipment_form_shows_host_customer_domains(self):
+        arch = self.env["maintenance.equipment"].get_view(view_type="form")["arch"]
+        for field in ("physical_host_id", "host_id", "effective_customer_id", "customer_id", "domain_ids"):
+            self.assertIn(f'name="{field}"', arch)
+
+    def test_host_and_domain_menus(self):
+        parent = self.env.ref("maintenance_sw_base.menu_sw_config")
+        self.assertEqual(self.env.ref("maintenance_sw_base.menu_maintenance_host").parent_id, parent)
+        self.assertEqual(self.env.ref("maintenance_sw_base.menu_maintenance_domain").parent_id, parent)

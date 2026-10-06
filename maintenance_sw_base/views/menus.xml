@@ -8,4 +8,8 @@
               parent="menu_sw_config" sequence="20"/>
     <menuitem id="menu_software_deployment_method" action="software_deployment_method_action"
               parent="menu_sw_config" sequence="30"/>
+    <menuitem id="menu_maintenance_host" action="maintenance_host_action"
+              parent="menu_sw_config" sequence="35"/>
+    <menuitem id="menu_maintenance_domain" action="maintenance_domain_action"
+              parent="menu_sw_config" sequence="36"/>
 </odoo>

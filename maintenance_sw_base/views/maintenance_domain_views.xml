@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="maintenance_domain_view_list" model="ir.ui.view">
+        <field name="name">maintenance.domain.list</field>
+        <field name="model">maintenance.domain</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="registrar_id"/>
+                <field name="expiration_date"/>
+                <field name="auto_renew"/>
+                <field name="equipment_ids" widget="many2many_tags" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="maintenance_domain_view_form" model="ir.ui.view">
+        <field name="name">maintenance.domain.form</field>
+        <field name="model">maintenance.domain</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. example.fr"/></h1>
+                    </div>
+                    <group>
+                        <group name="owner">
+                            <field name="partner_id"/>
+                            <field name="registrar_id"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group name="renewal">
+                            <field name="expiration_date"/>
+                            <field name="auto_renew"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="equipment_ids" widget="many2many_tags"/>
+                    </group>
+                    <notebook>
+                        <page string="Notes" name="notes">
+                            <field name="note"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="maintenance_domain_view_search" model="ir.ui.view">
+        <field name="name">maintenance.domain.search</field>
+        <field name="model">maintenance.domain</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="registrar_id"/>
+                <field name="equipment_ids"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Owner" name="group_owner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Registrar" name="group_registrar" context="{'group_by': 'registrar_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="maintenance_domain_action" model="ir.actions.act_window">
+        <field name="name">Domain Names</field>
+        <field name="res_model">maintenance.domain</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
