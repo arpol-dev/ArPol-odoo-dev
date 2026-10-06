@@ -4,3 +4,4 @@ from . import software_deployment_method
 from . import maintenance_equipment
 from . import maintenance_host
 from . import maintenance_domain
+from . import res_partner

@@ -44,12 +44,50 @@ class MaintenanceEquipment(models.Model):
     )
     version_note = fields.Char(help="Free-form version, when it is not in the catalog.")
     install_path = fields.Char(help="Where it is installed, e.g. /opt/apps/myc-deploy.")
+    host_id = fields.Many2one(
+        "maintenance.host",
+        string="Set Physical Host",
+        ondelete="restrict",
+        tracking=True,
+        help="Physical host of this equipment, when it is not the one of its parent.",
+    )
+    physical_host_id = fields.Many2one(
+        "maintenance.host",
+        string="Physical Host",
+        compute="_compute_physical_host_id",
+        store=True,
+        recursive=True,
+        index=True,
+        help="The set physical host, or else the one of the parent equipment.",
+    )
+    customer_id = fields.Many2one(
+        "res.partner",
+        string="Set Customer",
+        tracking=True,
+        help="Customer of this equipment, when it is not the one of its parent.",
+    )
+    effective_customer_id = fields.Many2one(
+        "res.partner",
+        string="Customer",
+        compute="_compute_effective_customer_id",
+        store=True,
+        recursive=True,
+        index=True,
+        help="The set customer, or else the one of the parent equipment.",
+    )
+    domain_ids = fields.Many2many(
+        "maintenance.domain",
+        "maintenance_domain_equipment_rel",
+        "equipment_id",
+        "domain_id",
+        string="Domain Names",
+    )
     needs_attachment = fields.Boolean(
         "To Attach",
         compute="_compute_needs_attachment",
         store=True,
-        help="Software with no parent equipment whose deployment method is not managed by "
-        "the provider: the server it runs on is missing.",
+        help="Software with no physical host (set on it or on a parent) whose deployment "
+        "method is not managed by the provider.",
     )
 
     @api.depends("software_version_id.product_id")
@@ -60,12 +98,26 @@ class MaintenanceEquipment(models.Model):
             else:
                 equipment.software_product_id = equipment.software_product_id
 
-    @api.depends("equipment_kind", "parent_id", "deployment_method_id.managed_by_provider")
+    @api.depends("host_id", "parent_id.physical_host_id")
+    def _compute_physical_host_id(self):
+        for equipment in self:
+            equipment.physical_host_id = equipment.host_id or equipment.parent_id.physical_host_id
+
+    @api.depends("customer_id", "parent_id.effective_customer_id")
+    def _compute_effective_customer_id(self):
+        for equipment in self:
+            equipment.effective_customer_id = (
+                equipment.customer_id or equipment.parent_id.effective_customer_id
+            )
+
+    @api.depends(
+        "equipment_kind", "physical_host_id", "deployment_method_id.managed_by_provider"
+    )
     def _compute_needs_attachment(self):
         for equipment in self:
             equipment.needs_attachment = (
                 equipment.equipment_kind == "software"
-                and not equipment.parent_id
+                and not equipment.physical_host_id
                 and not equipment.deployment_method_id.managed_by_provider
             )
 

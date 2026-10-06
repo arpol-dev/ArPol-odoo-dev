@@ -16,6 +16,7 @@ class TestSoftwareEquipment(TransactionCase):
             {"product_id": cls.debian.id, "name": "12"}
         )
         cls.vps = cls.Equipment.create({"name": "vps-test"})
+        cls.host = cls.env["maintenance.host"].create({"name": "vps-host-test"})
 
     def _software(self, **values):
         return self.Equipment.create({"name": "sw", "equipment_kind": "software", **values})
@@ -30,17 +31,17 @@ class TestSoftwareEquipment(TransactionCase):
     def test_software_without_method_needs_attachment(self):
         self.assertTrue(self._software().needs_attachment)
 
-    def test_software_with_parent_does_not_need_attachment(self):
-        software = self._software(parent_id=self.vps.id, deployment_method_id=self.method_0k.id)
+    def test_software_with_host_does_not_need_attachment(self):
+        software = self._software(host_id=self.host.id, deployment_method_id=self.method_0k.id)
         self.assertFalse(software.needs_attachment)
 
     def test_saas_without_parent_does_not_need_attachment(self):
         software = self._software(install_type="saas", deployment_method_id=self.method_saas.id)
         self.assertFalse(software.needs_attachment)
 
-    def test_needs_attachment_recomputed_when_parent_set(self):
+    def test_needs_attachment_recomputed_when_host_set(self):
         software = self._software(deployment_method_id=self.method_0k.id)
-        software.parent_id = self.vps
+        software.host_id = self.host
         self.assertFalse(software.needs_attachment)
 
     def test_needs_attachment_follows_method_flag(self):

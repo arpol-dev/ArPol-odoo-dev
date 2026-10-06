@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import _, api, fields, models
 
 HOST_TYPES = [
     ("physical", "Physical Server"),
@@ -32,3 +32,24 @@ class MaintenanceHost(models.Model):
     location = fields.Char()
     note = fields.Html()
     active = fields.Boolean(default=True)
+
+    software_ids = fields.One2many(
+        "maintenance.equipment", "physical_host_id", string="Software"
+    )
+    software_count = fields.Integer(compute="_compute_software_count")
+
+    @api.depends("software_ids")
+    def _compute_software_count(self):
+        for host in self:
+            host.software_count = len(host.software_ids)
+
+    def action_view_software(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Software"),
+            "res_model": "maintenance.equipment",
+            "view_mode": "list,form",
+            "domain": [("physical_host_id", "=", self.id)],
+            "context": {"default_equipment_kind": "software", "default_host_id": self.id},
+        }
