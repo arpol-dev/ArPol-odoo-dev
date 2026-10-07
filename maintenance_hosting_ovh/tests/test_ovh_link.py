@@ -1,3 +1,4 @@
+from ast import literal_eval
 from unittest.mock import patch
 
 from odoo.tests import TransactionCase, new_test_user
@@ -212,3 +213,19 @@ class TestOvhLink(TransactionCase):
         self.assertTrue(domain.is_ovh_managed)
         service.sudo().unlink()
         self.assertFalse(domain.is_ovh_managed)
+
+    def _kinds_offered_by(self, field):
+        domain = literal_eval(field.domain)
+        services = self.Service.create([
+            {"account_id": self.account.id, "kind": kind, "service_name": f"{kind}-filter-test"}
+            for kind, _label in self.Service._fields["kind"].selection
+        ])
+        return set(self.Service.search(domain).filtered(lambda s: s in services).mapped("kind"))
+
+    def test_host_field_offers_machine_services_only(self):
+        field = self.env["maintenance.host"]._fields["ovh_service_id"]
+        self.assertEqual(self._kinds_offered_by(field), {"dedicated", "vps", "hosting"})
+
+    def test_domain_field_offers_domain_services_only(self):
+        field = self.env["maintenance.domain"]._fields["ovh_service_id"]
+        self.assertEqual(self._kinds_offered_by(field), {"domain"})

@@ -7,6 +7,7 @@ class MaintenanceDomain(models.Model):
     ovh_service_id = fields.Many2one(
         "ovh.service",
         string="OVH Service",
+        domain="[('kind', '=', 'domain')]",
         ondelete="set null",
         index=True,
         groups="ovh_api.group_ovh_user",
