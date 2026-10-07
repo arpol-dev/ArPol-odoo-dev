@@ -14,7 +14,6 @@ class MaintenanceDomain(models.Model):
     is_ovh_managed = fields.Boolean(
         "Managed at OVH",
         compute="_compute_is_ovh_managed",
-        store=True,
         help="Expiration and renewal come from OVH and are rewritten at each synchronization.",
     )
 

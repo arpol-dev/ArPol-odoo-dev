@@ -1,6 +1,11 @@
+from unittest.mock import patch
+
 from odoo.tests import TransactionCase, new_test_user
+from odoo.tools import mute_logger
 
 from odoo.addons.maintenance_hosting_ovh.hooks import post_init_hook
+
+LOGGER = "odoo.addons.maintenance_hosting_ovh.models.ovh_service"
 
 
 def payload(name, expiration="2027-06-09", automatic=True, admin="pa1413842-ovh"):
@@ -27,9 +32,16 @@ class TestOvhLink(TransactionCase):
         )
         cls.ovhcloud = cls.env.ref("maintenance_hosting_ovh.partner_ovhcloud")
 
-    def _sync(self, kind, name, **kwargs):
-        service, _is_new = self.Service._upsert(self.account, kind, name, payload(name, **kwargs))
+    def _sync(self, kind, name, account=None, **kwargs):
+        service, _is_new = self.Service._upsert(
+            account or self.account, kind, name, payload(name, **kwargs)
+        )
         return service
+
+    def _other_account(self):
+        return self.env["ovh.account"].create(
+            {"name": "OVH customer", "application_key": "k2", "application_secret": "s2"}
+        )
 
     def test_vps_creates_host_once(self):
         service = self._sync("vps", "vps-d4d16c17.vps.ovh.net")
@@ -129,3 +141,74 @@ class TestOvhLink(TransactionCase):
             self.account.with_user(operator), "domain", "operator.fr", payload("operator.fr")
         )
         self.assertTrue(self.Domain.search([("ovh_service_id", "=", service.id)]))
+
+    def test_domain_listed_by_two_accounts(self):
+        first = self._sync("domain", "shared.fr")
+        with self.assertLogs(LOGGER, "WARNING"):
+            second = self._sync("domain", "shared.fr", account=self._other_account())
+        self.assertTrue(second)
+        domain = self.Domain.search([("name", "=", "shared.fr")])
+        self.assertEqual(len(domain), 1)
+        self.assertEqual(domain.ovh_service_id, first, "the domain stays with the first service")
+        self.assertTrue(domain.active)
+
+    def test_domain_moved_to_another_account(self):
+        old = self._sync("domain", "moved.fr")
+        old.write({"state": "terminated", "active": False})
+        domain = self.Domain.search([("ovh_service_id", "=", old.id)])
+        self.assertFalse(domain.active)
+        new = self._sync("domain", "moved.fr", account=self._other_account())
+        self.assertEqual(self.Domain.search([("name", "=", "moved.fr")]), domain)
+        self.assertEqual(domain.ovh_service_id, new)
+        self.assertTrue(domain.active)
+
+    def test_archived_service_does_not_take_manual_domain(self):
+        manual = self.Domain.create({"name": "manual-old.fr"})
+        archived = self.Service.create({
+            "account_id": self.account.id, "kind": "domain", "service_name": "manual-old.fr",
+            "active": False,
+        })
+        post_init_hook(self.env)
+        self.assertFalse(manual.ovh_service_id)
+        self.assertTrue(manual.active)
+        self.assertFalse(self.Domain.search([("ovh_service_id", "=", archived.id)]))
+
+    def test_link_failure_does_not_stop_the_sync(self):
+        service = self._sync("domain", "boom.fr", expiration="2027-06-09")
+        with patch.object(
+            type(self.Service), "_sync_maintenance_domain", side_effect=Exception("boom")
+        ), mute_logger(LOGGER):
+            again, is_new = self.Service._upsert(
+                self.account, "domain", "boom.fr", payload("boom.fr", expiration="2028-06-09")
+            )
+        self.assertEqual(again, service)
+        self.assertFalse(is_new)
+        self.env.invalidate_all()
+        self.assertEqual(str(service.expiration_date), "2028-06-09")
+
+    def test_sql_failure_in_link_keeps_the_cursor_usable(self):
+        def broken(service, ovhcloud):
+            service.env.cr.execute("SELECT 1/0")
+
+        with patch.object(type(self.Service), "_sync_maintenance_domain", broken), \
+                mute_logger(LOGGER, "odoo.sql_db"):
+            service = self._sync("domain", "sql.fr", expiration="2027-06-09")
+        self.env.invalidate_all()
+        self.assertEqual(str(service.expiration_date), "2027-06-09")
+        self.assertFalse(self.Domain.search([("name", "=", "sql.fr")]))
+
+    def test_archive_failure_does_not_stop_the_write(self):
+        service = self._sync("vps", "vps-err.vps.ovh.net")
+        with patch.object(
+            type(self.Service), "_sync_maintenance_active", side_effect=Exception("boom")
+        ), mute_logger(LOGGER):
+            service.write({"state": "terminated", "active": False})
+        self.env.invalidate_all()
+        self.assertFalse(service.active)
+
+    def test_deleted_service_releases_the_domain(self):
+        service = self._sync("domain", "deleted.fr")
+        domain = self.Domain.search([("ovh_service_id", "=", service.id)])
+        self.assertTrue(domain.is_ovh_managed)
+        service.sudo().unlink()
+        self.assertFalse(domain.is_ovh_managed)

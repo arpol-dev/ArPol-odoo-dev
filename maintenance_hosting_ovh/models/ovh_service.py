@@ -1,4 +1,8 @@
+import logging
+
 from odoo import _, fields, models
+
+_logger = logging.getLogger(__name__)
 
 # OVH families that are a machine (or a shared hosting) software can run on.
 HOST_TYPES = {
@@ -27,13 +31,28 @@ class OvhService(models.Model):
 
     def _upsert(self, account, kind, service_name, payload):
         service, is_new = super()._upsert(account, kind, service_name, payload)
-        service._sync_maintenance_link()
+        # The link is a by-product: a failure must neither abort the transaction
+        # nor stop ovh_api's synchronization of the other services.
+        try:
+            with self.env.cr.savepoint():
+                service._sync_maintenance_link()
+        except Exception:
+            _logger.exception("OVH service %s: maintenance link not updated", service.service_name)
+            self.env.invalidate_all(flush=False)
         return service, is_new
 
     def write(self, vals):
         res = super().write(vals)
         if "active" in vals:
-            self._sync_maintenance_active()
+            try:
+                with self.env.cr.savepoint():
+                    self._sync_maintenance_active()
+            except Exception:
+                _logger.exception(
+                    "OVH services %s: maintenance links not archived/restored",
+                    ", ".join(self.mapped("service_name")),
+                )
+                self.env.invalidate_all(flush=False)
         return res
 
     # The links are a consequence of the synchronization, which an OVH operator
@@ -47,6 +66,8 @@ class OvhService(models.Model):
             elif service.kind == "domain":
                 service._sync_maintenance_domain(ovhcloud)
 
+    # OVH is the source of truth for linked records (hosts and domains): their active
+    # state mirrors the service's.
     def _sync_maintenance_host(self, ovhcloud):
         self.ensure_one()
         Host = self.env["maintenance.host"].sudo().with_context(active_test=False)
@@ -69,11 +90,21 @@ class OvhService(models.Model):
         domain = Domain.search([("ovh_service_id", "=", self.id)], limit=1)
         if not domain:
             # A domain typed by hand before the sync is the same domain: link it.
+            # One whose service was archived has moved here (account change).
             domain = Domain.search(
-                [("name", "=", Domain._normalize_name(self.service_name)),
-                 ("ovh_service_id", "=", False)],
-                limit=1,
+                [("name", "=", Domain._normalize_name(self.service_name))], limit=1
             )
+            if domain and domain.ovh_service_id.active:
+                # Same domain listed by two OVH accounts: it stays with the first.
+                _logger.warning(
+                    "OVH domain %s (account %s) not linked: already linked to account %s",
+                    self.service_name, self.account_id.display_name,
+                    domain.ovh_service_id.account_id.display_name,
+                )
+                return Domain
+            if domain and not self.active:
+                # An archived service never takes over (and archives) a live domain.
+                return Domain
         values = {
             "expiration_date": self.expiration_date,
             "auto_renew": self.renew_automatic,

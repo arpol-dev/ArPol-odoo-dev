@@ -7,7 +7,8 @@
         <field name="arch" type="xml">
             <group name="main" position="inside">
                 <field name="ovh_service_id" groups="ovh_api.group_ovh_user"/>
-                <field name="ovh_expiration_date" groups="ovh_api.group_ovh_user"/>
+                <field name="ovh_expiration_date" groups="ovh_api.group_ovh_user"
+                       invisible="not ovh_service_id"/>
             </group>
         </field>
     </record>
