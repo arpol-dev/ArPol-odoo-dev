@@ -1,0 +1,96 @@
+[
+    {
+        "Id": "0d00000000010000000000000000000000000000000000000000000000000001",
+        "Created": "2026-10-01T10:00:00Z",
+        "Path": "/entrypoint.sh",
+        "Args": [
+            "odoo",
+            "-c",
+            "/srv/conf/odoo.conf",
+            "--db_host",
+            "pgx",
+            "-r",
+            "leakuser",
+            "--addons-path=/mnt/a,/mnt/a, /mnt/b",
+            "--db_password",
+            "LEAK01",
+            "-w",
+            "LEAK02",
+            "--pass",
+            "LEAK09",
+            "sh -c 'odoo --db_password LEAK17'",
+            "x; PGPASSWORD='LEAK04' psql",
+            "y; DB_PASSWORD=\"LEAK05\" z",
+            "mysql -uroot -pLEAK12",
+            "redis-cli -a LEAK13 ping"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true,
+            "Health": {
+                "Status": "healthy",
+                "Log": [
+                    {
+                        "Output": "redis-cli -a LEAK22 ping: PONG"
+                    }
+                ]
+            }
+        },
+        "Image": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+        "Name": "/leaky-odoo",
+        "HostConfig": {
+            "NetworkMode": "leaky_default",
+            "Binds": [
+                "/srv/conf:/srv/conf:ro"
+            ],
+            "RestartPolicy": {
+                "Name": "always",
+                "MaximumRetryCount": 0
+            }
+        },
+        "Mounts": [],
+        "Config": {
+            "Hostname": "0d0000000001",
+            "Env": [
+                "ADMIN_PASSWORD=ab\\cLEAK06",
+                "DATABASE_URL=postgres://u:p@ssLEAK07@db/x",
+                "ODOO_ARGS=--db_password LEAK10",
+                "SMTP_PWD=LEAK15",
+                "HTTP_AUTH=LEAK16",
+                "GIT_AUTHOR_NAME=Armand",
+                "PWD=/srv"
+            ],
+            "Cmd": [
+                "odoo",
+                "--db_password",
+                "LEAK01"
+            ],
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "redis-cli -a LEAK22 ping"
+                ]
+            },
+            "Image": "odoo:17.0",
+            "Entrypoint": [
+                "/entrypoint.sh"
+            ],
+            "Labels": {
+                "com.docker.compose.project": "leaky",
+                "com.docker.compose.project.config_files": "/srv/a\u0026b/compose.yml",
+                "traefik.http.middlewares.a.basicauth.users": "admin:$apr1$LEAK11",
+                "org.opencontainers.image.source": "https://u:pa/LEAK08@h/x"
+            }
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "leaky_default": {
+                    "Aliases": [
+                        "odoo"
+                    ],
+                    "NetworkID": "leakynet"
+                }
+            }
+        }
+    }
+]

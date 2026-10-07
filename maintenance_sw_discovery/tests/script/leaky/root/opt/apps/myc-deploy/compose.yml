@@ -1,0 +1,13 @@
+odoo:
+  charm: odoo-tecnativa
+  docker-compose:
+    image: odoo:17.0
+    command:
+      - --db_password
+      - LEAK18
+      - "PGPASSWORD=LEAK26 with space"
+      - --workers=2
+    environment:
+      DATABASE_URL: postgres://u:p@ssLEAK19@db/x
+      INIT: "x; PGPASSWORD='LEAK20' psql"
+      SMTP_PWD: LEAK27

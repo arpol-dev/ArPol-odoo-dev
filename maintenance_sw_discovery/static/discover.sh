@@ -9,6 +9,17 @@
 # Requires bash >= 4 and coreutils/busybox (sed, awk, grep); iconv, timeout, jq, git, sudo are
 # used when present. Everything runs from main(), called on the last line: with `bash -s` the
 # whole script has been read before anything runs, and stdin is then closed for every command.
+#
+# Secrets: odoo.conf only leaves its container as a key whitelist; docker inspect / image inspect
+# are reduced to the members the import needs (see INSPECT_KEPT, IMAGE_KEPT: no Healthcheck,
+# health log, image history, nor labels other than compose / Cloudron / OCI identification); then
+# every remaining string, compose.yml, repos.yaml and git URL is masked by text_mask / json_pick:
+# NAME=value (also NAME='v', NAME="v") with NAME containing PASS, SECRET, TOKEN, KEY, CREDENTIAL,
+# PRIVATE, AUTH (not AUTHOR) or _PWD; the word (or list item) after such an option and after -w,
+# -a, --pass, --requirepass; -p<value>; user:password@ of URLs (up to the last @).
+# Heuristic limits: a secret passed as a free word (positional argument, other short options
+# such as -P x), a list in YAML flow style ([--db_password, x]), a value spanning lines, or a URL
+# whose password contains a blank or a quote may still leak; masking may hide harmless values.
 set -u
 SCRIPT_VERSION="1.0.0"
 SCHEMA_VERSION=1
@@ -34,10 +45,22 @@ have() { command -v "$1" >/dev/null 2>&1; }
 run() {  # run a command with a timeout when available; never fails the script
   if have timeout; then timeout 30 "$@" 2>/dev/null; else "$@" 2>/dev/null; fi
 }
+NO_PRIV=126       # priv: not root and no --sudo
+SUDO_PASSWORD=120 # priv: --sudo but sudo -n refuses (password required)
 priv() {  # command needing root: as is when root, with sudo -n when --sudo
   if [ "$(id -u)" = 0 ]; then run "$@"
-  elif [ "$USE_SUDO" = 1 ] && have sudo; then run sudo -n "$@"
-  else return 126; fi
+  elif [ "$USE_SUDO" = 1 ] && have sudo; then
+    run sudo -n true || return $SUDO_PASSWORD
+    run sudo -n "$@"
+  else return $NO_PRIV; fi
+}
+priv_denied() { [ "$1" -eq $NO_PRIV ] || [ "$1" -eq $SUDO_PASSWORD ]; }
+priv_reason() {  # priv_reason RC -> why priv could not run the command
+  if [ "$1" -eq $SUDO_PASSWORD ]; then
+    echo "root privileges required: sudo -n refused (a password is required; allow these read-only commands without password or run as root)"
+  else
+    echo "$ROOT_REASON"
+  fi
 }
 section() {  # section NAME FUNCTION -> "NAME": {...}; FUNCTION prints the data object or
              # returns 3 with a reason on stdout (skipped)
@@ -310,7 +333,7 @@ collect_proxmox() {
   for cmd in qm pct; do
     have "$cmd" || continue
     out="$(priv "$cmd" list)"; rc=$?
-    [ $rc -eq 126 ] && { echo "$ROOT_REASON"; return 3; }
+    priv_denied $rc && { priv_reason $rc; return 3; }
     [ $rc -eq 0 ] || { echo "$cmd list failed (exit $rc)" >&2; return 1; }
     if [ "$cmd" = qm ]; then type=qemu; else type=lxc; fi
     while IFS= read -r line; do
@@ -332,12 +355,180 @@ collect_proxmox() {
   printf '{"guests": [%s]}' "$guests"
 }
 
+# ----------------------------------------------------------------------------- secrets
+# Secret-like name: contains PASS, SECRET, TOKEN, KEY, CREDENTIAL, PRIVATE, AUTH (not AUTHOR_)
+# or _PWD, case-insensitive. Masking is heuristic, see the limits in the script header.
+SECRET_RE='(PASS|SECRET|TOKEN|KEY|CREDENTIAL|PRIVATE|AUTH|_PWD)'
+is_secret_name() {  # is_secret_name NAME
+  local u="${1^^}"
+  u="${u//AUTHOR_/_}"; u="${u%AUTHOR}"
+  [[ $u =~ $SECRET_RE ]]
+}
+# awk functions shared by text_mask and json_pick; strings may be raw text or JSON string
+# contents (\" and \\ escapes): masking never cuts an escape sequence.
+MASK_AWK='function secret_name(n,   u) {
+  u = toupper(n); gsub(/AUTHOR_/, "_", u); sub(/AUTHOR$/, "", u)
+  return u ~ /PASS|SECRET|TOKEN|KEY|CREDENTIAL|PRIVATE|AUTH|_PWD/
+}
+function is_flag(t) {  # option whose next word is a secret
+  if (t == "-w" || t == "-a" || t == "--requirepass" || t == "--pass") return 1
+  return t ~ /^--?[A-Za-z0-9_.-]+$/ && secret_name(t)
+}
+function whole_secret(t,   e) {  # NAME=value with a secret-like NAME (whole string)
+  e = index(t, "=")
+  return e > 1 && substr(t, 1, e - 1) ~ /^[A-Za-z0-9_.-]+$/ && secret_name(substr(t, 1, e - 1))
+}
+function quote_at(s, i,   c) {
+  c = substr(s, i, 1)
+  if (c == SQ || c == "\"") return c
+  if (c == "\\" && substr(s, i + 1, 1) == "\"") return "\\\""
+  return ""
+}
+function qend(s, i, q,   n, c) {  # index after the quote q closing a value that starts at i
+  n = length(s)
+  while (i <= n) {
+    c = substr(s, i, 1)
+    if (q == "\\\"") {
+      if (c == "\\") { if (substr(s, i + 1, 1) == "\"") return i + 2; i += 2; continue }
+    } else {
+      if (c == "\\" && q == "\"") { i += 2; continue }
+      if (c == q) return i + 1
+    }
+    i++
+  }
+  return n + 1
+}
+function mask_text(s,   out, i, j, n, tok, e, name, v, q, nxt) {
+  # NAME=value / NAME='v' / NAME="v" / NAME=\"v\" with a secret-like NAME, the word after
+  # a secret option (--db_password x, -a x, -w x, NAME=--db_password x), -p<value>
+  out = ""; n = length(s); i = 1; nxt = 0
+  while (i <= n) {
+    if (substr(s, i, 1) == " ") { out = out " "; i++; continue }
+    j = i; while (j <= n && substr(s, j, 1) != " ") j++
+    tok = substr(s, i, j - i)
+    if (nxt) {
+      nxt = 0; q = quote_at(s, i)
+      if (q != "") { out = out "***"; i = qend(s, i + length(q), q); continue }
+      out = out "***"; i = j; continue
+    }
+    if (is_flag(tok)) { out = out tok; nxt = 1; i = j; continue }
+    if (tok ~ /^-p[^-=]/) { out = out "-p***"; i = j; continue }
+    e = index(tok, "=")
+    if (e > 0) {
+      name = substr(tok, 1, e - 1); sub(/.*[^A-Za-z0-9_.-]/, "", name)
+      if (name != "" && secret_name(name)) {
+        out = out substr(s, i, e); v = i + e; q = quote_at(s, v)
+        if (q != "") { out = out q "***" q; i = qend(s, v + length(q), q); continue }
+        out = out "***"; i = j; continue
+      }
+      if (is_flag(substr(tok, e + 1))) { out = out tok; nxt = 1; i = j; continue }
+    }
+    out = out tok; i = j
+  }
+  return out
+}
+function mask_url(s,   out, k, r, e, m, a, c) {
+  # scheme://user:password@host -> scheme://***@host, up to the LAST @ before a blank or quote
+  out = ""
+  while ((k = index(s, "://")) > 0) {
+    out = out substr(s, 1, k + 2); s = substr(s, k + 3)
+    m = length(s); e = 1
+    while (e <= m) { c = substr(s, e, 1); if (c == " " || c == "\t" || c == SQ || c == "\"" || c == "<" || c == ">") break; e++ }
+    r = substr(s, 1, e - 1); a = 0
+    for (k = length(r); k > 0; k--) if (substr(r, k, 1) == "@") { a = k; break }
+    if (a > 0 && index(substr(r, 1, a - 1), ":") > 0) { out = out "***"; s = substr(s, a) }
+  }
+  return out s
+}
+function mask_str(s, prev) {  # a whole string; prev = the previous string of the same list
+  if (is_flag(prev)) return "***"
+  if (whole_secret(s)) return substr(s, 1, index(s, "=")) "***"
+  return mask_url(mask_text(s))
+}'
+text_mask() {  # stdin text (YAML...) -> stdout, secrets masked line by line; in "- item" lists,
+               # the item after a secret option and NAME=value items are masked as a whole
+  LC_ALL=C awk -v SQ="'" "$MASK_AWK"'
+    {
+      line = $0
+      if (match(line, /^[ \t]*- /)) {
+        lead = substr(line, 1, RLENGTH); item = substr(line, RLENGTH + 1); bare = item
+        c1 = substr(bare, 1, 1)
+        if (length(bare) > 1 && (c1 == "\"" || c1 == SQ) && substr(bare, length(bare)) == c1) bare = substr(bare, 2, length(bare) - 2)
+        if (prevflag) line = lead "***"
+        else if (whole_secret(bare)) line = lead substr(bare, 1, index(bare, "=")) "***"
+        else line = lead mask_url(mask_text(item))
+        prevflag = is_flag(bare)
+      } else {
+        prevflag = 0; line = mask_url(mask_text(line))
+      }
+      print line
+    }'
+}
+json_pick() {  # json_pick PATTERNS < JSON -> compact JSON keeping only the members whose path
+               # (keys joined by "/", array items "#") matches one of the regexes of PATTERNS
+               # (one per line), every string masked (mask_str); exit 2 on a parse error
+  PICK="$1" LC_ALL=C awk -v SQ="'" "$MASK_AWK"'
+    BEGIN { RS = "\001"; np = split(ENVIRON["PICK"], P, "\n") }
+    { s = s $0 }
+    function keep(path,   i) { for (i = 1; i <= np; i++) if (P[i] != "" && path ~ P[i]) return 1; return 0 }
+    function sp() { while (p <= n && index(" \t\r\n", substr(s, p, 1)) > 0) p++ }
+    function fail() { bad = 1; p = n + 1 }
+    function str(   start, c) {
+      start = ++p
+      while (p <= n) { c = substr(s, p, 1); if (c == "\\") p += 2; else if (c == "\"") break; else p++ }
+      if (p > n) { fail(); return "" }
+      p++
+      return substr(s, start, p - 1 - start)
+    }
+    function val(path, whole, prev,   c, k) {
+      sp(); c = substr(s, p, 1)
+      if (!whole && keep(path)) whole = 1
+      if (c == "{") return obj(path, whole)
+      if (c == "[") return arr(path, whole)
+      if (c == "\"") { k = str(); LAST = k; if (bad || !whole) return ""; return "\"" mask_str(k, prev) "\"" }
+      k = p
+      while (p <= n && index(",]} \t\r\n", substr(s, p, 1)) == 0) p++
+      if (p == k) { fail(); return "" }
+      return whole ? substr(s, k, p - k) : ""
+    }
+    function obj(path, whole,   out, k, v, c) {
+      p++; sp(); out = ""
+      if (substr(s, p, 1) == "}") { p++; return whole ? "{}" : "" }
+      while (p <= n) {
+        sp(); if (substr(s, p, 1) != "\"") { fail(); return "" }
+        k = str(); sp()
+        if (substr(s, p, 1) != ":") { fail(); return "" }
+        p++; v = val(path == "" ? k : path "/" k, whole, ""); sp()
+        if (v != "") out = out (out == "" ? "" : ",") "\"" k "\":" v
+        c = substr(s, p, 1); p++
+        if (c == "}") return (out == "" && !whole) ? "" : "{" out "}"
+        if (c != ",") { fail(); return "" }
+      }
+      fail(); return ""
+    }
+    function arr(path, whole,   out, v, c, prev, isstr) {
+      p++; sp(); out = ""; prev = ""
+      if (substr(s, p, 1) == "]") { p++; return whole ? "[]" : "" }
+      while (p <= n) {
+        sp(); isstr = substr(s, p, 1) == "\""
+        v = val(path "/#", whole, prev); prev = isstr ? LAST : ""
+        if (v != "") out = out (out == "" ? "" : ",") v
+        sp(); c = substr(s, p, 1); p++
+        if (c == "]") return (out == "" && !whole) ? "" : "[" out "]"
+        if (c != ",") { fail(); return "" }
+      }
+      fail(); return ""
+    }
+    END {
+      n = length(s); p = 1; sp(); if (p > n) exit 2
+      out = val("", 0, ""); sp()
+      if (bad || p <= n) exit 2
+      print (out == "" ? "null" : out)
+    }'
+}
+
 # ----------------------------------------------------------------------------- zerok
 ZEROK_DIR=/opt/apps/myc-deploy
-SECRET_RE='(PASS|SECRET|TOKEN|KEY|CREDENTIAL|PRIVATE)'
-mask_inline() {  # stdin -> stdout: NAME=value with a secret-like NAME -> NAME=***
-  sed -E 's/([A-Za-z0-9_.-]*([Pp][Aa][Ss][Ss]|[Ss][Ee][Cc][Rr][Ee][Tt]|[Tt][Oo][Kk][Ee][Nn]|[Kk][Ee][Yy]|[Cc][Rr][Ee][Dd][Ee][Nn][Tt][Ii][Aa][Ll]|[Pp][Rr][Ii][Vv][Aa][Tt][Ee])[A-Za-z0-9_.-]*=)[^[:space:]"'"'"',]+/\1***/g'
-}
 compose_filter() {  # stdin compose.yml -> stdout without secret keys (and their nested block)
   local line stripped item key indent drop=-1
   while IFS= read -r line || [ -n "$line" ]; do
@@ -349,11 +540,11 @@ compose_filter() {  # stdin compose.yml -> stdout without secret keys (and their
     fi
     item="${stripped#- }"
     if [[ $item =~ ^[\"\']?([A-Za-z0-9_.-]+)[\"\']?:([[:space:]]|$) ]]; then
-      key="${BASH_REMATCH[1]^^}"
-      if [[ $key =~ $SECRET_RE ]]; then drop=$indent; continue; fi
+      key="${BASH_REMATCH[1]}"
+      if is_secret_name "$key"; then drop=$indent; continue; fi
     fi
     printf '%s\n' "$line"
-  done | mask_inline
+  done | text_mask
 }
 yaml_scalar() {  # trimmed, unquoted YAML scalar (comment removed when unquoted)
   local v
@@ -429,7 +620,7 @@ collect_zerok() {
     content="$(rf "$f")"
   else
     content="$(priv cat "${ROOT}$f")"; rc=$?
-    [ $rc -eq 126 ] && { echo "$f not readable: $ROOT_REASON"; return 3; }
+    priv_denied $rc && { echo "$f not readable: $(priv_reason $rc)"; return 3; }
     [ $rc -eq 0 ] || { echo "cannot read $f (exit $rc)" >&2; return 1; }
   fi
   filtered="$(printf '%s\n' "$content" | compose_filter)"
@@ -496,21 +687,6 @@ collect_cloudron() {
 }
 
 # ----------------------------------------------------------------------------- docker
-SECRET_SED='([Pp][Aa][Ss][Ss]|[Ss][Ee][Cc][Rr][Ee][Tt]|[Tt][Oo][Kk][Ee][Nn]|[Kk][Ee][Yy]|[Cc][Rr][Ee][Dd][Ee][Nn][Tt][Ii][Aa][Ll]|[Pp][Rr][Ii][Vv][Aa][Tt][Ee])'
-mask_url() {  # stdin -> stdout: credentials of URLs (scheme://user:pass@host) -> ***
-  sed -E 's#(://)[^/@"[:space:]\\]+@#\1***@#g'
-}
-mask_json() {  # stdin JSON text -> stdout with secrets masked; works on JSON string tokens, so
-               # the result stays valid JSON whatever the values contain (no jq needed)
-  # 1. "NAME=value" strings (Env entries, --x_password=... arguments): whole value -> ***
-  # 2. "name": "value" members whose name is secret-like (labels): value -> "***"
-  # 3. URL credentials;  4. NAME=value inside a longer string (stops at \ " ' , space)
-  sed -E \
-    -e 's/"([A-Za-z0-9_.-]*'"$SECRET_SED"'[A-Za-z0-9_.-]*)=([^"\\]|\\.)*"/"\1=***"/g' \
-    -e 's/"([^"\\]*'"$SECRET_SED"'[^"\\]*)"([[:space:]]*):([[:space:]]*)"([^"\\]|\\.)*"/"\1"\3:\4"***"/g' \
-    -e 's#(://)[^/@"[:space:]\\]+@#\1***@#g' \
-    -e 's/([A-Za-z0-9_.-]*'"$SECRET_SED"'[A-Za-z0-9_.-]*=)[^[:space:]"'"'"'\\,]+/\1***/g'
-}
 # awk helpers on json_flat lines: unesc() turns a JSON-escaped string into its raw bytes (UTF-8)
 JAWK='function hex(h,   i, v) {
   v = 0; h = tolower(h)
@@ -556,16 +732,29 @@ dk_init() {  # choose the access mode; prints the reason and returns 3 (skipped)
   if run docker ps -q >/dev/null; then DK_MODE=direct; return 0; fi
   priv docker ps -q >/dev/null; rc=$?
   if [ $rc -eq 0 ]; then DK_MODE=priv; return 0; fi
-  if [ $rc -eq 126 ]; then echo "cannot access the Docker daemon: $ROOT_REASON"; return 3; fi
+  if priv_denied $rc; then echo "cannot access the Docker daemon: $(priv_reason $rc)"; return 3; fi
   echo "cannot access the Docker daemon (docker ps exit $rc)" >&2; return 1
 }
-dk_object() {  # dk_object ARGS... -> the object of `docker ARGS` (an inspect array of one),
-               # secrets masked; null when the answer is not exactly one valid JSON object
-  local out
-  out="$(dk "$@" | mask_json)"
-  out="$(trim "$out")"
+# What is kept of `docker inspect` / `docker image inspect` (json_pick paths): what the import
+# needs, nothing else (no Healthcheck, health log, HostConfig details, image history, other labels).
+LABELS_KEPT='(com\.docker\.compose\.[^/]*|compose\.[^/]*|isCloudronManaged|appId|fqdn|org\.opencontainers\.image\.(version|revision|source|title|created))'
+INSPECT_KEPT="^(Id|Created|Path|Args|Name|Image|RestartCount|Platform|Driver)\$
+^State/(Status|Running|Paused|Restarting|OOMKilled|Dead|Pid|ExitCode|Error|StartedAt|FinishedAt)\$
+^Config/(Hostname|User|WorkingDir|Image|Cmd|Entrypoint|Env)\$
+^Config/Labels/$LABELS_KEPT\$
+^Mounts\$
+^HostConfig/(NetworkMode|RestartPolicy)\$
+^NetworkSettings/Networks/[^/]*/(Aliases|DNSNames|NetworkID|IPAddress|Gateway|MacAddress)\$"
+IMAGE_KEPT="^(Id|RepoTags|RepoDigests|Created|Architecture|Os|Size)\$
+^Config/Env\$
+^Config/Labels/$LABELS_KEPT\$"
+dk_object() {  # dk_object KEPT ARGS... -> the object of `docker ARGS` (an inspect array of one),
+               # reduced to the KEPT paths, secrets masked; null when not one valid JSON object
+  local kept="$1" out; shift
+  out="$(trim "$(dk "$@")")"
   [[ $out == \[*\] ]] && out="$(trim "${out:1:${#out}-2}")"
-  if [[ $out == \{*\} ]] && printf '%s' "$out" | json_flat >/dev/null; then
+  if [[ $out == \{*\} ]] && out="$(printf '%s' "$out" | json_pick "$kept")" \
+     && [[ $out == \{*\} ]] && printf '%s' "$out" | json_flat >/dev/null; then
     printf '%s' "$out"
   else
     printf 'null'
@@ -576,14 +765,14 @@ collect_docker() {
   dk_init; rc=$?; [ $rc -eq 0 ] || return $rc
   ids="$(dk ps -q)" || { echo "docker ps failed" >&2; return 1; }
   for id in $ids; do
-    obj="$(dk_object inspect "$id")"
+    obj="$(dk_object "$INSPECT_KEPT" inspect "$id")"
     name="$id" image="" iobj=null
     if [ "$obj" != null ]; then
       flat="$(printf '%s' "$obj" | json_flat)"
       name="$(jget "$flat" .Name)"; name="${name#/}"; [ -n "$name" ] || name="$id"
       image="$(jget "$flat" .Image)"
     fi
-    [ -n "$image" ] && iobj="$(dk_object image inspect "$image")"
+    [ -n "$image" ] && iobj="$(dk_object "$IMAGE_KEPT" image inspect "$image")"
     containers+="$sep{\"name\": $(json_str "$name"), \"inspect\": $obj, \"image_inspect\": $iobj}"
     sep=", "
   done
@@ -670,7 +859,7 @@ git_files() {  # git_files DIR -> "url\tbranch\tcommit" read from DIR/.git files
 }
 repo_json() {  # repo_json PATH URL BRANCH COMMIT
   local url branch="$3"
-  url="$(printf '%s' "$2" | mask_url)"
+  url="$(printf '%s\n' "$2" | text_mask)"
   [ "$branch" = HEAD ] && branch=""
   printf '{"path": %s, "url": %s, "branch": %s, "commit": %s}' \
     "$(json_str "$1")" "$(jnull "$url")" "$(jnull "$branch")" "$(jnull "$4")"
@@ -742,7 +931,8 @@ odoo_databases() {  # odoo_databases ODOO_ID DB_HOST USER -> {"status", ...} obj
   printf '{"status": "ok", "items": [%s]}' "$items"
 }
 odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
-  local id="$1" flat="${FLAT[$1]}" name ver conf arg next=0 cmd_path="" path line d m t k
+  local id="$1" flat="${FLAT[$1]}" name ver conf arg next="" path line d m t k
+  local cmd_path="" cmd_conf="" cmd_host="" cmd_user=""
   local binds addons="" asep="" yaml repos="" rsep="" seen=" " st rest u b c hp rel
   local mrepos="" msep="" src dst links="" lsep="" config="" csep="" host user plist=""
   local -a paths=() confs=()
@@ -755,22 +945,35 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
     ver="$(env_get "$flat" ODOO_VERSION)"
     [[ $ver =~ ^([0-9]+\.[0-9]+) ]] && ver="${BASH_REMATCH[1]}"
   fi
+  # command line options (they win over odoo.conf)
+  while IFS= read -r arg; do
+    if [ -n "$next" ]; then printf -v "$next" '%s' "$arg"; next=""; continue; fi
+    case "$arg" in
+      --addons-path=*) cmd_path="${arg#*=}" ;;
+      --addons-path) next=cmd_path ;;
+      --config=*) cmd_conf="${arg#*=}" ;;
+      -c|--config) next=cmd_conf ;;
+      --db_host=*) cmd_host="${arg#*=}" ;;
+      --db_host) next=cmd_host ;;
+      --db_user=*) cmd_user="${arg#*=}" ;;
+      -r|--db_user) next=cmd_user ;;
+    esac
+  done < <(jlist "$flat" .Args)
   # odoo.conf: only the whitelisted keys leave the container (and only 6 are output)
+  [ -n "$cmd_conf" ] && confs+=("$cmd_conf")
   for k in OPENERP_SERVER ODOO_RC; do
     t="$(env_get "$flat" "$k")"; [ -n "$t" ] && confs+=("$t")
   done
   confs+=(/etc/odoo/odoo.conf /opt/odoo/auto/odoo.conf)
   conf="$(dk exec "$id" sh -c "$CONF_SH" discover-conf "${confs[@]}")"
-  # addons_path: command line, else odoo.conf
-  while IFS= read -r arg; do
-    if [ $next = 1 ]; then cmd_path="$arg"; next=0
-    elif [[ $arg == --addons-path=* ]]; then cmd_path="${arg#--addons-path=}"
-    elif [ "$arg" = --addons-path ]; then next=1; fi
-  done < <(jlist "$flat" .Args)
+  # addons_path: command line, else odoo.conf; trimmed, without duplicates
   [ -n "$cmd_path" ] || cmd_path="$(conf_get "$conf" addons_path)"
   while IFS= read -r -d , path; do
-    path="$(trim "$path")"; [ -n "$path" ] && paths+=("$path")
+    path="$(trim "$path")"; [ -n "$path" ] || continue
+    case "$seen" in *" $path "*) continue ;; esac
+    seen+="$path "; paths+=("$path")
   done <<<"$cmd_path,"
+  seen=" "
   # modules per addons_path directory
   while IFS=$'\t' read -r d m; do
     [ -n "$m" ] && mods[$d]+="$m"$'\n'
@@ -782,9 +985,9 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
     done < <(printf '%s' "${mods[$d]:-}" | LC_ALL=C sort -u)
     addons+="${addons:+, }$(json_str "$d"): [$m]"
   done
-  # repos.yaml as is, NAME=value secrets and URL credentials masked
+  # repos.yaml as is, secrets masked (text_mask)
   yaml="$(dk exec "$id" cat /opt/odoo/custom/src/repos.yaml)" || yaml=""
-  [ -n "$yaml" ] && yaml="$(printf '%s\n' "$yaml" | mask_inline | mask_url)"
+  [ -n "$yaml" ] && yaml="$(printf '%s\n' "$yaml" | text_mask)"
   # git repositories: in the container, else on the host for the bind-mounted ones
   binds="$(binds_of "$flat")"
   while IFS= read -r line; do
@@ -822,14 +1025,18 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
   for k in db_host db_port db_name dbfilter data_dir addons_path; do
     config+="$csep$(json_str "$k"): $(jnull "$(conf_get "$conf" "$k")")"; csep=", "
   done
-  # databases: Postgres container of db_host, psql as PGUSER / db_user / postgres
-  host="$(conf_get "$conf" db_host)"
+  # databases: Postgres container of db_host (command line, odoo.conf, PGHOST, HOST); psql as
+  # the Odoo user (command line, odoo.conf, PGUSER), else postgres
+  host="$cmd_host"
+  [ -n "$host" ] || host="$(conf_get "$conf" db_host)"
   case "$host" in False|false|None) host="" ;; esac
   [ -n "$host" ] || host="$(env_get "$flat" PGHOST)"
   [ -n "$host" ] || host="$(env_get "$flat" HOST)"
-  user="$(env_get "$flat" PGUSER)"
+  user="$cmd_user"
   [ -n "$user" ] || user="$(conf_get "$conf" db_user)"
-  case "$user" in ""|False|false|None) user=postgres ;; esac
+  case "$user" in False|false|None) user="" ;; esac
+  [ -n "$user" ] || user="$(env_get "$flat" PGUSER)"
+  [ -n "$user" ] || user=postgres
   for d in "${paths[@]}"; do plist+="${plist:+, }$(json_str "$d")"; done
   printf '{"container": %s, "version": %s, "addons_path": [%s], "addons": {%s}, "repos_yaml": %s, "repos": [%s], "mount_repos": [%s], "runtime_links": [%s], "config": {%s}, "databases": %s}' \
     "$(json_str "$name")" "$(jnull "$ver")" "$plist" \
@@ -842,7 +1049,7 @@ collect_odoo() {
   dk_init; rc=$?; [ $rc -eq 0 ] || return $rc
   ids="$(dk ps -q)" || { echo "docker ps failed" >&2; return 1; }
   for id in $ids; do
-    obj="$(dk_object inspect "$id")"
+    obj="$(dk_object "$INSPECT_KEPT" inspect "$id")"
     [ "$obj" = null ] && continue
     FLAT[$id]="$(printf '%s' "$obj" | json_flat)"
     ORDER+=" $id"

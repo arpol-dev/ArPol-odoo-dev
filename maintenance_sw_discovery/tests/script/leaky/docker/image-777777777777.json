@@ -1,0 +1,26 @@
+[
+    {
+        "Id": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+        "RepoTags": [
+            "odoo:17.0"
+        ],
+        "RepoDigests": [],
+        "Created": "2026-09-01T00:00:00Z",
+        "ContainerConfig": {
+            "Cmd": [
+                "/bin/sh",
+                "-c",
+                "#(nop) ENV ROOT_PASSWORD LEAK14"
+            ]
+        },
+        "Config": {
+            "Env": [
+                "ODOO_VERSION=17.0"
+            ],
+            "Labels": {
+                "maintainer": "LEAK29 <x@example.com>",
+                "org.opencontainers.image.source": "https://u:pa/LEAK08@h/x"
+            }
+        }
+    }
+]

@@ -1,0 +1,40 @@
+[
+    {
+        "Id": "0d00000000020000000000000000000000000000000000000000000000000002",
+        "Path": "docker-entrypoint.sh",
+        "Args": [
+            "redis-server",
+            "--requirepass",
+            "LEAK03"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true
+        },
+        "Image": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "Name": "/leaky-redis",
+        "Mounts": [],
+        "Config": {
+            "Env": null,
+            "Cmd": [
+                "redis-server",
+                "--requirepass",
+                "LEAK03"
+            ],
+            "Image": "redis:7",
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ]
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "leaky_default": {
+                    "Aliases": [
+                        "redis"
+                    ],
+                    "NetworkID": "leakynet"
+                }
+            }
+        }
+    }
+]

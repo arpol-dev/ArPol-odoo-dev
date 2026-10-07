@@ -30,7 +30,7 @@ SCRIPT = os.path.join(MODULE_DIR, "static", "discover.sh")
 SCENARIOS_DIR = os.path.join(MODULE_DIR, "tests", "script")
 SCENARIOS = [
     "debian", "proxmox", "cloudron", "alpine", "weird", "zerok", "zerok_odoo", "manual_odoo",
-    "docker_denied",
+    "docker_denied", "leaky",
 ]
 SECTIONS = ["machine", "os", "platforms", "proxmox", "zerok", "cloudron", "docker", "odoo"]
 # Basic utilities a minimal server always has (coreutils / busybox, sed, grep, awk, iconv).
@@ -66,7 +66,8 @@ def run_raw(name, extra_env=None, args=(), extra_bin=None, stdin_script=False):
         path_dir = os.path.join(tmp, "bin")
         home = os.path.join(tmp, "home")
         tmpdir = os.path.join(tmp, "tmp")
-        for directory in (path_dir, home, tmpdir):
+        cwd = os.path.join(tmp, "cwd")
+        for directory in (path_dir, home, tmpdir, cwd):
             os.mkdir(directory)
         stubs = os.path.join(scenario, "bin")
         for stub in sorted(os.listdir(stubs)) if os.path.isdir(stubs) else []:
@@ -96,14 +97,18 @@ def run_raw(name, extra_env=None, args=(), extra_bin=None, stdin_script=False):
             with open(SCRIPT, "rb") as script:
                 proc = subprocess.run(
                     ["bash", "-s", "--", *args], env=env, stdin=script, capture_output=True,
-                    timeout=60, executable=shutil.which("bash"),
+                    timeout=60, executable=shutil.which("bash"), cwd=cwd,
                 )
         else:
             proc = subprocess.run(
                 ["bash", SCRIPT, *args], env=env, capture_output=True, timeout=60,
-                executable=shutil.which("bash"),
+                executable=shutil.which("bash"), cwd=cwd,
             )
-        leftovers = (os.listdir(tmpdir) if os.path.isdir(tmpdir) else []) + os.listdir(home)
+        # Read-only: nothing may be left in the temp dir, HOME or the working directory.
+        leftovers = (
+            (os.listdir(tmpdir) if os.path.isdir(tmpdir) else []) + os.listdir(home)
+            + os.listdir(cwd)
+        )
     return proc, leftovers
 
 
@@ -326,9 +331,11 @@ class TestDiscoverScript(BaseCase):
         self.assertEqual(odoo["inspect"]["Name"], "/myc_odoo-v18_1")
         self.assertEqual(odoo["inspect"]["State"]["Status"], "running")
         self.assertEqual(odoo["inspect"]["Mounts"][0]["Destination"], "/opt/odoo/auto/dev")
-        self.assertEqual(
-            odoo["inspect"]["Config"]["Labels"]["description"], "start && serve <fast>"
-        )
+        # Only the identification labels are kept.
+        self.assertEqual(odoo["inspect"]["Config"]["Labels"], {
+            "com.docker.compose.project": "myc", "com.docker.compose.service": "odoo-v18",
+        })
+        self.assertNotIn("Binds", odoo["inspect"]["HostConfig"])
         self.assertEqual(odoo["image_inspect"]["RepoTags"],
                          ["docker.0k.io/mirror/odoo:rc_18.0-ARPOL-ODOO-DEV-18.0"])
         self.assertEqual(docker["containers"][2]["inspect"]["Config"]["Env"], None)
@@ -352,7 +359,6 @@ class TestDiscoverScript(BaseCase):
         ])
         self.assertEqual(odoo["inspect"]["Args"][-1], "--db_password=***")
         self.assertEqual(odoo["inspect"]["Config"]["Cmd"][-1], "--db_password=***")
-        self.assertEqual(odoo["inspect"]["Config"]["Labels"]["io.example.api_key"], "***")
         self.assertEqual(odoo["image_inspect"]["Config"]["Env"],
                          ["ODOO_VERSION=18.0", "GEOIP_LICENSE_KEY=***"])
         self.assertEqual(containers[1]["inspect"]["Config"]["Env"],
@@ -452,8 +458,16 @@ class TestDiscoverScript(BaseCase):
     # ------------------------------------------------------------------ robustness
     def test_no_temp_dir(self):
         """mktemp impossible: no file written anywhere, sections still run, JSON valid."""
-        proc, _leftovers = run_raw(
+        before = set(os.listdir("/tmp"))
+        proc, leftovers = run_raw(
             "proxmox", extra_env={"TMPDIR": "/nonexistent", "STUB_FAIL_PCT": "1"}
+        )
+        self.assertEqual(leftovers, [])  # HOME, working directory
+        self.assertFalse(os.path.exists("/nonexistent"))
+        # No fallback temp dir (tmp.* / discover*) in /tmp either.
+        self.assertEqual(
+            [n for n in set(os.listdir("/tmp")) - before if n.startswith(("tmp.", "discover."))],
+            [],
         )
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertEqual(proc.stderr, b"")
@@ -493,3 +507,87 @@ class TestDiscoverScript(BaseCase):
             {"path": "/mnt/extra-addons/oca-web", "url": "https://github.com/OCA/web.git",
              "branch": "18.0", "commit": "1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa"},
         ])
+
+    # ------------------------------------------------------------------ leaky
+    def test_leaky_no_secret(self):
+        """Every LEAKnn marker is a secret: none may appear in the raw output."""
+        proc, _leftovers = run_raw("leaky")
+        raw = proc.stdout.decode()
+        self.assertEqual(re.findall(r"LEAK\d+", raw), [])
+        sections = json.loads(raw)["sections"]
+        containers = self.data(sections, "docker")["containers"]
+        odoo, redis = containers[0]["inspect"], containers[1]["inspect"]
+        self.assertEqual(odoo["Args"], [
+            "odoo", "-c", "/srv/conf/odoo.conf", "--db_host", "pgx", "-r", "leakuser",
+            "--addons-path=/mnt/a,/mnt/a, /mnt/b",
+            "--db_password", "***", "-w", "***", "--pass", "***",
+            "sh -c 'odoo --db_password ***",
+            "x; PGPASSWORD='***' psql",
+            'y; DB_PASSWORD="***" z',
+            "mysql -uroot -p***",
+            "redis-cli -a *** ping",
+        ])
+        self.assertEqual(odoo["Config"]["Cmd"], ["odoo", "--db_password", "***"])
+        self.assertEqual(odoo["Config"]["Env"], [
+            "ADMIN_PASSWORD=***",
+            "DATABASE_URL=postgres://***@db/x",
+            "ODOO_ARGS=--db_password ***",
+            "SMTP_PWD=***",
+            "HTTP_AUTH=***",
+            "GIT_AUTHOR_NAME=Armand",
+            "PWD=/srv",
+        ])
+        self.assertEqual(redis["Args"], ["redis-server", "--requirepass", "***"])
+        # Reduced objects: no Healthcheck, health log, binds, other labels, image history.
+        self.assertNotIn("Healthcheck", odoo["Config"])
+        self.assertNotIn("Health", odoo["State"])
+        self.assertEqual(odoo["HostConfig"], {
+            "NetworkMode": "leaky_default", "RestartPolicy": {"Name": "always", "MaximumRetryCount": 0},
+        })
+        self.assertEqual(odoo["Config"]["Labels"], {
+            "com.docker.compose.project": "leaky",
+            "com.docker.compose.project.config_files": "/srv/a&b/compose.yml",
+            "org.opencontainers.image.source": "https://***@h/x",
+        })
+        image = containers[0]["image_inspect"]
+        self.assertNotIn("ContainerConfig", image)
+        self.assertEqual(image["RepoTags"], ["odoo:17.0"])
+        self.assertEqual(image["Config"]["Labels"], {"org.opencontainers.image.source": "https://***@h/x"})
+        # compose.yml text
+        compose = self.data(sections, "zerok")["compose_yml"]
+        self.assertIn("postgres://***@db/x", compose)
+        self.assertIn("PGPASSWORD='***' psql", compose)
+        self.assertEqual(self.data(sections, "zerok")["services"][0]["command"],
+                         ["--db_password", "***", "PGPASSWORD=***", "--workers=2"])
+
+    def test_leaky_odoo_command_line(self):
+        """-c, --db_host and -r of the command line win over the defaults and odoo.conf."""
+        sections = self.sections("leaky")
+        odoo = self.data(sections, "odoo")["instances"][0]
+        self.assertEqual(odoo["version"], "17.0")
+        self.assertEqual(odoo["addons_path"], ["/mnt/a", "/mnt/b"])  # deduplicated
+        self.assertEqual(odoo["addons"], {"/mnt/a": ["mod_a"], "/mnt/b": ["mod_b"]})
+        self.assertEqual(odoo["repos"][0]["url"], "https://***@git.example.com/r.git")
+        self.assertIn("origin: https://***@git.example.com/x.git", odoo["repos_yaml"])
+        self.assertIn("other: postgres://***@h", odoo["repos_yaml"])
+        self.assertEqual(odoo["config"]["db_host"], "wronghost")  # odoo.conf as is
+        self.assertEqual(odoo["databases"], {"status": "ok", "items": [
+            {"name": "leakdb", "modules": [
+                {"name": "base", "version": "17.0.1.3", "state": "installed"}]},
+        ]})
+
+    # ------------------------------------------------------------------ sudo
+    def test_sudo_needs_password(self):
+        """--sudo with a sudo asking for a password: skipped with the reason, not an error."""
+        sudo = "#!/usr/bin/env bash\necho 'sudo: a password is required' >&2\nexit 1\n"
+        proc, _leftovers = run_raw(
+            "proxmox", extra_env={"STUB_UID": "1000"}, args=["--sudo"], extra_bin={"sudo": sudo}
+        )
+        sections = json.loads(proc.stdout.decode())["sections"]
+        self.assertEqual(sections["proxmox"]["status"], "skipped")
+        self.assertIn("password", sections["proxmox"]["reason"])
+        proc, _leftovers = run_raw("docker_denied", args=["--sudo"], extra_bin={"sudo": sudo})
+        sections = json.loads(proc.stdout.decode())["sections"]
+        for name in ("docker", "odoo"):
+            self.assertEqual(sections[name]["status"], "skipped", name)
+            self.assertIn("password", sections[name]["reason"])

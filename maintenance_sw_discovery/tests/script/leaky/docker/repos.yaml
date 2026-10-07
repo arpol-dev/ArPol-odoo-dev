@@ -1,0 +1,6 @@
+./odoo:
+  remotes:
+    origin: https://u:p@ssLEAK24@git.example.com/x.git
+    other: postgres://u:pa/LEAK25@h
+  merges:
+    - origin 17.0
