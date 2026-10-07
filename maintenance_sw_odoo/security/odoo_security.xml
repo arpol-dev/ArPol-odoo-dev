@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Databases and their modules follow the company of their container. -->
+    <record id="maintenance_odoo_database_comp_rule" model="ir.rule">
+        <field name="name">Odoo Database Multi-company rule</field>
+        <field name="model_id" ref="model_maintenance_odoo_database"/>
+        <field name="domain_force">[('equipment_id.company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <record id="maintenance_odoo_module_comp_rule" model="ir.rule">
+        <field name="name">Odoo Module Multi-company rule</field>
+        <field name="model_id" ref="model_maintenance_odoo_module"/>
+        <field name="domain_force">[('database_id.equipment_id.company_id', 'in', company_ids + [False])]</field>
+    </record>
+</odoo>

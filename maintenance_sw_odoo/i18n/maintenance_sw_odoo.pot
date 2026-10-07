@@ -1,0 +1,204 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* maintenance_sw_odoo
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0-20260926\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-07 14:32+0000\n"
+"PO-Revision-Date: 2026-10-07 14:32+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__active
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__active
+msgid "Active"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_database_view_form
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_database_view_search
+msgid "Archived"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__equipment_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_database_view_search
+msgid "Container"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__create_uid
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__create_date
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__database_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_module_view_search
+msgid "Database"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__display_name
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_database_view_search
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_module_view_search
+msgid "Group By"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__id
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__id
+msgid "ID"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields.selection,name:maintenance_sw_odoo.selection__maintenance_odoo_module__state__installed
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_module_view_search
+msgid "Installed"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__installed_version
+msgid "Installed Version"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__last_discovery
+msgid "Last Discovery"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__write_uid
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__write_date
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model,name:maintenance_sw_odoo.model_maintenance_equipment
+msgid "Maintenance Equipment"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__module_count
+msgid "Module Count"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__module_ids
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_database_view_form
+msgid "Modules"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_database__name
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__name
+msgid "Name"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model,name:maintenance_sw_odoo.model_maintenance_odoo_database
+msgid "Odoo Database"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_equipment__odoo_database_count
+msgid "Odoo Database Count"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#. odoo-python
+#: code:addons/maintenance_sw_odoo/models/maintenance_equipment.py:0
+#: model:ir.actions.act_window,name:maintenance_sw_odoo.maintenance_odoo_database_action
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_equipment__odoo_database_ids
+#: model:ir.ui.menu,name:maintenance_sw_odoo.menu_odoo_database
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.hr_equipment_view_form
+msgid "Odoo Databases"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model,name:maintenance_sw_odoo.model_maintenance_odoo_module
+msgid "Odoo Module"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#. odoo-python
+#: code:addons/maintenance_sw_odoo/models/odoo_database.py:0
+#: model:ir.actions.act_window,name:maintenance_sw_odoo.maintenance_odoo_module_action
+#: model:ir.ui.menu,name:maintenance_sw_odoo.menu_odoo_module
+msgid "Odoo Modules"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__component_id
+msgid "Provided By"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__repository_id
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_module_view_search
+msgid "Repository"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,field_description:maintenance_sw_odoo.field_maintenance_odoo_module__state
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_module_view_search
+msgid "State"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields,help:maintenance_sw_odoo.field_maintenance_odoo_module__component_id
+msgid ""
+"The docker component (git repository in the container) that provides this "
+"module."
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.constraint,message:maintenance_sw_odoo.constraint_maintenance_odoo_database_equipment_name_uniq
+msgid "This Odoo database is already registered for this container."
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.constraint,message:maintenance_sw_odoo.constraint_maintenance_odoo_module_database_name_uniq
+msgid "This module is already registered for this database."
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields.selection,name:maintenance_sw_odoo.selection__maintenance_odoo_module__state__to_remove
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_module_view_search
+msgid "To Remove"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model:ir.model.fields.selection,name:maintenance_sw_odoo.selection__maintenance_odoo_module__state__to_upgrade
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_module_view_search
+msgid "To Upgrade"
+msgstr ""
+
+#. module: maintenance_sw_odoo
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_odoo.maintenance_odoo_database_view_form
+msgid "e.g. arpol.fr"
+msgstr ""

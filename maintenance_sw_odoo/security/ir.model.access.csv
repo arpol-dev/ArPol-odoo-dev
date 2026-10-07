@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_maintenance_odoo_database_user,maintenance.odoo.database.user,model_maintenance_odoo_database,base.group_user,1,0,0,0
+access_maintenance_odoo_database_manager,maintenance.odoo.database.manager,model_maintenance_odoo_database,maintenance.group_equipment_manager,1,1,1,1
+access_maintenance_odoo_module_user,maintenance.odoo.module.user,model_maintenance_odoo_module,base.group_user,1,0,0,0
+access_maintenance_odoo_module_manager,maintenance.odoo.module.manager,model_maintenance_odoo_module,maintenance.group_equipment_manager,1,1,1,1

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_odoo_database" action="maintenance_odoo_database_action"
+              parent="maintenance_sw_base.menu_sw_config" sequence="60"/>
+    <menuitem id="menu_odoo_module" action="maintenance_odoo_module_action"
+              parent="maintenance_sw_base.menu_sw_config" sequence="70"/>
+</odoo>

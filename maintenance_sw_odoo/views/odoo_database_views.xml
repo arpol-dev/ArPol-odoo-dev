@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="maintenance_odoo_database_view_list" model="ir.ui.view">
+        <field name="name">maintenance.odoo.database.list</field>
+        <field name="model">maintenance.odoo.database</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="equipment_id"/>
+                <field name="module_count"/>
+                <field name="last_discovery"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="maintenance_odoo_database_view_form" model="ir.ui.view">
+        <field name="name">maintenance.odoo.database.form</field>
+        <field name="model">maintenance.odoo.database</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_modules" type="object"
+                                class="oe_stat_button" icon="fa-puzzle-piece">
+                            <field name="module_count" widget="statinfo" string="Modules"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. arpol.fr"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="equipment_id"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="last_discovery"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Modules" name="modules">
+                            <field name="module_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="installed_version"/>
+                                    <field name="state"/>
+                                    <field name="component_id"/>
+                                    <field name="repository_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="maintenance_odoo_database_view_search" model="ir.ui.view">
+        <field name="name">maintenance.odoo.database.search</field>
+        <field name="model">maintenance.odoo.database</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="equipment_id"/>
+                <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Container" name="group_equipment" context="{'group_by': 'equipment_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="maintenance_odoo_database_action" model="ir.actions.act_window">
+        <field name="name">Odoo Databases</field>
+        <field name="res_model">maintenance.odoo.database</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
