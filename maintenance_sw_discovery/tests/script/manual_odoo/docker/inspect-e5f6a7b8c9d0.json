@@ -1,0 +1,39 @@
+[
+    {
+        "Id": "e5f6a7b8c9d00000000000000000000000000000000000000000000000000000",
+        "Path": "docker-entrypoint.sh",
+        "Args": [
+            "postgres"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true
+        },
+        "Image": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+        "Name": "/manual-db-1",
+        "Mounts": [],
+        "Config": {
+            "Env": [
+                "POSTGRES_PASSWORD=secret123"
+            ],
+            "Cmd": [
+                "postgres"
+            ],
+            "Image": "postgres:16",
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ]
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "manual_default": {
+                    "Aliases": [
+                        "db"
+                    ],
+                    "NetworkID": "manual_default-id",
+                    "IPAddress": "172.20.0.2"
+                }
+            }
+        }
+    }
+]

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Host git: answers for the repositories under $DISCOVER_ROOT/srv/addons only.
+# STUB_GIT_BROKEN=1: git unusable (the script then reads the .git files itself).
+[ -n "${STUB_GIT_BROKEN:-}" ] && { echo "git: error while loading shared libraries" >&2; exit 127; }
+dir=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -C) dir="$2"; shift 2 ;;
+    -c) shift 2 ;;
+    *) break ;;
+  esac
+done
+[ -e "$dir/.git" ] || { echo "fatal: not a git repository: $dir" >&2; exit 128; }
+case "${dir#"$DISCOVER_ROOT"}:$*" in
+  "/srv/addons/oca-web:config --get remote.origin.url") echo https://github.com/OCA/web.git ;;
+  "/srv/addons/oca-web:rev-parse --abbrev-ref HEAD") echo 18.0 ;;
+  "/srv/addons/oca-web:rev-parse HEAD") echo 1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa ;;
+  "/srv/addons/custom:config --get remote.origin.url") echo https://arpol:secret123@git.example.com/arpol/custom.git ;;
+  "/srv/addons/custom:rev-parse --abbrev-ref HEAD") echo main ;;
+  "/srv/addons/custom:rev-parse HEAD") echo 2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb ;;
+  *) echo "git stub: unexpected call in $dir: $*" >&2; exit 1 ;;
+esac

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+case "$*" in
+  -r) echo 6.1.0-25-amd64 ;;
+  -n) echo srv-debian ;;
+  *) echo Linux ;;
+esac

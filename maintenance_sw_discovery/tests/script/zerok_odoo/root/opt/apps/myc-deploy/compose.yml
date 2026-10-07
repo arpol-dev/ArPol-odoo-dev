@@ -1,0 +1,14 @@
+odoo-v18:
+  charm: odoo-tecnativa
+  docker-compose:
+    image: docker.0k.io/mirror/odoo:rc_18.0-ARPOL-ODOO-DEV-18.0
+    command:
+      - --workers=4
+    volumes:
+      - /srv/datastore/data/odoo-v18/addons:/opt/odoo/auto/dev:rw
+  options:
+    admin-password: secret123
+
+postgres:
+  docker-compose:
+    image: docker.0k.io/postgres:16.0-myc

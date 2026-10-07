@@ -1,0 +1,54 @@
+[
+    {
+        "Id": "b2c3d4e5f6a70000000000000000000000000000000000000000000000000002",
+        "Path": "docker-entrypoint.sh",
+        "Args": [
+            "postgres"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true
+        },
+        "Image": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "Name": "/myc_postgres_1",
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/srv/datastore/data/postgres/var/lib/postgresql",
+                "Destination": "/var/lib/postgresql",
+                "Mode": "rw",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ],
+        "Config": {
+            "Hostname": "b2c3d4e5f6a7",
+            "Env": [
+                "POSTGRES_PASSWORD=secret123",
+                "PGDATA=/var/lib/postgresql/data"
+            ],
+            "Cmd": [
+                "postgres"
+            ],
+            "Image": "docker.0k.io/postgres:16.0-myc",
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ],
+            "Labels": {
+                "com.docker.compose.service": "postgres"
+            }
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "myc_default": {
+                    "Aliases": [
+                        "postgres",
+                        "b2c3d4e5f6a7"
+                    ],
+                    "NetworkID": "9f8e7d6c5b4a",
+                    "IPAddress": "172.18.0.2"
+                }
+            }
+        }
+    }
+]

@@ -1,0 +1,17 @@
+[
+    {
+        "Id": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "RepoTags": [
+            "odoo:18.0"
+        ],
+        "RepoDigests": [
+            "odoo@sha256:abababababababababababababababababababababababababababababababab"
+        ],
+        "Config": {
+            "Env": [
+                "ODOO_VERSION=18.0",
+                "ODOO_RC=/etc/odoo/odoo.conf"
+            ]
+        }
+    }
+]

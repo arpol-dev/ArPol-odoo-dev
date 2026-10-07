@@ -1,0 +1,35 @@
+[
+    {
+        "Id": "c3d4e5f6a7b80000000000000000000000000000000000000000000000000003",
+        "Path": "httpd-foreground",
+        "Args": [],
+        "State": {
+            "Status": "running",
+            "Running": true
+        },
+        "Image": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "Name": "/myc_frontend_1",
+        "Mounts": [],
+        "Config": {
+            "Hostname": "c3d4e5f6a7b8",
+            "Env": null,
+            "Cmd": [
+                "httpd-foreground"
+            ],
+            "Image": "docker.0k.io/apache:2.4",
+            "Entrypoint": null,
+            "Labels": {}
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "myc_default": {
+                    "Aliases": [
+                        "frontend"
+                    ],
+                    "NetworkID": "9f8e7d6c5b4a",
+                    "IPAddress": "172.18.0.4"
+                }
+            }
+        }
+    }
+]

@@ -1,0 +1,24 @@
+[
+    {
+        "Id": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "RepoTags": [
+            "docker.0k.io/mirror/odoo:rc_18.0-ARPOL-ODOO-DEV-18.0"
+        ],
+        "RepoDigests": [
+            "docker.0k.io/mirror/odoo@sha256:f46e1a70b686d85611004e4da6456e71680ab0f22f4ba801de95b54fbd90757e"
+        ],
+        "Created": "2026-09-29T21:00:00Z",
+        "Config": {
+            "Env": [
+                "ODOO_VERSION=18.0",
+                "GEOIP_LICENSE_KEY=secret123"
+            ],
+            "Labels": {
+                "org.opencontainers.image.version": "18.0"
+            }
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 2147483648
+    }
+]

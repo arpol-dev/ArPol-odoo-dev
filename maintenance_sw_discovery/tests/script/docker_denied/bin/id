@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Simulated non-root user.
+case "$*" in
+  -u) echo 1000 ;;
+  *) echo "uid=1000(user) gid=1000(user) groups=1000(user)" ;;
+esac

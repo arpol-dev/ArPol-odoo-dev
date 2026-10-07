@@ -1,0 +1,39 @@
+[
+    {
+        "Id": "f6a7b8c9d0e10000000000000000000000000000000000000000000000000000",
+        "Path": "docker-entrypoint.sh",
+        "Args": [
+            "postgres"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true
+        },
+        "Image": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+        "Name": "/other-db",
+        "Mounts": [],
+        "Config": {
+            "Env": [
+                "POSTGRES_PASSWORD=secret123"
+            ],
+            "Cmd": [
+                "postgres"
+            ],
+            "Image": "postgres:16",
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ]
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "other_net": {
+                    "Aliases": [
+                        "db"
+                    ],
+                    "NetworkID": "other_net-id",
+                    "IPAddress": "172.20.0.2"
+                }
+            }
+        }
+    }
+]

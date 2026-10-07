@@ -1,0 +1,4 @@
+[core]
+	bare = false
+[remote "origin"]
+	url = https://arpol:secret123@git.example.com/arpol/custom.git

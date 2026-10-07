@@ -1,0 +1,10 @@
+[core]
+	repositoryformatversion = 0
+	bare = false
+[remote "upstream"]
+	url = https://github.com/OCA/upstream-web.git
+[remote "origin"]
+	url = https://github.com/OCA/web.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "18.0"]
+	remote = origin

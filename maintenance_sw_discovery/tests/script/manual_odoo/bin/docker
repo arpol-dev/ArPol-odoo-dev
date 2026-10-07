@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Hand-made Odoo: official odoo:18.0 image (no git inside), addons bind-mounted from /srv/addons,
+# Postgres "manual-db-1" (alias "db" on the Odoo network) and, listed first, an unrelated
+# "other-db" with the same alias on another network (must not be used).
+D="$SCENARIO_DIR/docker"
+ODOO=d4e5f6a7b8c9
+PG=e5f6a7b8c9d0
+OTHER=f6a7b8c9d0e1
+fail() { echo "docker stub: unexpected call: docker $*" >&2; exit 1; }
+
+case "$1" in
+  version) [ "$*" = "version --format {{.Server.Version}}" ] && { echo 27.3.1; exit 0; }; fail "$@" ;;
+  ps) [ "$*" = "ps -q" ] && { printf '%s\n' $OTHER $ODOO $PG; exit 0; }; fail "$@" ;;
+  inspect) [ $# -eq 2 ] && [ -f "$D/inspect-$2.json" ] && { cat "$D/inspect-$2.json"; exit 0; }; fail "$@" ;;
+  image)
+    h="${3#sha256:}"
+    [ "$2" = inspect ] && [ -f "$D/image-${h:0:12}.json" ] && { cat "$D/image-${h:0:12}.json"; exit 0; }
+    fail "$@" ;;
+  exec) ;;
+  *) fail "$@" ;;
+esac
+
+shift; c="$1"; shift
+if [ "$c" = $ODOO ]; then
+  case "$*" in
+    "odoo --version") echo "odoo: unexpected error" >&2; exit 1 ;;   # version from ODOO_VERSION
+    "cat /opt/odoo/custom/src/repos.yaml")
+      echo "cat: /opt/odoo/custom/src/repos.yaml: No such file or directory" >&2; exit 1 ;;
+    *)
+      [ "$1 $2" = "sh -c" ] || fail exec "$c" "$@"
+      tag="$4"; shift 4
+      case "$tag" in
+        discover-conf)
+          [ "$1" = /etc/odoo/odoo.conf ] || fail exec "$c" conf "$@"
+          cat "$D/odoo.conf" ;;
+        discover-addons)
+          for d in "$@"; do
+            case "$d" in
+              /mnt/extra-addons/oca-web) mods="web_environment_ribbon web_responsive" ;;
+              /mnt/extra-addons/custom) mods="arpol_custom" ;;
+              /usr/lib/python3/dist-packages/odoo/addons) mods="base web" ;;
+              *) mods="" ;;
+            esac
+            for m in $mods; do printf '%s\t%s\n' "$d" "$m"; done
+          done ;;
+        discover-repos)
+          # no git in the image: the two mounted repositories are reported unreadable
+          printf 'na\t%s\n' /mnt/extra-addons/oca-web /mnt/extra-addons/custom ;;
+        discover-links) ;;
+        *) fail exec "$c" "$tag" "$@" ;;
+      esac ;;
+  esac
+  exit 0
+fi
+
+if [ "$c" = $PG ] || [ "$c" = $OTHER ]; then
+  [ "$1" = psql ] || fail exec "$c" "$@"
+  shift
+  user="" db="" query=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -U) user="$2"; shift 2 ;;
+      -d) db="$2"; shift 2 ;;
+      -c) query="$2"; shift 2 ;;
+      -X|-w|-At|-A|-t) shift ;;
+      *) fail exec "$c" psql "$@" ;;
+    esac
+  done
+  [ "$user" = odoo ] || { echo "psql: error: FATAL:  role \"$user\" does not exist" >&2; exit 2; }
+  if [ "$c" = $OTHER ]; then
+    case "$query" in *pg_database*) echo wrong_server ;; *) echo t ;; esac
+    exit 0
+  fi
+  case "$db:$query" in
+    "postgres:"*pg_database*) echo manual ;;
+    "manual:"*to_regclass*) echo t ;;
+    "manual:"*ir_module_module*)
+      printf '%s\n' "base|18.0.1.3|installed" "web_responsive|18.0.1.0.2|installed" ;;
+    *) echo "psql: error: unexpected query on $db: $query" >&2; exit 1 ;;
+  esac
+  exit 0
+fi
+fail exec "$c" "$@"

@@ -1,0 +1,95 @@
+[
+    {
+        "Id": "a1b2c3d4e5f60000000000000000000000000000000000000000000000000001",
+        "Created": "2026-09-30T08:00:00.123456789Z",
+        "Path": "/opt/odoo/common/entrypoint",
+        "Args": [
+            "odoo",
+            "--addons-path=/opt/odoo/auto/dev/ArPol-odoo-dev, /opt/odoo/auto/addons",
+            "--workers=4",
+            "--db_password=secret123"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true,
+            "Pid": 4242,
+            "StartedAt": "2026-09-30T08:00:01.5Z"
+        },
+        "Image": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "Name": "/myc_odoo-v18_1",
+        "RestartCount": 0,
+        "HostConfig": {
+            "Binds": [
+                "/srv/datastore/data/odoo-v18/addons:/opt/odoo/auto/dev:rw"
+            ],
+            "RestartPolicy": {
+                "Name": "unless-stopped",
+                "MaximumRetryCount": 0
+            }
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/srv/datastore/data/odoo-v18/addons",
+                "Destination": "/opt/odoo/auto/dev",
+                "Mode": "rw",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "volume",
+                "Name": "myc_odoo-v18-data",
+                "Source": "/var/lib/docker/volumes/myc_odoo-v18-data/_data",
+                "Destination": "/var/lib/odoo",
+                "Driver": "local",
+                "Mode": "z",
+                "RW": true,
+                "Propagation": ""
+            }
+        ],
+        "Config": {
+            "Hostname": "a1b2c3d4e5f6",
+            "User": "odoo",
+            "Env": [
+                "PGHOST=postgres",
+                "PGUSER=odoo-v18",
+                "PGPASSWORD=secret123",
+                "ADMIN_PASSWORD=secret123",
+                "smtp_password=secret123,with \"quote\" = and \\ backslash",
+                "Api_Token=secret123",
+                "OPENERP_SERVER=/opt/odoo/auto/odoo.conf",
+                "ODOO_VERSION=18.0",
+                "PATH=/usr/local/bin:/usr/bin:/bin",
+                "DB_FILTER=^arpol$"
+            ],
+            "Cmd": [
+                "odoo",
+                "--addons-path=/opt/odoo/auto/dev/ArPol-odoo-dev, /opt/odoo/auto/addons",
+                "--workers=4",
+                "--db_password=secret123"
+            ],
+            "Image": "docker.0k.io/mirror/odoo:rc_18.0-ARPOL-ODOO-DEV-18.0",
+            "Entrypoint": [
+                "/opt/odoo/common/entrypoint"
+            ],
+            "Labels": {
+                "com.docker.compose.project": "myc",
+                "com.docker.compose.service": "odoo-v18",
+                "io.example.api_key": "secret123",
+                "description": "start \u0026\u0026 serve \u003cfast\u003e"
+            }
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "myc_default": {
+                    "Aliases": [
+                        "odoo-v18",
+                        "a1b2c3d4e5f6"
+                    ],
+                    "NetworkID": "9f8e7d6c5b4a",
+                    "IPAddress": "172.18.0.3"
+                }
+            }
+        }
+    }
+]

@@ -1,0 +1,67 @@
+[
+    {
+        "Id": "d4e5f6a7b8c90000000000000000000000000000000000000000000000000004",
+        "Path": "/entrypoint.sh",
+        "Args": [
+            "odoo"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true
+        },
+        "Image": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "Name": "/odoo-web",
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "odoo-web-data",
+                "Source": "/var/lib/docker/volumes/odoo-web-data/_data",
+                "Destination": "/var/lib/odoo",
+                "Driver": "local",
+                "Mode": "z",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/srv/addons",
+                "Destination": "/mnt/extra-addons",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ],
+        "Config": {
+            "Hostname": "d4e5f6a7b8c9",
+            "User": "odoo",
+            "Env": [
+                "HOST=db",
+                "USER=odoo",
+                "PASSWORD=secret123",
+                "ODOO_RC=/etc/odoo/odoo.conf",
+                "ODOO_VERSION=18.0",
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Cmd": [
+                "odoo"
+            ],
+            "Image": "odoo:18.0",
+            "Entrypoint": [
+                "/entrypoint.sh"
+            ],
+            "Labels": {}
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "manual_default": {
+                    "Aliases": [
+                        "web",
+                        "d4e5f6a7b8c9"
+                    ],
+                    "NetworkID": "1a2b3c4d5e6f",
+                    "IPAddress": "172.20.0.3"
+                }
+            }
+        }
+    }
+]
