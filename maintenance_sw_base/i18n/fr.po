@@ -95,15 +95,15 @@ msgid "Created on"
 msgstr "Créé le"
 
 #. module: maintenance_sw_base
-#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__effective_customer_id
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__customer_id
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
 msgid "Customer"
 msgstr "Client"
 
 #. module: maintenance_sw_base
-#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__customer_id
-msgid "Customer of this equipment, when it is not the one of its parent."
-msgstr "Client de cet équipement, lorsque ce n'est pas celui de son parent."
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__customer_forced
+msgid "Customer Forced"
+msgstr "Client forcé"
 
 #. module: maintenance_sw_base
 #: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_domain__partner_id
@@ -224,9 +224,12 @@ msgid "ID"
 msgstr "ID"
 
 #. module: maintenance_sw_base
-#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_form
-msgid "Inherited from the parent"
-msgstr "Hérité du parent"
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__customer_id
+#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__physical_host_id
+msgid ""
+"Inherited from the parent equipment unless set here. Clear it to inherit "
+"again."
+msgstr "Hérité de l'équipement parent sauf saisie ici. Videz-le pour hériter à nouveau."
 
 #. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__install_path
@@ -322,6 +325,12 @@ msgid "Maintenance Equipment"
 msgstr "Équipement de maintenance"
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_res_partner__maintenance_host_count
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_res_users__maintenance_host_count
+msgid "Maintenance Host Count"
+msgstr "Nombre de supports physiques"
+
+#. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_deployment_method__managed_by_provider
 msgid "Managed By Provider"
 msgstr "Géré par le fournisseur"
@@ -397,8 +406,18 @@ msgid "Physical Host"
 msgstr "Support physique"
 
 #. module: maintenance_sw_base
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__physical_host_forced
+msgid "Physical Host Forced"
+msgstr "Support physique forcé"
+
+#. module: maintenance_sw_base
+#. odoo-python
+#: code:addons/maintenance_sw_base/models/res_partner.py:0
 #: model:ir.actions.act_window,name:maintenance_sw_base.maintenance_host_action
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_res_partner__maintenance_host_ids
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_res_users__maintenance_host_ids
 #: model:ir.ui.menu,name:maintenance_sw_base.menu_maintenance_host
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.view_partner_form
 msgid "Physical Hosts"
 msgstr "Supports physiques"
 
@@ -406,13 +425,6 @@ msgstr "Supports physiques"
 #: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_host__host_type__physical
 msgid "Physical Server"
 msgstr "Serveur physique"
-
-#. module: maintenance_sw_base
-#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__host_id
-msgid "Physical host of this equipment, when it is not the one of its parent."
-msgstr ""
-"Support physique de cet équipement, lorsque ce n'est pas celui de son "
-"parent."
 
 #. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_software_version__product_id
@@ -461,16 +473,6 @@ msgstr "Séquence"
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_domain__equipment_ids
 msgid "Served By"
 msgstr "Servi par"
-
-#. module: maintenance_sw_base
-#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__customer_id
-msgid "Set Customer"
-msgstr "Client forcé"
-
-#. module: maintenance_sw_base
-#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__host_id
-msgid "Set Physical Host"
-msgstr "Support physique forcé"
 
 #. module: maintenance_sw_base
 #: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_host__host_type__shared_hosting
@@ -545,16 +547,6 @@ msgid ""
 "The provider runs and updates the software (SaaS): there is no server of "
 "ours to attach it to, and its updates are not ours to plan."
 msgstr "Le fournisseur exploite et met à jour le logiciel (SaaS) : il n'y a pas de serveur à nous auquel le rattacher, et ses mises à jour ne sont pas à planifier de notre côté."
-
-#. module: maintenance_sw_base
-#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__effective_customer_id
-msgid "The set customer, or else the one of the parent equipment."
-msgstr "Le client forcé, sinon celui de l'équipement parent."
-
-#. module: maintenance_sw_base
-#: model:ir.model.fields,help:maintenance_sw_base.field_maintenance_equipment__physical_host_id
-msgid "The set physical host, or else the one of the parent equipment."
-msgstr "Le support physique forcé, sinon celui de l'équipement parent."
 
 #. module: maintenance_sw_base
 #: model:ir.model.constraint,message:maintenance_sw_base.constraint_maintenance_domain_name_uniq
