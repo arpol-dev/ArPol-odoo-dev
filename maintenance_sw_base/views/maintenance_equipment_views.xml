@@ -13,8 +13,8 @@
             </xpath>
             <field name="category_id" position="after">
                 <field name="equipment_kind" widget="radio" options="{'horizontal': true}"/>
-                <field name="effective_customer_id"/>
-                <field name="customer_id" placeholder="Inherited from the parent"/>
+                <field name="customer_id"/>
+                <field name="customer_forced" invisible="1"/>
             </field>
             <xpath expr="//notebook" position="inside">
                 <page string="Software" name="software" invisible="equipment_kind != 'software'">
@@ -29,7 +29,7 @@
                             <field name="software_version_id"/>
                             <field name="version_note"/>
                             <field name="physical_host_id"/>
-                            <field name="host_id" placeholder="Inherited from the parent"/>
+                            <field name="physical_host_forced" invisible="1"/>
                             <field name="needs_attachment" invisible="1"/>
                         </group>
                     </group>
@@ -51,7 +51,7 @@
                 <field name="software_version_id" optional="show"/>
                 <field name="deployment_method_id" optional="hide"/>
                 <field name="physical_host_id" optional="show"/>
-                <field name="effective_customer_id" optional="show"/>
+                <field name="customer_id" optional="show"/>
             </field>
         </field>
     </record>
@@ -77,13 +77,13 @@
                         context="{'group_by': 'deployment_method_id'}"/>
                 <filter string="Install Type" name="group_install_type" context="{'group_by': 'install_type'}"/>
                 <filter string="Physical Host" name="group_physical_host" context="{'group_by': 'physical_host_id'}"/>
-                <filter string="Customer" name="group_customer" context="{'group_by': 'effective_customer_id'}"/>
+                <filter string="Customer" name="group_customer" context="{'group_by': 'customer_id'}"/>
             </xpath>
             <field name="category_id" position="after">
                 <field name="software_product_id"/>
                 <field name="software_version_id"/>
                 <field name="physical_host_id"/>
-                <field name="effective_customer_id"/>
+                <field name="customer_id"/>
                 <field name="domain_ids"/>
             </field>
         </field>

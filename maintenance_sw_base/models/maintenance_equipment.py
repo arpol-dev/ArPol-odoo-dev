@@ -11,6 +11,9 @@ INSTALL_TYPES = [
     ("manual", "Manual"),
 ]
 
+# Fields inherited from the parent equipment, with the flag telling they were set by hand.
+INHERITED_FIELDS = {"physical_host_id": "physical_host_forced", "customer_id": "customer_forced"}
+
 
 class MaintenanceEquipment(models.Model):
     _inherit = "maintenance.equipment"
@@ -44,37 +47,31 @@ class MaintenanceEquipment(models.Model):
     )
     version_note = fields.Char(help="Free-form version, when it is not in the catalog.")
     install_path = fields.Char(help="Where it is installed, e.g. /opt/apps/myc-deploy.")
-    host_id = fields.Many2one(
-        "maintenance.host",
-        string="Set Physical Host",
-        ondelete="restrict",
-        tracking=True,
-        help="Physical host of this equipment, when it is not the one of its parent.",
-    )
     physical_host_id = fields.Many2one(
         "maintenance.host",
         string="Physical Host",
+        ondelete="restrict",
         compute="_compute_physical_host_id",
         store=True,
+        readonly=False,
         recursive=True,
         index=True,
-        help="The set physical host, or else the one of the parent equipment.",
+        tracking=True,
+        help="Inherited from the parent equipment unless set here. Clear it to inherit again.",
     )
+    physical_host_forced = fields.Boolean(copy=True)
     customer_id = fields.Many2one(
         "res.partner",
-        string="Set Customer",
-        tracking=True,
-        help="Customer of this equipment, when it is not the one of its parent.",
-    )
-    effective_customer_id = fields.Many2one(
-        "res.partner",
         string="Customer",
-        compute="_compute_effective_customer_id",
+        compute="_compute_customer_id",
         store=True,
+        readonly=False,
         recursive=True,
         index=True,
-        help="The set customer, or else the one of the parent equipment.",
+        tracking=True,
+        help="Inherited from the parent equipment unless set here. Clear it to inherit again.",
     )
+    customer_forced = fields.Boolean(copy=True)
     domain_ids = fields.Many2many(
         "maintenance.domain",
         "maintenance_domain_equipment_rel",
@@ -98,17 +95,22 @@ class MaintenanceEquipment(models.Model):
             else:
                 equipment.software_product_id = equipment.software_product_id
 
-    @api.depends("host_id", "parent_id.physical_host_id")
+    @api.depends("parent_id.physical_host_id", "physical_host_forced")
     def _compute_physical_host_id(self):
-        for equipment in self:
-            equipment.physical_host_id = equipment.host_id or equipment.parent_id.physical_host_id
+        self._compute_inherited("physical_host_id")
 
-    @api.depends("customer_id", "parent_id.effective_customer_id")
-    def _compute_effective_customer_id(self):
+    @api.depends("parent_id.customer_id", "customer_forced")
+    def _compute_customer_id(self):
+        self._compute_inherited("customer_id")
+
+    def _compute_inherited(self, fname):
+        """Keep a value set on the equipment (flag set), otherwise take the parent's."""
+        flag = INHERITED_FIELDS[fname]
         for equipment in self:
-            equipment.effective_customer_id = (
-                equipment.customer_id or equipment.parent_id.effective_customer_id
-            )
+            if equipment[flag]:
+                equipment[fname] = equipment[fname]
+            else:
+                equipment[fname] = equipment.parent_id[fname]
 
     @api.depends(
         "equipment_kind", "physical_host_id", "deployment_method_id.managed_by_provider"
@@ -120,6 +122,63 @@ class MaintenanceEquipment(models.Model):
                 and not equipment.physical_host_id
                 and not equipment.deployment_method_id.managed_by_provider
             )
+
+    @api.model
+    def _set_inherited_flags(self, vals):
+        """A value written on an inherited field forces it, an empty one inherits again.
+
+        The flag is derived from the value unless it is given. A form saving a new parent sends
+        the recomputed value (the new parent's one) without the unchanged flag: that value is
+        the inherited one, not a forced one.
+        """
+        parent = self.browse(vals.get("parent_id") or ())
+        for fname, flag in INHERITED_FIELDS.items():
+            if fname in vals and flag not in vals:
+                value = vals[fname]
+                vals[flag] = bool(value) and not (
+                    "parent_id" in vals and value == parent[fname].id
+                )
+        return vals
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        vals_list = [self._set_inherited_flags(dict(vals)) for vals in vals_list]
+        for vals in vals_list:
+            for fname, flag in INHERITED_FIELDS.items():
+                if not vals.get(flag):
+                    # not forced: let the ORM compute it from the parent
+                    vals.pop(fname, None)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        vals = self._set_inherited_flags(dict(vals))
+        res = super().write(vals)
+        for fname, flag in INHERITED_FIELDS.items():
+            if fname in vals and not vals[flag]:
+                # write() protects the written field from recomputation: compute it from the
+                # parent now, and make the descendants follow.
+                self.env.add_to_compute(self._fields[fname], self)
+                self.modified([fname])
+        return res
+
+    @api.onchange("physical_host_id")
+    def _onchange_physical_host_id(self):
+        self._onchange_inherited("physical_host_id")
+
+    @api.onchange("customer_id")
+    def _onchange_customer_id(self):
+        self._onchange_inherited("customer_id")
+
+    def _onchange_inherited(self, fname):
+        """Cleared: show the parent's value again. Set: force it, unless it is the parent's value.
+
+        The onchange also runs when the field is recomputed in the form (new parent): the value
+        is then the parent's one, and must stay inherited.
+        """
+        parent_value = self.parent_id[fname]
+        if not self[fname]:
+            self[fname] = parent_value
+        self[INHERITED_FIELDS[fname]] = self[fname] != parent_value
 
     @api.onchange("software_product_id")
     def _onchange_software_product_id(self):

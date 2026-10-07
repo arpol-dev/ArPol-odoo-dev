@@ -32,7 +32,9 @@ class TestSoftwareEquipment(TransactionCase):
         self.assertTrue(self._software().needs_attachment)
 
     def test_software_with_host_does_not_need_attachment(self):
-        software = self._software(host_id=self.host.id, deployment_method_id=self.method_0k.id)
+        software = self._software(
+            physical_host_id=self.host.id, deployment_method_id=self.method_0k.id
+        )
         self.assertFalse(software.needs_attachment)
 
     def test_saas_without_parent_does_not_need_attachment(self):
@@ -41,7 +43,7 @@ class TestSoftwareEquipment(TransactionCase):
 
     def test_needs_attachment_recomputed_when_host_set(self):
         software = self._software(deployment_method_id=self.method_0k.id)
-        software.host_id = self.host
+        software.physical_host_id = self.host
         self.assertFalse(software.needs_attachment)
 
     def test_needs_attachment_follows_method_flag(self):

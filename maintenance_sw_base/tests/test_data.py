@@ -22,8 +22,17 @@ class TestShippedData(TransactionCase):
 
     def test_equipment_form_shows_host_customer_domains(self):
         arch = self.env["maintenance.equipment"].get_view(view_type="form")["arch"]
-        for field in ("physical_host_id", "host_id", "effective_customer_id", "customer_id", "domain_ids"):
+        for field in (
+            "physical_host_id", "physical_host_forced", "customer_id", "customer_forced", "domain_ids"
+        ):
             self.assertIn(f'name="{field}"', arch)
+        for field in ("host_id", "effective_customer_id"):
+            self.assertNotIn(f'name="{field}"', arch)
+
+    def test_partner_form_has_hosts_button(self):
+        arch = self.env["res.partner"].get_view(view_type="form")["arch"]
+        self.assertIn('name="action_view_maintenance_hosts"', arch)
+        self.assertIn('name="maintenance_host_count"', arch)
 
     def test_host_and_domain_menus(self):
         parent = self.env.ref("maintenance_sw_base.menu_sw_config")

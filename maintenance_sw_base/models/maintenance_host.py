@@ -51,5 +51,9 @@ class MaintenanceHost(models.Model):
             "res_model": "maintenance.equipment",
             "view_mode": "list,form",
             "domain": [("physical_host_id", "=", self.id)],
-            "context": {"default_equipment_kind": "software", "default_host_id": self.id},
+            "context": {
+                "default_equipment_kind": "software",
+                "default_physical_host_id": self.id,
+                "default_physical_host_forced": True,
+            },
         }
