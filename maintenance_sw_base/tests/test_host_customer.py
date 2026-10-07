@@ -68,6 +68,31 @@ class TestHostCustomer(TransactionCase):
         self.assertHostCustomer(cleared, self.h1, self.c1)
         self.assertForced(cleared, False, False)
 
+    def test_create_with_parent_value_forces_it(self):
+        child = self.Equipment.create({
+            "name": "Same as parent", "parent_id": self.os.id,
+            "physical_host_id": self.h1.id, "customer_id": self.c1.id,
+        })
+        self.assertForced(child, True, True)
+        self.os.write({"physical_host_id": self.h2.id, "customer_id": self.c2.id})
+        self.assertHostCustomer(child, self.h1, self.c1)
+
+    def test_write_records_instead_of_ids(self):
+        other = self.Equipment.create({
+            "name": "Ubuntu", "equipment_kind": "software",
+            "physical_host_id": self.h2.id, "customer_id": self.c2.id,
+        })
+        # what the form sends after a parent change, with records instead of ids
+        self.container.write({
+            "parent_id": other, "physical_host_id": self.h2, "customer_id": self.c2,
+        })
+        self.assertForced(self.container, False, False)
+        other.write({"physical_host_id": self.h3.id, "customer_id": self.c1.id})
+        self.assertHostCustomer(self.container, self.h3, self.c1)
+        self.stack.write({"physical_host_id": self.h3, "customer_id": self.c2})
+        self.assertForced(self.stack, True, True)
+        self.assertHostCustomer(self.stack, self.h3, self.c2)
+
     def test_create_with_flag_given_keeps_it(self):
         # what the form sends: the parent's value with the flag cleared
         child = self.Equipment.create({

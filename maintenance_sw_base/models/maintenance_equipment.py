@@ -124,20 +124,22 @@ class MaintenanceEquipment(models.Model):
             )
 
     @api.model
-    def _set_inherited_flags(self, vals):
+    def _set_inherited_flags(self, vals, parent_change=False):
         """A value written on an inherited field forces it, an empty one inherits again.
 
-        The flag is derived from the value unless it is given. A form saving a new parent sends
-        the recomputed value (the new parent's one) without the unchanged flag: that value is
-        the inherited one, not a forced one.
+        The flag is derived from the value unless it is given. With ``parent_change`` (write), a
+        form saving a new parent sends the recomputed value (the new parent's one) without the
+        unchanged flag: that value is the inherited one, not a forced one.
         """
-        parent = self.browse(vals.get("parent_id") or ())
+        def to_id(value):
+            return value.id if isinstance(value, models.BaseModel) else value
+
+        parent_change = parent_change and "parent_id" in vals
+        parent = self.browse(to_id(vals.get("parent_id")) or ())
         for fname, flag in INHERITED_FIELDS.items():
             if fname in vals and flag not in vals:
-                value = vals[fname]
-                vals[flag] = bool(value) and not (
-                    "parent_id" in vals and value == parent[fname].id
-                )
+                value = to_id(vals[fname])
+                vals[flag] = bool(value) and not (parent_change and value == parent[fname].id)
         return vals
 
     @api.model_create_multi
@@ -151,7 +153,7 @@ class MaintenanceEquipment(models.Model):
         return super().create(vals_list)
 
     def write(self, vals):
-        vals = self._set_inherited_flags(dict(vals))
+        vals = self._set_inherited_flags(dict(vals), parent_change=True)
         res = super().write(vals)
         for fname, flag in INHERITED_FIELDS.items():
             if fname in vals and not vals[flag]:
