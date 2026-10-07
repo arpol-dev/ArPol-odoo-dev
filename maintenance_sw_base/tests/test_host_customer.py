@@ -99,3 +99,8 @@ class TestHostCustomer(TransactionCase):
         self.assertEqual(self.h1.software_count, 3)
         action = self.h1.action_view_software()
         self.assertEqual(self.Equipment.search(action["domain"]), self.os | self.stack | self.container)
+
+    def test_host_software_label_is_plural(self):
+        # "Software" alone is the equipment kind (singular "Logiciel" in French).
+        self.assertEqual(self.h1.action_view_software()["name"], "Installed Software")
+        self.assertEqual(self.env["maintenance.host"]._fields["software_ids"].string, "Installed Software")

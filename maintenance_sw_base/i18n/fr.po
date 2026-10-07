@@ -259,6 +259,14 @@ msgid "Installations"
 msgstr "Installations"
 
 #. module: maintenance_sw_base
+#. odoo-python
+#: code:addons/maintenance_sw_base/models/maintenance_host.py:0
+#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__software_ids
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_host_view_form
+msgid "Installed Software"
+msgstr "Logiciels installés"
+
+#. module: maintenance_sw_base
 #: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_equipment__equipment_kind
 msgid "Kind"
 msgstr "Nature"
@@ -470,14 +478,10 @@ msgid "Shared Hosting"
 msgstr "Hébergement mutualisé"
 
 #. module: maintenance_sw_base
-#. odoo-python
-#: code:addons/maintenance_sw_base/models/maintenance_host.py:0
-#: model:ir.model.fields,field_description:maintenance_sw_base.field_maintenance_host__software_ids
 #: model:ir.model.fields.selection,name:maintenance_sw_base.selection__maintenance_equipment__equipment_kind__software
 #: model:ir.ui.menu,name:maintenance_sw_base.menu_sw_config
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_form
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_base.hr_equipment_view_search
-#: model_terms:ir.ui.view,arch_db:maintenance_sw_base.maintenance_host_view_form
 msgid "Software"
 msgstr "Logiciel"
 

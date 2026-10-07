@@ -34,7 +34,7 @@ class MaintenanceHost(models.Model):
     active = fields.Boolean(default=True)
 
     software_ids = fields.One2many(
-        "maintenance.equipment", "physical_host_id", string="Software"
+        "maintenance.equipment", "physical_host_id", string="Installed Software"
     )
     software_count = fields.Integer(compute="_compute_software_count")
 
@@ -47,7 +47,7 @@ class MaintenanceHost(models.Model):
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",
-            "name": _("Software"),
+            "name": _("Installed Software"),
             "res_model": "maintenance.equipment",
             "view_mode": "list,form",
             "domain": [("physical_host_id", "=", self.id)],
