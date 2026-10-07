@@ -15,7 +15,7 @@
                         </group>
                         <group>
                             <field name="physical_host_id" readonly="1"/>
-                            <field name="effective_customer_id" readonly="1"/>
+                            <field name="customer_id" readonly="1"/>
                         </group>
                     </group>
                     <separator string="Mounts"/>

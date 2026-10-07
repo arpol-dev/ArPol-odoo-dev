@@ -27,7 +27,7 @@ class TestDockerViews(TransactionCase):
     def test_docker_page_shows_host_and_customer(self):
         arch = etree.fromstring(self.env["maintenance.equipment"].get_view(view_type="form")["arch"])
         page = arch.xpath("//page[@name='docker']")[0]
-        for field in ("physical_host_id", "effective_customer_id"):
+        for field in ("physical_host_id", "customer_id"):
             nodes = page.xpath(f".//field[@name='{field}']")
             self.assertTrue(nodes, field)
             self.assertEqual(nodes[0].get("readonly"), "1")
