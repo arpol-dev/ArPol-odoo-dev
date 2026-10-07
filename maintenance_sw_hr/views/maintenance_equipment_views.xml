@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="maintenance_equipment_view_form_software_hr" model="ir.ui.view">
+        <field name="name">maintenance.equipment.form.software.hr</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="hr_maintenance.maintenance_equipment_view_form_inherit_hr"/>
+        <field name="arch" type="xml">
+            <field name="equipment_assign_to" position="attributes">
+                <attribute name="invisible">equipment_kind == 'software'</attribute>
+            </field>
+            <field name="employee_id" position="attributes">
+                <attribute name="invisible">equipment_kind == 'software' or equipment_assign_to == 'department' or not equipment_assign_to</attribute>
+            </field>
+            <field name="department_id" position="attributes">
+                <attribute name="invisible">equipment_kind == 'software' or equipment_assign_to == 'employee' or not equipment_assign_to</attribute>
+            </field>
+        </field>
+    </record>
+</odoo>
