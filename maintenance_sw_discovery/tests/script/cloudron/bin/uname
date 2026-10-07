@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+case "$*" in
+  -r) echo 6.8.0-45-generic ;;
+  -n) echo my.eoloa.eu ;;
+  *) echo Linux ;;
+esac

@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+echo "pve-manager/8.2.7/3e0176e6bb2ade3b (running kernel: 6.8.12-4-pve)"

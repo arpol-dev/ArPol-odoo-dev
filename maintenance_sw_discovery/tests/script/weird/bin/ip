@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# iproute2: `ip -j addr` (JSON, one line)
+case "$*" in
+  "-j addr"|"-j address"|"-j addr show")
+    printf '%s\n' '[{"ifindex":1,"ifname":"lo","flags":["LOOPBACK","UP","LOWER_UP"],"mtu":65536,"qdisc":"noqueue","operstate":"UNKNOWN","group":"default","txqlen":1000,"link_type":"loopback","address":"00:00:00:00:00:00","broadcast":"00:00:00:00:00:00","addr_info":[{"family":"inet","local":"127.0.0.1","prefixlen":8,"scope":"host","label":"lo","valid_life_time":4294967295,"preferred_life_time":4294967295},{"family":"inet6","local":"::1","prefixlen":128,"scope":"host","valid_life_time":4294967295,"preferred_life_time":4294967295}]},{"ifindex":2,"ifname":"eth0","flags":["BROADCAST","MULTICAST","UP","LOWER_UP"],"mtu":1500,"qdisc":"fq_codel","operstate":"UP","group":"default","txqlen":1000,"link_type":"ether","address":"bc:24:11:2a:00:01","broadcast":"ff:ff:ff:ff:ff:ff","altnames":["enp0s18"],"addr_info":[{"family":"inet","local":"192.168.1.20","prefixlen":24,"broadcast":"192.168.1.255","scope":"global","label":"eth0","valid_life_time":4294967295,"preferred_life_time":4294967295},{"family":"inet6","local":"2001:db8::20","prefixlen":64,"scope":"global","dynamic":true,"mngtmpaddr":true,"valid_life_time":86400,"preferred_life_time":14400},{"family":"inet6","local":"fe80::be24:11ff:fe2a:1","prefixlen":64,"scope":"link","valid_life_time":4294967295,"preferred_life_time":4294967295}]}]'
+    ;;
+  *) echo "ip: unexpected arguments: $*" >&2; exit 1 ;;
+esac

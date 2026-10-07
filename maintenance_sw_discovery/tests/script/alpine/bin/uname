@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+case "$*" in
+  -r) echo 6.6.49-0-lts ;;
+  -n) echo alpine-box ;;
+  *) echo Linux ;;
+esac

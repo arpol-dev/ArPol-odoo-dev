@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# STUB_FAIL_PCT=1 simulates a failing command.
+[ -n "${STUB_FAIL_PCT:-}" ] && { echo "pct: cluster not ready" >&2; exit 1; }
+case "$*" in
+  list)
+    echo "VMID       Status     Lock         Name                "
+    echo "101        running                 arpol-brain         "
+    echo "104        stopped    backup       odoo-migrate        "
+    ;;
+  "config 101") printf 'arch: amd64\ncores: 2\nhostname: arpol-brain\nostype: debian\n' ;;
+  "config 104") printf 'arch: amd64\nhostname: odoo-migrate\nlock: backup\nostype: ubuntu\n' ;;
+  *) echo "pct: unexpected arguments: $*" >&2; exit 255 ;;
+esac

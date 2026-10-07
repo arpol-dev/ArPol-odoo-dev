@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# expected: h"q\b<TAB>t<LF>l<U+FFFD>z
+printf 'h"q\\b\tt\nl\xffz\n'

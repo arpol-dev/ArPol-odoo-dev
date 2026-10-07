@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Simulated root (STUB_UID overrides it, e.g. STUB_UID=1000 for a non-root run).
+case "$*" in
+  -u) echo "${STUB_UID:-0}" ;;
+  *) echo "uid=${STUB_UID:-0}" ;;
+esac

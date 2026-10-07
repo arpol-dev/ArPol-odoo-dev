@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Only what the Cloudron fallback needs; any other command lists nothing.
+case "$*" in
+  "version --format {{.Server.Version}}") echo 27.3.1 ;;
+  "ps --filter label=isCloudronManaged=true --format "*)
+    printf '%s\t%s\t%s\n' \
+      6cd145c1-0445-4834-a734-1eb559c00b24 odoo.eoloa.eu "registry.docker.com/alusage/com.odoo.cloudronapp:18.0.0" \
+      0a1b2c3d-1111-2222-3333-444455556666 cloud.eoloa.eu "cloudron/org.nextcloud.cloudronapp:4.21.3" \
+      "" "" "cloudron/mail:3.12.1"
+    ;;
+  *) exit 0 ;;
+esac

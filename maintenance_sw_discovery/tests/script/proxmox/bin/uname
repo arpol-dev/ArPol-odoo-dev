@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+case "$*" in
+  -r) echo 6.8.12-4-pve ;;
+  -n) echo tardis ;;
+  *) echo Linux ;;
+esac

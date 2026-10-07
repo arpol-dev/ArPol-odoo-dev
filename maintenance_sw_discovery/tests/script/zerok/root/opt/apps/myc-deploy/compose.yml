@@ -1,0 +1,34 @@
+# 0k deployment
+odoo-v18:
+  charm: odoo-tecnativa
+  docker-compose:
+    image: docker.0k.io/mirror/odoo:rc_18.0-ARPOL-ODOO-DEV-18.0
+    command:
+      - "--log-level=warn"
+      - --workers=4
+      - --db_password=topsecret1
+    volumes:
+      - /srv/datastore/data/odoo-v18/addons:/opt/odoo/auto/dev:rw
+  options:
+    admin-password: topsecret2
+    private_key: |
+      -----BEGIN PRIVATE KEY-----
+      topsecret3
+      -----END PRIVATE KEY-----
+    workers: 4
+  relations:
+    web-proxy:
+      frontend:
+        domain: arpol.fr
+
+postgres:
+  docker-compose:
+    image: docker.0k.io/postgres:16.0-myc
+    command: ["postgres", "-c", "max_connections=200"]
+
+frontend:
+  charm: apache
+  docker-compose:
+    volumes: ['/etc/ssl:/etc/ssl:ro']
+  options:
+    API_TOKEN: topsecret4

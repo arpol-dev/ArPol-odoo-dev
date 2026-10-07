@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# STUB_FAIL_CLOUDRON=1 simulates a CLI that is not logged in (fallback on docker ps).
+[ -n "${STUB_FAIL_CLOUDRON:-}" ] && { echo "Not logged in" >&2; exit 1; }
+case "$*" in
+  "list --json")
+    cat <<'JSON'
+[
+  {"id": "6cd145c1-0445-4834-a734-1eb559c00b24", "appStoreId": "com.odoo.cloudronapp",
+   "installationState": "installed", "runState": "running", "label": null,
+   "location": "odoo", "domain": "eoloa.eu", "fqdn": "odoo.eoloa.eu",
+   "manifest": {"id": "com.odoo.cloudronapp", "version": "18.0.0", "title": "Odoo",
+                "tags": ["erp", "crm"], "memoryLimit": 2147483648}},
+  {"id": "0a1b2c3d-1111-2222-3333-444455556666", "appStoreId": "org.nextcloud.cloudronapp",
+   "installationState": "installed", "runState": "running", "label": "Cloud \"Airmes\"",
+   "location": "cloud", "domain": "eoloa.eu", "fqdn": "cloud.eoloa.eu",
+   "manifest": {"id": "org.nextcloud.cloudronapp", "version": "4.21.3", "title": "Nextcloud"}}
+]
+JSON
+    ;;
+  *) echo "cloudron: unexpected arguments: $*" >&2; exit 1 ;;
+esac

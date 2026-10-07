@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+case "$*" in
+  list)
+    echo "      VMID NAME                 STATUS     MEM(MB)    BOOTDISK(GB) PID       "
+    echo "       100 haos                 running    4096              32.00 1179      "
+    ;;
+  "config 100") printf 'boot: order=scsi0\ncores: 2\nmemory: 4096\nname: haos\nostype: l26\n' ;;
+  *) echo "qm: unexpected arguments: $*" >&2; exit 255 ;;
+esac
