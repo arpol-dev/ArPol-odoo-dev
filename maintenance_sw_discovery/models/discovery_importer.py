@@ -106,8 +106,10 @@ class DiscoveryImporter(models.AbstractModel):
         data = self._load(data)
         mid, hostname, root_key = tools.machine_ids(data)
         Equipment = self.env["maintenance.equipment"]
+        # archived (missing) records keep their key: they are found by it, not by name
+        Known = Equipment.with_context(active_test=False)
         matches = {}
-        system = Equipment.search([("discovery_key", "=", root_key)], limit=1)
+        system = Known.search([("discovery_key", "=", root_key)], limit=1)
         if not system:
             candidates = Equipment.search([
                 ("discovery_key", "=", False), ("install_type", "=", "os"),
@@ -124,7 +126,7 @@ class DiscoveryImporter(models.AbstractModel):
         for container in (tools.section(data, "docker") or {}).get("containers") or []:
             name = container.get("name")
             key = f"container:{mid}:{name}"
-            if not name or Equipment.search_count([("discovery_key", "=", key)]):
+            if not name or Known.search_count([("discovery_key", "=", key)]):
                 continue
             domain = [
                 ("discovery_key", "=", False), "|", ("name", "=", name),

@@ -239,6 +239,11 @@ class TestImporter(DiscoveryCase):
         archived = self.Database.search([("equipment_id", "=", odoo.id), ("name", "=", "arpol_test")])
         self.assertFalse(archived.active)
 
+        # an archived container is still known by its key: no name match proposed for it
+        self.Equipment.create({"name": "myc_frontend_1", "equipment_kind": "software",
+                               "parent_id": root.id})
+        self.assertEqual(self.Importer._suggest(REFERENCE_RAW)["matches"], {})
+
         # back again: unarchived
         self.Importer._apply(REFERENCE_RAW)
         self.assertTrue(frontend.active)
