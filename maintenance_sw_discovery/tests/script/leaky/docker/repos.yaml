@@ -29,6 +29,8 @@
         # old: https://u:LEAK72@h/old.git
         # # Automatically frozen:
         # origin: https://u:LEAK71@github.com/OCA/frozen.git
+        # token: LEAK82
+        # bad name: https://LEAK83@h/x.git
         origin: ssh://git@git.example.com:5022/frozen.git
         "quoted": "https://LEAK73@h/q.git"
     target: origin 17.0-frozen

@@ -22,8 +22,9 @@
 # list item after such an option or after -w, -a, --pass, --requirepass; -p<value>; the user info
 # of URLs (up to the last @; a plain "git" user and image digests kept) and user:password@host.
 # Heuristic limits: a secret passed as a free word (positional argument, other short options
-# such as -P x), a URL whose password contains a blank or a quote, or a non-URL value under a
-# repos.yaml remote may still leak; masking may hide harmless values (-p8080, the word after -a).
+# such as -P x), a URL whose password contains a blank or a quote, a non-URL value under a
+# repos.yaml remote, or a secret inside an upstream URL (frozen "# <remote>: <url>" comments,
+# kept only for a remote name and a URL / scp-like address, masked like remotes) may still leak; masking may hide harmless values (-p8080, the word after -a).
 set -u
 SCRIPT_VERSION="1.0.0"
 SCHEMA_VERSION=1
@@ -633,7 +634,8 @@ json_pick() {  # json_pick PATTERNS < JSON -> compact JSON keeping only the memb
 #   block scalars (| >), flow maps, nested flow lists, scalars or flow lists spanning lines,
 #   anchors / aliases / tags, list items that are mappings or lists, other escapes, tab indents.
 # Records 1..YN: YK kind ("m" key of a mapping, "v" key: scalar, "f" key: [flow list], "i" list
-# item, "c" comment, "x" scalar found to span lines), YP path (keys joined by YS), YV value
+# item, "s" list item not understood, "c" comment, "x" key whose scalar or flow list spans lines,
+# "d" item of such a flow list), YP path (keys joined by YS), YV value
 # (decoded; comment text for "c", its path being the keys of the mappings around it).
 YAML_AWK='BEGIN { YS = "\034"; SN = 0; SKIP = -1; CONT = -1; YN = 0; YW = 0 }
 function yrec(kind, path, v) { YN++; YK[YN] = kind; YP[YN] = path; YV[YN] = v; return YN }
@@ -744,7 +746,10 @@ function yline(line,   ind, s, k, p, v) {  # read one line
   }
   if (CONT >= 0) {  # a deeper line after a scalar continues it: the scalar is dropped
     k = CONT; CONT = -1
-    if (ind > k) { for (v = CRA; v <= CRB; v++) YK[v] = "x"; yskip(k); return }
+    if (ind > k) {  # block item -> "s"; key: scalar or [flow] -> "x", its flow items -> "d"
+      YK[CRA] = (YK[CRA] == "i") ? "s" : "x"; for (v = CRA + 1; v <= CRB; v++) YK[v] = "d"
+      yskip(k); return
+    }
   }
   if (substr(s, 1, 1) == "\t") { yskip(ind); return }
   if (s ~ /^(---|\.\.\.)([ \t]|$)/) { SN = 0; if (!ytrail(s, 4)) YW++; return }
@@ -753,7 +758,7 @@ function yline(line,   ind, s, k, p, v) {  # read one line
     if (SN == 0 || ST[SN] == "m") { yskip(ind); return }
     ST[SN] = "l"
     v = substr(s, 2); sub(/^[ \t]+/, "", v)
-    if (v == "" || !yscalar(v)) { yskip(ind); return }
+    if (v == "" || !yscalar(v)) { yrec("s", ypath(SN), ""); yskip(ind); return }
     CRA = CRB = yrec("i", ypath(SN), YQ); CONT = ind; return
   }
   if (!ykey(s)) { yskip(ind); return }
@@ -775,34 +780,49 @@ function yline(line,   ind, s, k, p, v) {  # read one line
 compose_services() {  # stdin compose.yml -> '"services": [...], "parse_warnings": N'
   # A service is a top-level mapping (its name is never taken for a secret); only its charm,
   # image, command and volumes are read, as <service>/<field> or <service>/docker-compose/<field>
-  # (first place found), every value masked (command: item by item).
+  # (the first key found wins, a duplicate key is ignored with its items), every value masked
+  # (command: item by item; after an item not understood, the next item is masked: it may be the
+  # value of a secret option).
   LC_ALL=C awk -v SQ="'" "$MASK_AWK$YAML_AWK"'
+    BEGIN { SKIPPED = "\001skipped" }
     { yline($0) }
     function jv(s, f) { return ((s, f) in F) ? jstr(mask_arg(F[s, f], "")) : "null" }
     END {
       ns = 0
       for (i = 1; i <= YN; i++) {
-        np = split(YP[i], q, YS)
-        if (np == 1) { if (YK[i] == "m" && !(q[1] in SV)) { SV[q[1]] = ++ns; SNAME[ns] = q[1] }; continue }
-        if (!(q[1] in SV) || (YK[i] != "v" && YK[i] != "i")) continue
+        np = split(YP[i], q, YS); k = YK[i]
+        if (np == 1) { if (k == "m" && !(q[1] in SV)) { SV[q[1]] = ++ns; SNAME[ns] = q[1] }; continue }
+        if (!(q[1] in SV) || k == "c") continue
         s = SV[q[1]]
         if (np == 2) f = q[2]; else if (np == 3 && q[2] == "docker-compose") f = q[3]; else continue
         if (f != "charm" && f != "image" && f != "command" && f != "volumes") continue
-        if (((s, f) in SRC) && SRC[s, f] != YP[i]) continue
-        SRC[s, f] = YP[i]
-        if (f == "charm" || f == "image") { if (YK[i] == "v" && !((s, f) in F)) F[s, f] = YV[i] }
-        else L[s, f, ++LN[s, f]] = YV[i]
+        list = f == "command" || f == "volumes"
+        if (k == "m" || k == "f" || k == "v" || k == "x") {
+          # key of the field: the first one is its source, a later one a duplicate (ignored, and
+          # so are its items)
+          if ((s, f) in SRC) { DONE[s, f] = 1; continue }
+          SRC[s, f] = YP[i]
+          if (k == "v") { if (list) L[s, f, ++LN[s, f]] = YV[i]; else F[s, f] = YV[i] }
+          continue
+        }
+        if ((k != "i" && k != "s") || !list || ((s, f) in DONE) || !((s, f) in SRC) || SRC[s, f] != YP[i]) continue
+        L[s, f, ++LN[s, f]] = (k == "i") ? YV[i] : SKIPPED
       }
       printf "\"services\": ["
       for (s = 1; s <= ns; s++) {
         printf "%s{\"name\": %s, \"charm\": %s, \"image\": %s, \"command\": [", (s > 1 ? ", " : ""), \
           jstr(SNAME[s]), jv(s, "charm"), jv(s, "image")
-        prev = ""
+        prev = ""; sep = ""
         for (k = 1; k <= LN[s, "command"] + 0; k++) {
-          v = L[s, "command", k]; printf "%s%s", (k > 1 ? ", " : ""), jstr(mask_arg(v, prev)); prev = v
+          v = L[s, "command", k]
+          if (v == SKIPPED) { prev = "--pass"; continue }   # unknown item: mask the next one
+          printf "%s%s", sep, jstr(mask_arg(v, prev)); prev = v; sep = ", "
         }
-        printf "], \"volumes\": ["
-        for (k = 1; k <= LN[s, "volumes"] + 0; k++) printf "%s%s", (k > 1 ? ", " : ""), jstr(mask_arg(L[s, "volumes", k], ""))
+        printf "], \"volumes\": ["; sep = ""
+        for (k = 1; k <= LN[s, "volumes"] + 0; k++) {
+          v = L[s, "volumes", k]
+          if (v != SKIPPED) { printf "%s%s", sep, jstr(mask_arg(v, "")); sep = ", " }
+        }
         printf "]}"
       }
       printf "], \"parse_warnings\": %d", YW
@@ -814,6 +834,10 @@ repos_spec() {  # stdin repos.yaml (doodba) -> {"items": [...], "parse_warnings"
   # remotes (upstreams: the "# <remote>: <url>" lines right after) are read, every value masked.
   LC_ALL=C awk -v SQ="'" "$MASK_AWK$YAML_AWK"'
     { yline($0) }
+    function is_repo_url(u) {  # URL (scheme://...) or scp-like git address (user@host:path, host.tld:path)
+      return u ~ /^[A-Za-z][A-Za-z0-9+.-]*:\/\/[^ \t]+$/ \
+        || u ~ /^([A-Za-z0-9_.-]+@[A-Za-z0-9_.-]+|[A-Za-z0-9_-]+\.[A-Za-z0-9_.-]+):[^ \t]+$/
+    }
     function madd(r, m, k, v) {
       if ((r, m, k) in MS) return
       MS[r, m, k] = 1; MK[r, m, ++MC[r, m]] = k; MV[r, m, MC[r, m]] = v
@@ -831,7 +855,9 @@ repos_spec() {  # stdin repos.yaml (doodba) -> {"items": [...], "parse_warnings"
           t = YV[i]; sub(/^#[ \t]*/, "", t)
           if (np == 2 && q[2] == "remotes" && (q[1] in R)) {
             if (t ~ /^#[ \t]*Automatically frozen/) { fz = 1; continue }
-            if (fz && ykey(t) && YREST != "" && yscalar(YREST)) { madd(R[q[1]], "u", YKEY, YQ); continue }
+            if (fz && ykey(t) && YKEY ~ /^[A-Za-z0-9_.-]+$/ && YREST != "" && yscalar(YREST) && is_repo_url(YQ)) {
+              madd(R[q[1]], "u", YKEY, YQ); continue
+            }
           }
           fz = 0; continue
         }

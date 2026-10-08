@@ -57,6 +57,32 @@ passbolt:
     - LEAK62
     db: {"DB_PASSWORD": LEAK63, 'key': LEAK64}
 
+skipper:
+  docker-compose:
+    command:
+    - odoo
+    - !!str --db_password
+    - LEAK76
+    - "--db_password\x20"
+    - LEAK77
+    - >-
+      --db_password
+    - LEAK78
+    - "--db_password
+      x"
+    - LEAK79
+    - --db_password
+      continued
+    - LEAK80
+    - --workers=2
+
+dupsvc:
+  docker-compose:
+    command:
+    - --db_password
+    command:
+    - LEAK81
+
 weird:
   docker-compose:
     image: busybox

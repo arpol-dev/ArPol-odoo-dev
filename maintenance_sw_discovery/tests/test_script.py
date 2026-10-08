@@ -577,7 +577,8 @@ class TestDiscoverScript(BaseCase):
         # services named like secrets keep their data; nothing but name, charm, image, command,
         # volumes is read (environment, options... never output)
         self.assertEqual([s["name"] for s in services],
-                         ["odoo", "flowsvc", "bare", "keycloak", "authelia", "passbolt", "weird"])
+                         ["odoo", "flowsvc", "bare", "keycloak", "authelia", "passbolt", "skipper",
+                          "dupsvc", "weird"])
         self.assertEqual(services[1]["command"], ["odoo", "--db_password", "***"])
         self.assertEqual(services[2]["command"], ["odoo", "--db_password", "***", "-w", "***"])
         self.assertEqual(services[3], {
@@ -597,12 +598,18 @@ class TestDiscoverScript(BaseCase):
             "name": "passbolt", "charm": None, "image": "passbolt/passbolt:latest",
             "command": ["--db_password", "***"], "volumes": [],
         })
+        # a command item not understood (tag, unsupported escape, block scalar, quoted or plain
+        # scalar spanning lines) is skipped, and the item after it is masked (it may be its value)
+        self.assertEqual(services[6]["command"],
+                         ["odoo", "***", "***", "***", "***", "***", "--workers=2"])
+        # duplicate key: the first one wins, nothing appended from the second
+        self.assertEqual(services[7]["command"], ["--db_password"])
         # not understood (multi-line plain scalar, flow map, multi-line flow list, block scalar,
         # list item in a mapping, tab indentation): skipped, never echoed
-        self.assertEqual(services[6], {
+        self.assertEqual(services[8], {
             "name": "weird", "charm": None, "image": None, "command": [], "volumes": [],
         })
-        self.assertEqual(self.data(sections, "zerok")["parse_warnings"], 9)
+        self.assertEqual(self.data(sections, "zerok")["parse_warnings"], 14)
         # Image references with a digest are not taken for user:password@host
         self.assertEqual(odoo["Config"]["Image"], "odoo:17.0@sha256:abababababababababababababababababababababababababababababababab")
         self.assertEqual(image["RepoDigests"], ["reg:5000/odoo@sha256:abababababababababababababababababababababababababababababababab"])
@@ -624,7 +631,8 @@ class TestDiscoverScript(BaseCase):
              "target": {"remote": "origin", "ref": "17.0"},
              "remotes": {"origin": "https://***@github.com/x/private.git"},
              "upstreams": {}, "merges": ["origin 17.0"]},
-            # upstreams: only the "Automatically frozen" comments; commented merges ignored;
+            # upstreams: only the "Automatically frozen" comments, with a remote name and a URL
+            # (token: x, bad name: url ignored); commented merges ignored;
             # ssh://git@ keeps its plain user, quoted keys understood
             {"name": "frozen", "path": "/opt/odoo/custom/src/frozen",
              "target": {"remote": "origin", "ref": "17.0-frozen"},
