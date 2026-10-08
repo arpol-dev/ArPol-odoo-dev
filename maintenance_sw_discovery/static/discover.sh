@@ -10,19 +10,20 @@
 # used when present. Everything runs from main(), called on the last line: with `bash -s` the
 # whole script has been read before anything runs, and stdin is then closed for every command.
 #
-# Secrets: odoo.conf only leaves its container as a key whitelist; the compose.yml text is not
-# output (only its services); docker inspect / image inspect are reduced to the members the import
-# needs (see INSPECT_KEPT, IMAGE_KEPT: no Healthcheck, health log, image history, nor labels other
-# than compose / Cloudron / OCI identification); repos.yaml and compose.yml lose their secret keys
-# (compose_filter: values under a secret mapping such as credentials: become ***); then every
-# remaining string, service field, repos.yaml line and git URL is masked (text_mask / json_pick):
-# NAME=value (also quoted, at any = of a word) with NAME containing PASS, SECRET, TOKEN, KEY,
-# CREDENTIAL, PRIVATE, AUTH (not AUTHOR) or _PWD; the word or list item (block or flow lists) after
-# such an option, after -w, -a, --pass, --requirepass, or after such a key in a flow map; -p<value>;
-# the user info of URLs (up to the last @) and user:password@host (image digests excepted).
+# Secrets: odoo.conf only leaves its container as a key whitelist; no YAML text is output:
+# compose.yml and repos.yaml are parsed here (YAML_AWK, a small conservative reader: what it does
+# not understand is skipped and counted in parse_warnings) and only a few values are kept (services:
+# name, charm, image, command, volumes; repositories: name, path, target, remotes, frozen upstreams,
+# merges); docker inspect / image inspect are reduced to the members the import needs (see
+# INSPECT_KEPT, IMAGE_KEPT: no Healthcheck, health log, image history, nor labels other than
+# compose / Cloudron / OCI identification). Every value kept is then masked on its own (one argv
+# item, one Env string, one URL; MASK_AWK): NAME=value (also quoted, at any = of a word) with NAME
+# containing PASS, SECRET, TOKEN, KEY, CREDENTIAL, PRIVATE, AUTH (not AUTHOR) or _PWD; the word or
+# list item after such an option or after -w, -a, --pass, --requirepass; -p<value>; the user info
+# of URLs (up to the last @; a plain "git" user and image digests kept) and user:password@host.
 # Heuristic limits: a secret passed as a free word (positional argument, other short options
-# such as -P x), a value spanning lines, or a URL whose password contains a blank or a quote may
-# still leak; masking may hide harmless values (-p8080, the word after -a).
+# such as -P x), a URL whose password contains a blank or a quote, or a non-URL value under a
+# repos.yaml remote may still leak; masking may hide harmless values (-p8080, the word after -a).
 set -u
 SCRIPT_VERSION="1.0.0"
 SCHEMA_VERSION=1
@@ -376,17 +377,27 @@ collect_proxmox() {
 }
 
 # ----------------------------------------------------------------------------- secrets
-# Secret-like name: contains PASS, SECRET, TOKEN, KEY, CREDENTIAL, PRIVATE, AUTH (not AUTHOR_)
-# or _PWD, case-insensitive. Masking is heuristic, see the limits in the script header.
-SECRET_RE='(PASS|SECRET|TOKEN|KEY|CREDENTIAL|PRIVATE|AUTH|_PWD)'
-is_secret_name() {  # is_secret_name NAME
-  local u="${1^^}"
-  u="${u//AUTHOR_/_}"; u="${u%AUTHOR}"
-  [[ $u =~ $SECRET_RE ]]
+# Masking (awk functions shared by json_pick, the YAML readers and str_mask). It only applies to
+# well-delimited values: one argv item, one NAME=value string, one URL (never to free YAML text,
+# which is not output). Strings may be raw text (json = 0) or JSON string contents (json = 1:
+# \" \\ \n... escapes); masking never cuts an escape sequence.
+# Secret-like name: contains PASS, SECRET, TOKEN, KEY, CREDENTIAL, PRIVATE, AUTH (not AUTHOR) or
+# _PWD, case-insensitive. Heuristic limits: see the script header.
+MASK_AWK='BEGIN { for (_i = 1; _i < 32; _i++) { _c = sprintf("%c", _i); CTL = CTL _c; ORD[_c] = _i } }
+function jstr(s,   o, i, n, c) {  # JSON string literal of raw text s
+  o = ""; n = length(s)
+  for (i = 1; i <= n; i++) {
+    c = substr(s, i, 1)
+    if (c == "\\" || c == "\"") o = o "\\" c
+    else if (c == "\n") o = o "\\n"
+    else if (c == "\t") o = o "\\t"
+    else if (c == "\r") o = o "\\r"
+    else if (index(CTL, c)) o = o sprintf("\\u%04x", ORD[c])
+    else o = o c
+  }
+  return "\"" o "\""
 }
-# awk functions shared by text_mask and json_pick; strings may be raw text or JSON string
-# contents (\" and \\ escapes): masking never cuts an escape sequence.
-MASK_AWK='function secret_name(n,   u) {
+function secret_name(n,   u) {
   u = toupper(n); gsub(/AUTHOR_/, "_", u); sub(/AUTHOR$/, "", u)
   return u ~ /PASS|SECRET|TOKEN|KEY|CREDENTIAL|PRIVATE|AUTH|_PWD/
 }
@@ -419,28 +430,46 @@ function qend(s, i, q,   n, c) {  # index after the quote q closing a value that
   return n + 1
 }
 function sep_len(s, i, json,   c) {
-  # separator at i: blank, tab, newline, YAML flow punctuation , [ ] { }, and in JSON strings
-  # (json = 1) the escapes \n \t \r
+  # separator at i: blank or control character, punctuation , [ ] { }, and in JSON strings
+  # (json = 1) the escapes \n \t \r \u0000-\u001f
   c = substr(s, i, 1)
-  if (index(" \t\n\r,[]{}", c)) return 1
-  if (json && c == "\\") { c = substr(s, i + 1, 1); if (c == "n" || c == "t" || c == "r") return 2 }
+  if (index(" ,[]{}", c) || index(CTL, c)) return 1
+  if (json && c == "\\") {
+    c = substr(s, i + 1, 1)
+    if (c == "n" || c == "t" || c == "r") return 2
+    if (c == "u" && substr(s, i + 2, 2) == "00" && index("01", substr(s, i + 4, 1))) return 6
+  }
   return 0
 }
 function word_end(s, i, n, json) {  # index after the word starting at i (escapes kept whole)
   while (i <= n && !sep_len(s, i, json)) i += (substr(s, i, 1) == "\\") ? 2 : 1
   return i > n ? n + 1 : i
 }
-function value_end(s, i, n, json,   c) {  # index after an unquoted value: up to a blank only
+function value_end(s, i, n, json,   l) {  # index after an unquoted value: up to a blank only
   while (i <= n) {
-    c = substr(s, i, 1)
-    if (c == " " || c == "\t" || c == "\n" || c == "\r") break
-    if (c == "\\") {
-      if (json && index("ntr", substr(s, i + 1, 1))) break
-      i += 2; continue
-    }
-    i++
+    l = sep_len(s, i, json)
+    if (l && !index(",[]{}", substr(s, i, 1))) break
+    i += (substr(s, i, 1) == "\\") ? 2 : 1
   }
   return i > n ? n + 1 : i
+}
+function count_of(s, c,   a) { return split(s, a, c) - 1 }
+function tail_q(t, before,   k, c, o, seen) {
+  # closing quotes / parenthesis ending the masked word t, kept when they close one opened in
+  # before (the text already output): sh -c (x --db_password S) -> sh -c (x --db_password ***)
+  k = length(t); o = ""
+  while (k > 0) {
+    c = substr(t, k, 1)
+    if (index(seen, c)) break
+    if (c == ")" && index(before, "(")) { o = c o; seen = seen c; k--; continue }
+    if ((c == SQ || c == "\"") && count_of(before, c) % 2 == 1) {
+      if (c == "\"" && k > 1 && substr(t, k - 1, 1) == "\\") { o = "\\\"" o; k-- }
+      else o = c o
+      seen = seen c; k--; continue
+    }
+    break
+  }
+  return o
 }
 function unquote(t) {  # t without the quotes / brackets around it (for option tests)
   gsub("^[\\\\\"" SQ "(\\[{,]+", "", t); gsub("[\\\\\"" SQ ")\\]},]+$", "", t)
@@ -459,25 +488,28 @@ function mask_userinfo(t,   a, k, st, ui) {  # user:password@host without scheme
   if (ui ~ /^[A-Za-z0-9_.%+-]+:/) return substr(t, 1, st - 1) "***" substr(t, a)
   return t
 }
-function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, nxt, l) {
+function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, nxt) {
   # NAME=value / NAME=<quote>v<quote> (single, double, \" quotes) with a secret-like NAME at any
   # "=" of a word (ODOO_ARGS=--db_password=x); the word after a secret option (--db_password x,
-  # -a x, ODOO_ARGS=--db_password x, flow lists [--db_password, x]) or a secret YAML key in a flow
-  # map ({DB_PASSWORD: x}); -p<value>; user:password@host
+  # -a x, ODOO_ARGS=--db_password x) or after a secret key word (DB_PASSWORD: x); -p<value>;
+  # user:password@host
   out = ""; n = length(s); i = 1; nxt = 0
   while (i <= n) {
-    if ((l = sep_len(s, i, json)) > 0) { out = out substr(s, i, l); i += l; continue }
+    if ((k = sep_len(s, i, json)) > 0) { out = out substr(s, i, k); i += k; continue }
     j = word_end(s, i, n, json); tok = substr(s, i, j - i); bare = unquote(tok)
     if (nxt) {
       nxt = 0; q = quote_at(s, i)
-      if (q != "") { out = out "***"; i = qend(s, i + length(q), q); continue }
-      out = out "***"; i = j; continue
+      if (q != "") { out = out q "***" q; i = qend(s, i + length(q), q); continue }
+      out = out "***" tail_q(tok, out); i = j; continue
     }
     if (is_flag(bare)) { out = out tok; nxt = 1; i = j; continue }
     if (bare ~ /^[A-Za-z0-9_.-]+:$/ && secret_name(substr(bare, 1, length(bare) - 1))) {
       out = out tok; nxt = 1; i = j; continue
     }
-    if (bare ~ /^-p[^-=]/) { out = out substr(tok, 1, index(tok, "-p") + 1) "***"; i = value_end(s, i, n, json); continue }
+    if (bare ~ /^-p[^-=]/) {
+      out = out substr(tok, 1, index(tok, "-p") + 1); k = value_end(s, i, n, json)
+      out = out "***" tail_q(substr(s, i, k - i), out); i = k; continue
+    }
     e = 0; last = 0
     for (k = 1; k <= length(tok); k++) {
       if (substr(tok, k, 1) == "\\") { k++; continue }
@@ -489,16 +521,16 @@ function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, n
     if (e) {
       out = out substr(s, i, e); v = i + e; q = quote_at(s, v)
       if (q != "") { out = out q "***" q; i = qend(s, v + length(q), q); continue }
-      out = out "***"; i = value_end(s, v, n, json); continue
+      k = value_end(s, v, n, json); out = out "***" tail_q(substr(s, v, k - v), out); i = k; continue
     }
     if (last && is_flag(unquote(substr(tok, last + 1)))) { out = out tok; nxt = 1; i = j; continue }
     out = out mask_userinfo(tok); i = j
   }
   return out
 }
-function mask_url(s,   out, k, r, e, m, a, c) {
+function mask_url(s,   out, k, r, e, m, a, c, h) {
   # scheme://userinfo@host -> scheme://***@host (token or user:password), up to the LAST @
-  # before a blank or quote
+  # before a blank or quote; a plain "git" user and image digests (x@sha256:...) are kept
   out = ""
   while ((k = index(s, "://")) > 0) {
     out = out substr(s, 1, k + 2); s = substr(s, k + 3)
@@ -506,7 +538,10 @@ function mask_url(s,   out, k, r, e, m, a, c) {
     while (e <= m) { c = substr(s, e, 1); if (c == " " || c == "\t" || c == SQ || c == "\"" || c == "<" || c == ">") break; e++ }
     r = substr(s, 1, e - 1); a = 0
     for (k = length(r); k > 0; k--) if (substr(r, k, 1) == "@") { a = k; break }
-    if (a > 1) { out = out "***"; s = substr(s, a) }
+    if (a > 1) {
+      h = substr(r, a + 1); sub(/[^0-9A-Za-z:].*$/, "", h)
+      if (substr(r, 1, a - 1) != "git" && !is_digest(h)) { out = out "***"; s = substr(s, a) }
+    }
   }
   return out s
 }
@@ -515,25 +550,15 @@ function mask_str(s, prev, path) {  # a whole JSON string; prev = previous strin
   if (is_flag(prev)) return "***"
   if (whole_secret(s)) return substr(s, 1, index(s, "=")) "***"
   return mask_url(mask_text(s, 1))
+}
+function mask_arg(s, prev) {  # one raw value (argv item, URL, "remote ref"...); prev = the
+                              # previous item of its list
+  if (is_flag(unquote(prev))) return "***"
+  if (whole_secret(s)) return substr(s, 1, index(s, "=")) "***"
+  return mask_url(mask_text(s, 0))
 }'
-text_mask() {  # stdin text (YAML...) -> stdout, secrets masked line by line; in "- item" lists,
-               # the item after a secret option and NAME=value items are masked as a whole
-  LC_ALL=C awk -v SQ="'" "$MASK_AWK"'
-    {
-      line = $0
-      if (match(line, /^[ \t]*- /)) {
-        lead = substr(line, 1, RLENGTH); item = substr(line, RLENGTH + 1); bare = item
-        c1 = substr(bare, 1, 1)
-        if (length(bare) > 1 && (c1 == "\"" || c1 == SQ) && substr(bare, length(bare)) == c1) bare = substr(bare, 2, length(bare) - 2)
-        if (prevflag) line = lead "***"
-        else if (whole_secret(bare)) line = lead substr(bare, 1, index(bare, "=")) "***"
-        else line = lead mask_url(mask_text(item, 0))
-        prevflag = is_flag(bare)
-      } else {
-        prevflag = 0; line = mask_url(mask_text(line, 0))
-      }
-      print line
-    }'
+str_mask() {  # str_mask STRING -> STRING with its secrets masked (each line as one value)
+  printf '%s\n' "$1" | LC_ALL=C awk -v SQ="'" "$MASK_AWK"'{ print mask_arg($0, "") }'
 }
 json_pick() {  # json_pick PATTERNS < JSON -> compact JSON keeping only the members whose path
                # (keys joined by "/", array items "#") matches one of the regexes of PATTERNS
@@ -598,133 +623,250 @@ json_pick() {  # json_pick PATTERNS < JSON -> compact JSON keeping only the memb
     }'
 }
 
+# ----------------------------------------------------------------------------- YAML
+# Conservative block-YAML reader (awk) for compose.yml and repos.yaml: no text of these files is
+# output, only the few values the readers below pick from these records, masked one by one.
+#   understood: "key:" (nested mapping), "key: scalar", "key: [flow, list]" on one line, block
+#   list items "- scalar" (deeper than their key or at its indent), plain, "double" (escapes
+#   \n \t \r \" \\ \/ \<blank>) and 'single' quoted scalars and keys, comments, "---";
+#   not understood, counted in YW (parse_warnings) and skipped with every line nested below:
+#   block scalars (| >), flow maps, nested flow lists, scalars or flow lists spanning lines,
+#   anchors / aliases / tags, list items that are mappings or lists, other escapes, tab indents.
+# Records 1..YN: YK kind ("m" key of a mapping, "v" key: scalar, "f" key: [flow list], "i" list
+# item, "c" comment, "x" scalar found to span lines), YP path (keys joined by YS), YV value
+# (decoded; comment text for "c", its path being the keys of the mappings around it).
+YAML_AWK='BEGIN { YS = "\034"; SN = 0; SKIP = -1; CONT = -1; YN = 0; YW = 0 }
+function yrec(kind, path, v) { YN++; YK[YN] = kind; YP[YN] = path; YV[YN] = v; return YN }
+function ypath(k,   j, p) {  # path of the first k keys of the stack
+  p = ""; for (j = 1; j <= k; j++) p = p (j > 1 ? YS : "") SK[j]
+  return p
+}
+function yskip(ind) { YW++; SKIP = ind }
+function ytrail(s, i,   n) {  # 1 when s from i on is blank or a comment
+  n = length(s)
+  while (i <= n && index(" \t", substr(s, i, 1))) i++
+  return i > n || substr(s, i, 1) == "#"
+}
+function yq(s, i,   q, c, o, n, e) {  # quoted scalar starting at i: YQ = its value; returns the
+                                      # index after the closing quote, 0 when not understood
+  q = substr(s, i, 1); o = ""; n = length(s); i++
+  while (i <= n) {
+    c = substr(s, i, 1)
+    if (q == SQ) {
+      if (c != SQ) { o = o c; i++; continue }
+      if (substr(s, i + 1, 1) != SQ) { YQ = o; return i + 1 }
+      o = o SQ; i += 2; continue
+    }
+    if (c == "\"") { YQ = o; return i + 1 }
+    if (c != "\\") { o = o c; i++; continue }
+    e = substr(s, i + 1, 1)
+    if (e == "n") o = o "\n"
+    else if (e == "t" || e == "\t") o = o "\t"
+    else if (e == "r") o = o "\r"
+    else if (e == "\"" || e == "\\" || e == "/" || e == " ") o = o e
+    else return 0
+    i += 2
+  }
+  return 0
+}
+function yplain(s,   k, c) {  # plain scalar s (trimmed): YQ = its value without comment; 0 when
+                              # not understood (indicator first, a mapping, a nested list...)
+  c = substr(s, 1, 1)
+  if (c == "" || index("[]{},#&*!|>%@`\"" SQ, c) || s ~ /^[-?:]([ \t]|$)/) return 0
+  k = index(s, " #"); c = index(s, "\t#"); if (c && (!k || c < k)) k = c
+  if (k) s = substr(s, 1, k - 1)
+  sub(/[ \t]+$/, "", s)
+  if (s ~ /:$/ || index(s, ": ") || index(s, ":\t")) return 0
+  YQ = s; return 1
+}
+function yscalar(s,   c, e) {  # scalar s (trimmed, not empty): YQ = its value; 0 when not understood
+  c = substr(s, 1, 1)
+  if (c == "\"" || c == SQ) { e = yq(s, 1); return e > 0 && ytrail(s, e) }
+  return yplain(s)
+}
+function yflow(s,   i, n, c, e, t) {  # flow list "[a, b]" on one line: YF[1..YFN]; 0 when not
+                                      # understood (nested flow, flow map entry, spans lines)
+  YFN = 0; n = length(s); i = 2
+  while (1) {
+    while (i <= n && index(" \t", substr(s, i, 1))) i++
+    if (i > n) return 0
+    c = substr(s, i, 1)
+    if (c == "]") return ytrail(s, i + 1)
+    if (c == "\"" || c == SQ) {
+      e = yq(s, i); if (!e) return 0
+    } else {
+      e = i; while (e <= n && !index(",[]{}", substr(s, e, 1))) e++
+      t = substr(s, i, e - i); sub(/[ \t]+$/, "", t)
+      if (index(t, " #") || index(t, "\t#") || !yplain(t)) return 0
+    }
+    YF[++YFN] = YQ; i = e
+    while (i <= n && index(" \t", substr(s, i, 1))) i++
+    c = substr(s, i, 1)
+    if (c == "]") return ytrail(s, i + 1)
+    if (c != ",") return 0
+    i++
+  }
+}
+function ykey(s,   c, e, n, k) {  # "key: value" (s trimmed): YKEY, YREST = value; 0 when not one
+  n = length(s); c = substr(s, 1, 1)
+  if (c == "\"" || c == SQ) {
+    e = yq(s, 1); if (!e) return 0
+    YKEY = YQ
+    while (e <= n && index(" \t", substr(s, e, 1))) e++
+    if (substr(s, e, 1) != ":") return 0
+    e++
+    if (e <= n && !index(" \t", substr(s, e, 1))) return 0
+  } else {
+    if (index("[]{},#&*!|>%@`?", c)) return 0
+    e = 0
+    for (k = 1; k <= n; k++) {
+      c = substr(s, k, 1)
+      if (c == "#" && k > 1 && index(" \t", substr(s, k - 1, 1))) return 0
+      if (c == ":" && (k == n || index(" \t", substr(s, k + 1, 1)))) { e = k; break }
+    }
+    if (!e) return 0
+    YKEY = substr(s, 1, e - 1); sub(/[ \t]+$/, "", YKEY)
+    if (YKEY == "") return 0
+    e++
+  }
+  YREST = substr(s, e); sub(/^[ \t]+/, "", YREST); sub(/[ \t]+$/, "", YREST)
+  return 1
+}
+function yline(line,   ind, s, k, p, v) {  # read one line
+  sub(/\r$/, "", line)
+  if (line ~ /^[ \t]*$/) return
+  match(line, /^ */); ind = RLENGTH; s = substr(line, ind + 1)
+  if (SKIP >= 0) { if (ind > SKIP) return; SKIP = -1 }
+  if (s ~ /^[ \t]*#/) {
+    sub(/^[ \t]+/, "", s)
+    k = SN; while (k > 0 && SI[k] >= ind) k--
+    yrec("c", ypath(k), s); return
+  }
+  if (CONT >= 0) {  # a deeper line after a scalar continues it: the scalar is dropped
+    k = CONT; CONT = -1
+    if (ind > k) { for (v = CRA; v <= CRB; v++) YK[v] = "x"; yskip(k); return }
+  }
+  if (substr(s, 1, 1) == "\t") { yskip(ind); return }
+  if (s ~ /^(---|\.\.\.)([ \t]|$)/) { SN = 0; if (!ytrail(s, 4)) YW++; return }
+  if (s ~ /^-([ \t]|$)/) {  # list item of the key above it (deeper, or at the same indent)
+    while (SN > 0 && (SI[SN] > ind || (SI[SN] == ind && ST[SN] == "m"))) SN--
+    if (SN == 0 || ST[SN] == "m") { yskip(ind); return }
+    ST[SN] = "l"
+    v = substr(s, 2); sub(/^[ \t]+/, "", v)
+    if (v == "" || !yscalar(v)) { yskip(ind); return }
+    CRA = CRB = yrec("i", ypath(SN), YQ); CONT = ind; return
+  }
+  if (!ykey(s)) { yskip(ind); return }
+  while (SN > 0 && SI[SN] >= ind) SN--
+  if (SN > 0) { if (ST[SN] == "l") { yskip(ind); return }; ST[SN] = "m" }
+  p = ypath(SN); p = p (SN ? YS : "") YKEY
+  v = YREST
+  if (v == "" || substr(v, 1, 1) == "#") {
+    SN++; SI[SN] = ind; SK[SN] = YKEY; ST[SN] = ""; yrec("m", p, ""); return
+  }
+  if (substr(v, 1, 1) == "[") {
+    if (!yflow(v)) { yskip(ind); return }
+    CRA = yrec("f", p, ""); for (k = 1; k <= YFN; k++) yrec("i", p, YF[k])
+    CRB = YN; CONT = ind; return
+  }
+  if (!yscalar(v)) { yskip(ind); return }
+  CRA = CRB = yrec("v", p, YQ); CONT = ind
+}'
+compose_services() {  # stdin compose.yml -> '"services": [...], "parse_warnings": N'
+  # A service is a top-level mapping (its name is never taken for a secret); only its charm,
+  # image, command and volumes are read, as <service>/<field> or <service>/docker-compose/<field>
+  # (first place found), every value masked (command: item by item).
+  LC_ALL=C awk -v SQ="'" "$MASK_AWK$YAML_AWK"'
+    { yline($0) }
+    function jv(s, f) { return ((s, f) in F) ? jstr(mask_arg(F[s, f], "")) : "null" }
+    END {
+      ns = 0
+      for (i = 1; i <= YN; i++) {
+        np = split(YP[i], q, YS)
+        if (np == 1) { if (YK[i] == "m" && !(q[1] in SV)) { SV[q[1]] = ++ns; SNAME[ns] = q[1] }; continue }
+        if (!(q[1] in SV) || (YK[i] != "v" && YK[i] != "i")) continue
+        s = SV[q[1]]
+        if (np == 2) f = q[2]; else if (np == 3 && q[2] == "docker-compose") f = q[3]; else continue
+        if (f != "charm" && f != "image" && f != "command" && f != "volumes") continue
+        if (((s, f) in SRC) && SRC[s, f] != YP[i]) continue
+        SRC[s, f] = YP[i]
+        if (f == "charm" || f == "image") { if (YK[i] == "v" && !((s, f) in F)) F[s, f] = YV[i] }
+        else L[s, f, ++LN[s, f]] = YV[i]
+      }
+      printf "\"services\": ["
+      for (s = 1; s <= ns; s++) {
+        printf "%s{\"name\": %s, \"charm\": %s, \"image\": %s, \"command\": [", (s > 1 ? ", " : ""), \
+          jstr(SNAME[s]), jv(s, "charm"), jv(s, "image")
+        prev = ""
+        for (k = 1; k <= LN[s, "command"] + 0; k++) {
+          v = L[s, "command", k]; printf "%s%s", (k > 1 ? ", " : ""), jstr(mask_arg(v, prev)); prev = v
+        }
+        printf "], \"volumes\": ["
+        for (k = 1; k <= LN[s, "volumes"] + 0; k++) printf "%s%s", (k > 1 ? ", " : ""), jstr(mask_arg(L[s, "volumes", k], ""))
+        printf "]}"
+      }
+      printf "], \"parse_warnings\": %d", YW
+    }'
+}
+repos_spec() {  # stdin repos.yaml (doodba) -> {"items": [...], "parse_warnings": N}
+  # A repository is a top-level mapping (./name: path under /opt/odoo/custom/src); only its
+  # target, remotes, merges (active items) and the "# # Automatically frozen:" comments of its
+  # remotes (upstreams: the "# <remote>: <url>" lines right after) are read, every value masked.
+  LC_ALL=C awk -v SQ="'" "$MASK_AWK$YAML_AWK"'
+    { yline($0) }
+    function madd(r, m, k, v) {
+      if ((r, m, k) in MS) return
+      MS[r, m, k] = 1; MK[r, m, ++MC[r, m]] = k; MV[r, m, MC[r, m]] = v
+    }
+    function jmap(r, m,   k, o) {
+      o = ""
+      for (k = 1; k <= MC[r, m] + 0; k++) o = o (k > 1 ? ", " : "") jstr(MK[r, m, k]) ": " jstr(mask_arg(MV[r, m, k], ""))
+      return "{" o "}"
+    }
+    END {
+      nr = 0; fz = 0
+      for (i = 1; i <= YN; i++) {
+        np = split(YP[i], q, YS)
+        if (YK[i] == "c") {
+          t = YV[i]; sub(/^#[ \t]*/, "", t)
+          if (np == 2 && q[2] == "remotes" && (q[1] in R)) {
+            if (t ~ /^#[ \t]*Automatically frozen/) { fz = 1; continue }
+            if (fz && ykey(t) && YREST != "" && yscalar(YREST)) { madd(R[q[1]], "u", YKEY, YQ); continue }
+          }
+          fz = 0; continue
+        }
+        fz = 0
+        if (np == 1) { if (YK[i] == "m" && !(q[1] in R)) { R[q[1]] = ++nr; RK[nr] = q[1] }; continue }
+        if (!(q[1] in R)) continue
+        r = R[q[1]]
+        if (np == 3 && q[2] == "remotes" && YK[i] == "v") madd(r, "r", q[3], YV[i])
+        else if (np == 2 && q[2] == "target" && YK[i] == "v" && !(r in TG)) TG[r] = YV[i]
+        else if (np == 2 && q[2] == "merges" && YK[i] == "i") MG[r, ++MN[r]] = YV[i]
+      }
+      printf "{\"items\": ["
+      for (r = 1; r <= nr; r++) {
+        name = RK[r]; sub(/^\.\//, "", name); sub(/\/+$/, "", name)
+        if (substr(name, 1, 1) == "/") { path = name; sub(/.*\//, "", name) }
+        else path = "/opt/odoo/custom/src/" name
+        tg = "null"
+        if (r in TG) {
+          t = mask_arg(TG[r], "")
+          if (match(t, /[ \t]+/)) tg = "{\"remote\": " jstr(substr(t, 1, RSTART - 1)) ", \"ref\": " jstr(substr(t, RSTART + RLENGTH)) "}"
+          else tg = "{\"remote\": " jstr(t) ", \"ref\": null}"
+        }
+        o = ""
+        for (k = 1; k <= MN[r] + 0; k++) o = o (k > 1 ? ", " : "") jstr(mask_arg(MG[r, k], ""))
+        printf "%s{\"name\": %s, \"path\": %s, \"target\": %s, \"remotes\": %s, \"upstreams\": %s, \"merges\": [%s]}", \
+          (r > 1 ? ", " : ""), jstr(name), jstr(path), tg, jmap(r, "r"), jmap(r, "u"), o
+      }
+      printf "], \"parse_warnings\": %d}", YW
+    }'
+}
+
 # ----------------------------------------------------------------------------- zerok
 ZEROK_DIR=/opt/apps/myc-deploy
-compose_filter() {  # [repos] stdin YAML (compose.yml, repos.yaml) -> stdout without secrets:
-  # - a secret key with a value (or a | > block) is dropped with its nested block;
-  # - a secret key without value whose block is a mapping (credentials:, passwords:, auth:...)
-  #   is kept with its structure, every value below it replaced by *** (nested keys kept);
-  #   any other block below a secret key is dropped;
-  # - with "repos", top-level keys are repository paths, never taken for secrets;
-  # - the remaining lines go through text_mask.
-  local mode="${1:-}" line stripped item key indent rest drop=-1 hold="" hold_indent=-1 under=-1
-  while IFS= read -r line || [ -n "$line" ]; do
-    stripped="${line#"${line%%[![:space:]]*}"}"
-    indent=$(( ${#line} - ${#stripped} ))
-    if [ -n "$hold" ]; then
-      [ -z "$stripped" ] && continue
-      if [ $indent -gt $hold_indent ]; then
-        if [[ $stripped != "- "* && $stripped =~ ^[\"\']?[A-Za-z0-9_.-]+[\"\']?:([[:space:]]|$) ]]; then
-          printf '%s\n' "$hold"; under=$hold_indent
-        else
-          drop=$hold_indent
-        fi
-      fi
-      hold=""
-    fi
-    if [ $drop -ge 0 ]; then
-      if [ -z "$stripped" ] || [ $indent -gt $drop ]; then continue; fi
-      drop=-1
-    fi
-    if [ $under -ge 0 ]; then
-      if [ -z "$stripped" ]; then continue; fi
-      if [ $indent -gt $under ]; then   # inside a secret mapping: keys kept, values masked
-        if [[ $stripped =~ ^(-[[:space:]]+)?[\"\']?[A-Za-z0-9_.-]+[\"\']?:([[:space:]]|$) ]]; then
-          rest="$(trim "${stripped#*:}")"
-          if [ -z "$rest" ] || [[ $rest == \#* ]]; then printf '%s\n' "${line%%:*}:"
-          else
-            printf '%s\n' "${line%%:*}: ***"
-            [[ $rest == [\|\>]* ]] && drop=$indent
-          fi
-        elif [[ $stripped == "-"* ]]; then printf '%*s- ***\n' "$indent" ""
-        else printf '%*s***\n' "$indent" ""; fi
-        continue
-      fi
-      under=-1
-    fi
-    item="${stripped#- }"
-    if ! { [ "$mode" = repos ] && [ $indent -eq 0 ]; } \
-       && [[ $item =~ ^[\"\']?([A-Za-z0-9_.-]+)[\"\']?:([[:space:]]|$) ]]; then
-      key="${BASH_REMATCH[1]}"
-      if is_secret_name "$key"; then
-        rest="$(trim "${item#*:}")"; rest="$(trim "${rest%%#*}")"
-        if [ -z "$rest" ] && [[ $stripped != "- "* ]]; then hold="$line"; hold_indent=$indent
-        else drop=$indent; fi
-        continue
-      fi
-    fi
-    printf '%s\n' "$line"
-  done | text_mask
-}
-yaml_scalar() {  # trimmed, unquoted YAML scalar (comment removed when unquoted)
-  local v
-  v="$(trim "$1")"
-  case "$v" in
-    \"*\") v="${v:1:${#v}-2}"; v="${v//\\\"/\"}" ;;
-    \'*\') v="${v:1:${#v}-2}" ;;
-    *) v="$(trim "${v%% #*}")" ;;
-  esac
-  printf '%s' "$v"
-}
-yaml_items() {  # JSON items (without brackets) of an inline value: scalar or [a, b]
-  local v item sep="" IFS
-  v="$(trim "$1")"
-  if [[ $v == \[*\] ]]; then
-    v="${v:1:${#v}-2}"
-    IFS=','
-    for item in $v; do
-      item="$(yaml_scalar "$item")"
-      [ -n "$item" ] || continue
-      printf '%s%s' "$sep" "$(json_str "$item")"; sep=", "
-    done
-  elif [ -n "$v" ]; then
-    json_str "$(yaml_scalar "$v")"
-  fi
-}
-compose_services() {  # stdin filtered compose.yml -> JSON service objects
-  local line stripped indent svc="" charm="" image="" cmd="" vols="" list="" list_indent=0 sep="" k v items
-  flush() {
-    [ -n "$svc" ] || return 0
-    printf '%s{"name": %s, "charm": %s, "image": %s, "command": [%s], "volumes": [%s]}' "$sep" \
-      "$(json_str "$svc")" "$(jnull "$charm")" "$(jnull "$image")" "$cmd" "$vols"
-    sep=", "
-  }
-  add() {  # add LIST JSON_ITEMS
-    [ -n "$2" ] || return 0
-    if [ "$1" = command ]; then cmd="${cmd:+$cmd, }$2"; else vols="${vols:+$vols, }$2"; fi
-  }
-  while IFS= read -r line || [ -n "$line" ]; do
-    [[ $line =~ ^[[:space:]]*(#.*)?$ ]] && continue
-    if [[ $line =~ ^([A-Za-z0-9._-]+):[[:space:]]*(#.*)?$ ]]; then
-      flush; svc="${BASH_REMATCH[1]}"; charm=""; image=""; cmd=""; vols=""; list=""
-      continue
-    fi
-    if [[ $line =~ ^[^[:space:]] ]]; then flush; svc=""; list=""; continue; fi
-    [ -n "$svc" ] || continue
-    stripped="${line#"${line%%[![:space:]]*}"}"
-    indent=$(( ${#line} - ${#stripped} ))
-    if [ -n "$list" ]; then
-      if [[ $stripped == "-" || $stripped == "- "* ]] && [ $indent -ge $list_indent ]; then
-        v="$(yaml_scalar "${stripped#-}")"
-        [ -n "$v" ] && add "$list" "$(json_str "$v")"
-        continue
-      fi
-      list=""
-    fi
-    case "$stripped" in
-      charm:*) [ -n "$charm" ] || charm="$(yaml_scalar "${stripped#charm:}")" ;;
-      image:*) [ -n "$image" ] || image="$(yaml_scalar "${stripped#image:}")" ;;
-      command:*|volumes:*)
-        k="${stripped%%:*}"; v="$(trim "${stripped#*:}")"
-        if [ -z "$v" ]; then list="$k"; list_indent=$indent
-        else items="$(yaml_items "$v")"; add "$k" "$items"; fi
-        ;;
-    esac
-  done
-  flush
-}
 collect_zerok() {
-  local f="$ZEROK_DIR/compose.yml" content rc filtered
+  local f="$ZEROK_DIR/compose.yml" content rc
   fe "$f" || { echo "no 0k deployment ($f not found)"; return 3; }
   if [ -r "${ROOT}$f" ]; then
     content="$(rf "$f")"
@@ -733,11 +875,8 @@ collect_zerok() {
     priv_denied $rc && { echo "$f not readable: $(priv_reason $rc)"; return 3; }
     [ $rc -eq 0 ] || { echo "cannot read $f (exit $rc)" >&2; return 1; }
   fi
-  # The compose.yml text itself is not output (too many ways to hold a secret): only the
-  # services extracted from its filtered, masked text.
-  filtered="$(printf '%s\n' "$content" | compose_filter)"
-  printf '{"path": %s, "services": [%s]}' \
-    "$(json_str "$ZEROK_DIR")" "$(printf '%s\n' "$filtered" | compose_services)"
+  # No text of compose.yml is output: only the services parsed from it (compose_services).
+  printf '{"path": %s, %s}' "$(json_str "$ZEROK_DIR")" "$(printf '%s\n' "$content" | compose_services)"
 }
 
 # ----------------------------------------------------------------------------- cloudron
@@ -970,7 +1109,7 @@ git_files() {  # git_files DIR -> "url\tbranch\tcommit" read from DIR/.git files
 }
 repo_json() {  # repo_json PATH URL BRANCH COMMIT
   local url branch="$3"
-  url="$(printf '%s\n' "$2" | text_mask)"
+  url="$(str_mask "$2")"
   [ "$branch" = HEAD ] && branch=""
   printf '{"path": %s, "url": %s, "branch": %s, "commit": %s}' \
     "$(json_str "$1")" "$(jnull "$url")" "$(jnull "$branch")" "$(jnull "$4")"
@@ -1044,7 +1183,7 @@ odoo_databases() {  # odoo_databases ODOO_ID DB_HOST USER -> {"status", ...} obj
 odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
   local id="$1" flat="${FLAT[$1]}" name ver conf arg next="" path line d m t k
   local cmd_path="" cmd_conf="" cmd_host="" cmd_user=""
-  local binds addons="" asep="" yaml repos="" rsep="" seen=" " st rest u b c hp rel
+  local binds addons="" asep="" yaml spec repos="" rsep="" seen=" " st rest u b c hp rel
   local mrepos="" msep="" src dst links="" lsep="" config="" csep="" host user plist=""
   local -a paths=() confs=()
   local -A mods=()
@@ -1096,9 +1235,13 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
     done < <(printf '%s' "${mods[$d]:-}" | LC_ALL=C sort -u)
     addons+="${addons:+, }$(json_str "$d"): [$m]"
   done
-  # repos.yaml as is, secret keys dropped and secrets masked (compose_filter)
+  # repos.yaml: never output as text, only the repositories parsed from it (repos_spec)
   yaml="$(dk exec "$id" cat /opt/odoo/custom/src/repos.yaml)" || yaml=""
-  [ -n "$yaml" ] && yaml="$(printf '%s\n' "$yaml" | compose_filter repos)"
+  spec=null
+  if [ -n "$yaml" ]; then
+    spec="$(printf '%s\n' "$yaml" | repos_spec)"
+    printf '%s' "$spec" | json_flat >/dev/null || spec=null
+  fi
   # git repositories: in the container, else on the host for the bind-mounted ones
   binds="$(binds_of "$flat")"
   while IFS= read -r line; do
@@ -1149,9 +1292,9 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
   [ -n "$user" ] || user="$(env_get "$flat" PGUSER)"
   [ -n "$user" ] || user=postgres
   for d in "${paths[@]}"; do plist+="${plist:+, }$(json_str "$d")"; done
-  printf '{"container": %s, "version": %s, "addons_path": [%s], "addons": {%s}, "repos_yaml": %s, "repos": [%s], "mount_repos": [%s], "runtime_links": [%s], "config": {%s}, "databases": %s}' \
+  printf '{"container": %s, "version": %s, "addons_path": [%s], "addons": {%s}, "repos_spec": %s, "repos": [%s], "mount_repos": [%s], "runtime_links": [%s], "config": {%s}, "databases": %s}' \
     "$(json_str "$name")" "$(jnull "$ver")" "$plist" \
-    "$addons" "$(jnull "$yaml")" "$repos" "$mrepos" "$links" "$config" \
+    "$addons" "$spec" "$repos" "$mrepos" "$links" "$config" \
     "$(odoo_databases "$id" "$host" "$user")"
 }
 collect_odoo() {

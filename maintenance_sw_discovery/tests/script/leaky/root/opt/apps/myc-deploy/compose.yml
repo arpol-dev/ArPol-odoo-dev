@@ -31,3 +31,40 @@ flowsvc:
 bare:
   docker-compose:
     command: [odoo, --db_password, LEAK50, -w, LEAK51]
+
+keycloak:
+  charm: keycloak
+  docker-compose:
+    image: quay.io/keycloak/keycloak:24.0
+    command:
+    - start
+    - --db-password
+    - LEAK58
+    volumes: ["/srv/kc:/opt/kc", "a, b:/c"]
+
+authelia:
+  charm: authelia
+  docker-compose:
+    image: authelia/authelia:4
+    command: ["--db_password\nLEAK59", "--db_password\tLEAK60", 'it''s', "x\"y", "--config", /c]
+
+passbolt:
+  docker-compose:
+    "image": passbolt/passbolt:latest
+    command: ["--db_password", "LEAK61, still the secret"]
+  options:
+    passwords:
+    - LEAK62
+    db: {"DB_PASSWORD": LEAK63, 'key': LEAK64}
+
+weird:
+  docker-compose:
+    image: busybox
+      LEAK65
+    command: {"--db_password": LEAK66}
+    volumes: [a,
+      LEAK67]
+    entrypoint: |
+      sh -c "--db_password LEAK68"
+  - LEAK69
+	tabbed: LEAK70

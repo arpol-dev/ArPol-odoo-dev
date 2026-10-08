@@ -294,8 +294,10 @@ class TestDiscoverScript(BaseCase):
         )
         zerok = self.data(sections, "zerok")
         self.assertEqual(zerok["path"], "/opt/apps/myc-deploy")
-        # The raw compose.yml is not output (only the extracted services, masked).
-        self.assertNotIn("compose_yml", zerok)
+        # No compose.yml text: only the services parsed from it, masked; the private_key block
+        # scalar is not understood (counted, skipped).
+        self.assertEqual(set(zerok), {"path", "services", "parse_warnings"})
+        self.assertEqual(zerok["parse_warnings"], 1)
         self.assertEqual(zerok["services"], [
             {"name": "odoo-v18", "charm": "odoo-tecnativa",
              "image": "docker.0k.io/mirror/odoo:rc_18.0-ARPOL-ODOO-DEV-18.0",
@@ -372,8 +374,18 @@ class TestDiscoverScript(BaseCase):
             "/opt/odoo/auto/dev/ArPol-odoo-dev": ["maintenance_sw_base", "maintenance_sw_odoo"],
             "/opt/odoo/auto/addons": ["base", "maintenance_sw_base", "ovh_api", "sale"],
         })
-        self.assertIn("https://github.com/OCA/OCB.git", odoo["repos_yaml"])
-        self.assertIn("https://***@git.example.com/arpol/private.git", odoo["repos_yaml"])
+        # repos.yaml parsed into repositories (no text of it output)
+        self.assertNotIn("repos_yaml", odoo)
+        self.assertEqual(odoo["repos_spec"], {"parse_warnings": 0, "items": [
+            {"name": "odoo", "path": "/opt/odoo/custom/src/odoo",
+             "target": {"remote": "origin", "ref": "18.0"},
+             "remotes": {"origin": "https://github.com/OCA/OCB.git"}, "upstreams": {},
+             "merges": ["origin 18.0"]},
+            {"name": "private-addons", "path": "/opt/odoo/custom/src/private-addons",
+             "target": None,
+             "remotes": {"origin": "https://***@git.example.com/arpol/private.git"},
+             "upstreams": {}, "merges": ["origin 18.0"]},
+        ]})
         self.assertEqual(odoo["repos"], [{
             "path": "/opt/odoo/custom/src/private-addons",
             "url": "https://***@git.example.com/arpol/private.git",
@@ -415,7 +427,7 @@ class TestDiscoverScript(BaseCase):
         ])
         self.assertEqual(odoo["addons"]["/mnt/extra-addons/oca-web"],
                          ["web_environment_ribbon", "web_responsive"])
-        self.assertIsNone(odoo["repos_yaml"])
+        self.assertIsNone(odoo["repos_spec"])
         self.assertEqual(odoo["runtime_links"], [])
         oca_web = {"path": "/mnt/extra-addons/oca-web", "url": "https://github.com/OCA/web.git",
                    "branch": "18.0", "commit": "1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa"}
@@ -515,7 +527,7 @@ class TestDiscoverScript(BaseCase):
             "odoo", "-c", "/srv/conf/odoo.conf", "--db_host", "pgx", "-r", "leakuser",
             "--addons-path=/mnt/a,/mnt/a, /mnt/b",
             "--db_password", "***", "-w", "***", "--pass", "***",
-            "sh -c 'odoo --db_password ***",
+            "sh -c 'odoo --db_password ***'",
             "x; PGPASSWORD='***' psql",
             'y; DB_PASSWORD="***" z',
             "mysql -uroot -p***",
@@ -562,9 +574,35 @@ class TestDiscoverScript(BaseCase):
         self.assertEqual(services[0]["command"],
                          ["--db_password", "***", "PGPASSWORD=***", "--workers=2",
                           "ODOO_ARGS=--db_password=***"])
-        self.assertEqual([s["name"] for s in services], ["odoo", "flowsvc", "bare"])
+        # services named like secrets keep their data; nothing but name, charm, image, command,
+        # volumes is read (environment, options... never output)
+        self.assertEqual([s["name"] for s in services],
+                         ["odoo", "flowsvc", "bare", "keycloak", "authelia", "passbolt", "weird"])
         self.assertEqual(services[1]["command"], ["odoo", "--db_password", "***"])
         self.assertEqual(services[2]["command"], ["odoo", "--db_password", "***", "-w", "***"])
+        self.assertEqual(services[3], {
+            "name": "keycloak", "charm": "keycloak", "image": "quay.io/keycloak/keycloak:24.0",
+            # list at the same indent as its key
+            "command": ["start", "--db-password", "***"],
+            # quoted flow items are not split on their commas
+            "volumes": ["/srv/kc:/opt/kc", "a, b:/c"],
+        })
+        self.assertEqual(services[4], {
+            "name": "authelia", "charm": "authelia", "image": "authelia/authelia:4",
+            # YAML double-quoted escapes decoded, then masked item by item
+            "command": ["--db_password\n***", "--db_password\t***", "it's", 'x"y', "--config", "/c"],
+            "volumes": [],
+        })
+        self.assertEqual(services[5], {
+            "name": "passbolt", "charm": None, "image": "passbolt/passbolt:latest",
+            "command": ["--db_password", "***"], "volumes": [],
+        })
+        # not understood (multi-line plain scalar, flow map, multi-line flow list, block scalar,
+        # list item in a mapping, tab indentation): skipped, never echoed
+        self.assertEqual(services[6], {
+            "name": "weird", "charm": None, "image": None, "command": [], "volumes": [],
+        })
+        self.assertEqual(self.data(sections, "zerok")["parse_warnings"], 9)
         # Image references with a digest are not taken for user:password@host
         self.assertEqual(odoo["Config"]["Image"], "odoo:17.0@sha256:abababababababababababababababababababababababababababababababab")
         self.assertEqual(image["RepoDigests"], ["reg:5000/odoo@sha256:abababababababababababababababababababababababababababababababab"])
@@ -573,17 +611,28 @@ class TestDiscoverScript(BaseCase):
             "path": "/mnt/r1", "url": "https://***@gitlab.com/r1.git", "branch": "main",
             "commit": "cafecafecafecafecafecafecafecafecafecafe",
         }])
-        # repos.yaml: secret keys dropped, the repository block itself kept
-        repos_yaml = odoo_instance["repos_yaml"]
-        self.assertIn("./private-addons:", repos_yaml)
-        self.assertIn("origin: https://***@github.com/x/private.git", repos_yaml)
-        self.assertIn("  auth:\n    password: ***\n  target: origin 17.0", repos_yaml)
-        self.assertNotIn("token:", repos_yaml)  # secret key with a value: dropped
-        # children of secret-named mappings: values masked, structure kept
-        self.assertIn("  credentials:\n    github: ***\n", repos_yaml)
-        self.assertIn("  passwords:\n    admin: ***\n    list:\n      - ***\n", repos_yaml)
-        self.assertIn("  ssh_keys:\n    deploy: ***\n    pem: ***\n", repos_yaml)
-        self.assertIn("  extra: ADMIN_PASSWORD=***\n  merges:", repos_yaml)
+        # repos.yaml: only name, path, target, remotes, frozen upstreams and active merges are
+        # read (token:, auth:, credentials:... never output); repositories named like secrets kept
+        self.assertNotIn("repos_yaml", odoo_instance)
+        spec = odoo_instance["repos_spec"]
+        self.assertEqual(spec["parse_warnings"], 2)  # pem: | block, deploy: {flow map}
+        self.assertEqual(spec["items"], [
+            {"name": "odoo", "path": "/opt/odoo/custom/src/odoo", "target": None,
+             "remotes": {"origin": "https://***@git.example.com/x.git", "other": "postgres://***@h"},
+             "upstreams": {}, "merges": ["origin 17.0"]},
+            {"name": "private-addons", "path": "/opt/odoo/custom/src/private-addons",
+             "target": {"remote": "origin", "ref": "17.0"},
+             "remotes": {"origin": "https://***@github.com/x/private.git"},
+             "upstreams": {}, "merges": ["origin 17.0"]},
+            # upstreams: only the "Automatically frozen" comments; commented merges ignored;
+            # ssh://git@ keeps its plain user, quoted keys understood
+            {"name": "frozen", "path": "/opt/odoo/custom/src/frozen",
+             "target": {"remote": "origin", "ref": "17.0-frozen"},
+             "remotes": {"origin": "ssh://git@git.example.com:5022/frozen.git",
+                         "quoted": "https://***@h/q.git"},
+             "upstreams": {"origin": "https://***@github.com/OCA/frozen.git"},
+             "merges": ["origin mirror/17.0-x", "origin refs/pull/1/head"]},
+        ])
 
     def test_leaky_odoo_command_line(self):
         """-c, --db_host and -r of the command line win over the defaults and odoo.conf."""
@@ -593,8 +642,9 @@ class TestDiscoverScript(BaseCase):
         self.assertEqual(odoo["addons_path"], ["/mnt/a", "/mnt/b"])  # deduplicated
         self.assertEqual(odoo["addons"], {"/mnt/a": ["mod_a"], "/mnt/b": ["mod_b"]})
         self.assertEqual(odoo["repos"][0]["url"], "https://***@git.example.com/r.git")
-        self.assertIn("origin: https://***@git.example.com/x.git", odoo["repos_yaml"])
-        self.assertIn("other: postgres://***@h", odoo["repos_yaml"])
+        self.assertEqual(odoo["repos_spec"]["items"][0]["remotes"], {
+            "origin": "https://***@git.example.com/x.git", "other": "postgres://***@h",
+        })
         self.assertEqual(odoo["config"]["db_host"], "wronghost")  # odoo.conf as is
         self.assertEqual(odoo["databases"], {"status": "ok", "items": [
             {"name": "leakdb", "modules": [
