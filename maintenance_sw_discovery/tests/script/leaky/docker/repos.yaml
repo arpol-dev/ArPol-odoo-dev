@@ -11,3 +11,16 @@
   auth:
     password: LEAK33
   target: origin 17.0
+  credentials:
+    github: LEAK52
+  passwords:
+    admin: LEAK53
+    list:
+      - LEAK56
+  ssh_keys:
+    deploy: {key: LEAK54}
+    pem: |
+      LEAK57
+  extra: ADMIN_PASSWORD=ab\nLEAK55
+  merges:
+    - origin 17.0

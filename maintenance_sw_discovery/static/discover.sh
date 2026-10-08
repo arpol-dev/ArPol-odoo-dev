@@ -10,16 +10,19 @@
 # used when present. Everything runs from main(), called on the last line: with `bash -s` the
 # whole script has been read before anything runs, and stdin is then closed for every command.
 #
-# Secrets: odoo.conf only leaves its container as a key whitelist; docker inspect / image inspect
-# are reduced to the members the import needs (see INSPECT_KEPT, IMAGE_KEPT: no Healthcheck,
-# health log, image history, nor labels other than compose / Cloudron / OCI identification); then
-# every remaining string, compose.yml, repos.yaml and git URL is masked by text_mask / json_pick:
-# NAME=value (also NAME='v', NAME="v") with NAME containing PASS, SECRET, TOKEN, KEY, CREDENTIAL,
-# PRIVATE, AUTH (not AUTHOR) or _PWD; the word (or list item) after such an option and after -w,
-# -a, --pass, --requirepass; -p<value>; user:password@ of URLs (up to the last @).
+# Secrets: odoo.conf only leaves its container as a key whitelist; the compose.yml text is not
+# output (only its services); docker inspect / image inspect are reduced to the members the import
+# needs (see INSPECT_KEPT, IMAGE_KEPT: no Healthcheck, health log, image history, nor labels other
+# than compose / Cloudron / OCI identification); repos.yaml and compose.yml lose their secret keys
+# (compose_filter: values under a secret mapping such as credentials: become ***); then every
+# remaining string, service field, repos.yaml line and git URL is masked (text_mask / json_pick):
+# NAME=value (also quoted, at any = of a word) with NAME containing PASS, SECRET, TOKEN, KEY,
+# CREDENTIAL, PRIVATE, AUTH (not AUTHOR) or _PWD; the word or list item (block or flow lists) after
+# such an option, after -w, -a, --pass, --requirepass, or after such a key in a flow map; -p<value>;
+# the user info of URLs (up to the last @) and user:password@host (image digests excepted).
 # Heuristic limits: a secret passed as a free word (positional argument, other short options
-# such as -P x), a list in YAML flow style ([--db_password, x]), a value spanning lines, or a URL
-# whose password contains a blank or a quote may still leak; masking may hide harmless values.
+# such as -P x), a value spanning lines, or a URL whose password contains a blank or a quote may
+# still leak; masking may hide harmless values (-p8080, the word after -a).
 set -u
 SCRIPT_VERSION="1.0.0"
 SCHEMA_VERSION=1
@@ -53,14 +56,17 @@ priv() {  # command needing root: as is when root, with sudo -n when --sudo (no 
   local err rc
   if [ "$(id -u)" = 0 ]; then run "$@"
   elif [ "$USE_SUDO" = 1 ] && have sudo; then
+    # LC_ALL=C: sudo messages in English whatever the locale; only sudo's own refusal (first
+    # stderr line from sudo, exit 1) is taken for one, not an error of the command it ran
     exec 4>&1
-    if have timeout; then err="$(timeout 30 sudo -n "$@" 2>&1 1>&4)"; rc=$?
-    else err="$(sudo -n "$@" 2>&1 1>&4)"; rc=$?; fi
+    if have timeout; then err="$(LC_ALL=C timeout 30 sudo -n "$@" 2>&1 1>&4)"; rc=$?
+    else err="$(LC_ALL=C sudo -n "$@" 2>&1 1>&4)"; rc=$?; fi
     exec 4>&-
-    if [ $rc -ne 0 ]; then
-      case "$err" in
-        *"password is required"*|*"a terminal is required"*) return $SUDO_PASSWORD ;;
-        *"not allowed"*|*"may not run"*|*"not in the sudoers"*) return $SUDO_DENIED ;;
+    if [ $rc -eq 1 ]; then
+      case "${err%%$'\n'*}" in
+        "sudo: "*"password is required"*|"sudo: "*"a terminal is required"*) return $SUDO_PASSWORD ;;
+        "Sorry, user "*" is not allowed "*|"sudo: Sorry, user "*|"sudo: "*"not in the sudoers"*|*"may not run sudo"*)
+          return $SUDO_DENIED ;;
       esac
     fi
     return $rc
@@ -412,45 +418,66 @@ function qend(s, i, q,   n, c) {  # index after the quote q closing a value that
   }
   return n + 1
 }
-function sep_len(s, i,   c) {  # separator at i: blank, tab, newline, JSON escapes \n \t \r
+function sep_len(s, i, json,   c) {
+  # separator at i: blank, tab, newline, YAML flow punctuation , [ ] { }, and in JSON strings
+  # (json = 1) the escapes \n \t \r
   c = substr(s, i, 1)
-  if (c == " " || c == "\t" || c == "\n" || c == "\r") return 1
-  if (c == "\\") { c = substr(s, i + 1, 1); if (c == "n" || c == "t" || c == "r") return 2 }
+  if (index(" \t\n\r,[]{}", c)) return 1
+  if (json && c == "\\") { c = substr(s, i + 1, 1); if (c == "n" || c == "t" || c == "r") return 2 }
   return 0
 }
-function word_end(s, i, n) {  # index after the word starting at i (escapes kept whole)
-  while (i <= n && !sep_len(s, i)) i += (substr(s, i, 1) == "\\") ? 2 : 1
+function word_end(s, i, n, json) {  # index after the word starting at i (escapes kept whole)
+  while (i <= n && !sep_len(s, i, json)) i += (substr(s, i, 1) == "\\") ? 2 : 1
   return i > n ? n + 1 : i
 }
-function unquote(t) {  # t without the quotes / parentheses around it (for option tests)
-  gsub("^[\\\\\"" SQ "(]+", "", t); gsub("[\\\\\"" SQ ")]+$", "", t)
+function value_end(s, i, n, json,   c) {  # index after an unquoted value: up to a blank only
+  while (i <= n) {
+    c = substr(s, i, 1)
+    if (c == " " || c == "\t" || c == "\n" || c == "\r") break
+    if (c == "\\") {
+      if (json && index("ntr", substr(s, i + 1, 1))) break
+      i += 2; continue
+    }
+    i++
+  }
+  return i > n ? n + 1 : i
+}
+function unquote(t) {  # t without the quotes / brackets around it (for option tests)
+  gsub("^[\\\\\"" SQ "(\\[{,]+", "", t); gsub("[\\\\\"" SQ ")\\]},]+$", "", t)
   return t
+}
+function is_digest(t) {  # image digest: sha256:<hex>... (algorithm:hex, 32 hex digits or more)
+  return t ~ /^[a-z0-9]+:[0-9a-fA-F]+$/ && length(t) - index(t, ":") >= 32
 }
 function mask_userinfo(t,   a, k, st, ui) {  # user:password@host without scheme -> ***@host
   if (index(t, "://")) return t
   a = 0; for (k = length(t); k > 0; k--) if (substr(t, k, 1) == "@") { a = k; break }
-  if (!a) return t
+  if (!a || is_digest(unquote(substr(t, a + 1)))) return t
   st = 1
   for (k = a - 1; k > 0; k--) if (index("=\"(,;" SQ, substr(t, k, 1))) { st = k + 1; break }
   ui = substr(t, st, a - st)
   if (ui ~ /^[A-Za-z0-9_.%+-]+:/) return substr(t, 1, st - 1) "***" substr(t, a)
   return t
 }
-function mask_text(s,   out, i, j, n, tok, bare, k, e, last, name, v, q, nxt, l) {
-  # NAME=value / NAME=<quote>v<quote> (single, double, \" quotes) with a secret-like NAME at any "=" of a
-  # word (ODOO_ARGS=--db_password=x), the word after a secret option (--db_password x, -a x,
-  # ODOO_ARGS=--db_password x), -p<value>, user:password@host
+function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, nxt, l) {
+  # NAME=value / NAME=<quote>v<quote> (single, double, \" quotes) with a secret-like NAME at any
+  # "=" of a word (ODOO_ARGS=--db_password=x); the word after a secret option (--db_password x,
+  # -a x, ODOO_ARGS=--db_password x, flow lists [--db_password, x]) or a secret YAML key in a flow
+  # map ({DB_PASSWORD: x}); -p<value>; user:password@host
   out = ""; n = length(s); i = 1; nxt = 0
   while (i <= n) {
-    if ((l = sep_len(s, i)) > 0) { out = out substr(s, i, l); i += l; continue }
-    j = word_end(s, i, n); tok = substr(s, i, j - i); bare = unquote(tok)
+    if ((l = sep_len(s, i, json)) > 0) { out = out substr(s, i, l); i += l; continue }
+    j = word_end(s, i, n, json); tok = substr(s, i, j - i); bare = unquote(tok)
     if (nxt) {
       nxt = 0; q = quote_at(s, i)
       if (q != "") { out = out "***"; i = qend(s, i + length(q), q); continue }
       out = out "***"; i = j; continue
     }
     if (is_flag(bare)) { out = out tok; nxt = 1; i = j; continue }
-    if (bare ~ /^-p[^-=]/) { out = out substr(tok, 1, index(tok, "-p") + 1) "***"; i = j; continue }
+    if (bare ~ /^[A-Za-z0-9_.-]+:$/ && secret_name(substr(bare, 1, length(bare) - 1))) {
+      out = out tok; nxt = 1; i = j; continue
+    }
+    if (bare ~ /^-p[^-=]/) { out = out substr(tok, 1, index(tok, "-p") + 1) "***"; i = value_end(s, i, n, json); continue }
     e = 0; last = 0
     for (k = 1; k <= length(tok); k++) {
       if (substr(tok, k, 1) == "\\") { k++; continue }
@@ -462,7 +489,7 @@ function mask_text(s,   out, i, j, n, tok, bare, k, e, last, name, v, q, nxt, l)
     if (e) {
       out = out substr(s, i, e); v = i + e; q = quote_at(s, v)
       if (q != "") { out = out q "***" q; i = qend(s, v + length(q), q); continue }
-      out = out "***"; i = j; continue
+      out = out "***"; i = value_end(s, v, n, json); continue
     }
     if (last && is_flag(unquote(substr(tok, last + 1)))) { out = out tok; nxt = 1; i = j; continue }
     out = out mask_userinfo(tok); i = j
@@ -483,10 +510,11 @@ function mask_url(s,   out, k, r, e, m, a, c) {
   }
   return out s
 }
-function mask_str(s, prev) {  # a whole string; prev = the previous string of the same list
+function mask_str(s, prev, path) {  # a whole JSON string; prev = previous string of the list
+  if (path ~ /^(Id|Image|Config\/Image|RepoTags\/#|RepoDigests\/#)$/) return s   # image refs, ids
   if (is_flag(prev)) return "***"
   if (whole_secret(s)) return substr(s, 1, index(s, "=")) "***"
-  return mask_url(mask_text(s))
+  return mask_url(mask_text(s, 1))
 }'
 text_mask() {  # stdin text (YAML...) -> stdout, secrets masked line by line; in "- item" lists,
                # the item after a secret option and NAME=value items are masked as a whole
@@ -499,10 +527,10 @@ text_mask() {  # stdin text (YAML...) -> stdout, secrets masked line by line; in
         if (length(bare) > 1 && (c1 == "\"" || c1 == SQ) && substr(bare, length(bare)) == c1) bare = substr(bare, 2, length(bare) - 2)
         if (prevflag) line = lead "***"
         else if (whole_secret(bare)) line = lead substr(bare, 1, index(bare, "=")) "***"
-        else line = lead mask_url(mask_text(item))
+        else line = lead mask_url(mask_text(item, 0))
         prevflag = is_flag(bare)
       } else {
-        prevflag = 0; line = mask_url(mask_text(line))
+        prevflag = 0; line = mask_url(mask_text(line, 0))
       }
       print line
     }'
@@ -528,7 +556,7 @@ json_pick() {  # json_pick PATTERNS < JSON -> compact JSON keeping only the memb
       if (!whole && keep(path)) whole = 1
       if (c == "{") return obj(path, whole)
       if (c == "[") return arr(path, whole)
-      if (c == "\"") { k = str(); LAST = k; if (bad || !whole) return ""; return "\"" mask_str(k, prev) "\"" }
+      if (c == "\"") { k = str(); LAST = k; if (bad || !whole) return ""; return "\"" mask_str(k, prev, path) "\"" }
       k = p
       while (p <= n && index(",]} \t\r\n", substr(s, p, 1)) == 0) p++
       if (p == k) { fail(); return "" }
@@ -572,19 +600,22 @@ json_pick() {  # json_pick PATTERNS < JSON -> compact JSON keeping only the memb
 
 # ----------------------------------------------------------------------------- zerok
 ZEROK_DIR=/opt/apps/myc-deploy
-compose_filter() {  # stdin YAML (compose.yml, repos.yaml) -> stdout without secret keys: a
-                    # secret key with a value (or a | > block) is dropped with its nested block; a
-                    # secret key without value is kept only when its block is a mapping (its
-                    # children are filtered in turn), else dropped with its block
-  local line stripped item key indent rest drop=-1 hold="" hold_indent=-1
+compose_filter() {  # [repos] stdin YAML (compose.yml, repos.yaml) -> stdout without secrets:
+  # - a secret key with a value (or a | > block) is dropped with its nested block;
+  # - a secret key without value whose block is a mapping (credentials:, passwords:, auth:...)
+  #   is kept with its structure, every value below it replaced by *** (nested keys kept);
+  #   any other block below a secret key is dropped;
+  # - with "repos", top-level keys are repository paths, never taken for secrets;
+  # - the remaining lines go through text_mask.
+  local mode="${1:-}" line stripped item key indent rest drop=-1 hold="" hold_indent=-1 under=-1
   while IFS= read -r line || [ -n "$line" ]; do
     stripped="${line#"${line%%[![:space:]]*}"}"
     indent=$(( ${#line} - ${#stripped} ))
     if [ -n "$hold" ]; then
-      if [ -z "$stripped" ]; then continue; fi
+      [ -z "$stripped" ] && continue
       if [ $indent -gt $hold_indent ]; then
         if [[ $stripped != "- "* && $stripped =~ ^[\"\']?[A-Za-z0-9_.-]+[\"\']?:([[:space:]]|$) ]]; then
-          printf '%s\n' "$hold"
+          printf '%s\n' "$hold"; under=$hold_indent
         else
           drop=$hold_indent
         fi
@@ -595,8 +626,25 @@ compose_filter() {  # stdin YAML (compose.yml, repos.yaml) -> stdout without sec
       if [ -z "$stripped" ] || [ $indent -gt $drop ]; then continue; fi
       drop=-1
     fi
+    if [ $under -ge 0 ]; then
+      if [ -z "$stripped" ]; then continue; fi
+      if [ $indent -gt $under ]; then   # inside a secret mapping: keys kept, values masked
+        if [[ $stripped =~ ^(-[[:space:]]+)?[\"\']?[A-Za-z0-9_.-]+[\"\']?:([[:space:]]|$) ]]; then
+          rest="$(trim "${stripped#*:}")"
+          if [ -z "$rest" ] || [[ $rest == \#* ]]; then printf '%s\n' "${line%%:*}:"
+          else
+            printf '%s\n' "${line%%:*}: ***"
+            [[ $rest == [\|\>]* ]] && drop=$indent
+          fi
+        elif [[ $stripped == "-"* ]]; then printf '%*s- ***\n' "$indent" ""
+        else printf '%*s***\n' "$indent" ""; fi
+        continue
+      fi
+      under=-1
+    fi
     item="${stripped#- }"
-    if [[ $item =~ ^[\"\']?([A-Za-z0-9_.-]+)[\"\']?:([[:space:]]|$) ]]; then
+    if ! { [ "$mode" = repos ] && [ $indent -eq 0 ]; } \
+       && [[ $item =~ ^[\"\']?([A-Za-z0-9_.-]+)[\"\']?:([[:space:]]|$) ]]; then
       key="${BASH_REMATCH[1]}"
       if is_secret_name "$key"; then
         rest="$(trim "${item#*:}")"; rest="$(trim "${rest%%#*}")"
@@ -685,10 +733,11 @@ collect_zerok() {
     priv_denied $rc && { echo "$f not readable: $(priv_reason $rc)"; return 3; }
     [ $rc -eq 0 ] || { echo "cannot read $f (exit $rc)" >&2; return 1; }
   fi
+  # The compose.yml text itself is not output (too many ways to hold a secret): only the
+  # services extracted from its filtered, masked text.
   filtered="$(printf '%s\n' "$content" | compose_filter)"
-  printf '{"path": %s, "compose_yml": %s, "services": [%s]}' \
-    "$(json_str "$ZEROK_DIR")" "$(json_str "$filtered")" \
-    "$(printf '%s\n' "$filtered" | compose_services)"
+  printf '{"path": %s, "services": [%s]}' \
+    "$(json_str "$ZEROK_DIR")" "$(printf '%s\n' "$filtered" | compose_services)"
 }
 
 # ----------------------------------------------------------------------------- cloudron
@@ -1049,7 +1098,7 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
   done
   # repos.yaml as is, secret keys dropped and secrets masked (compose_filter)
   yaml="$(dk exec "$id" cat /opt/odoo/custom/src/repos.yaml)" || yaml=""
-  [ -n "$yaml" ] && yaml="$(printf '%s\n' "$yaml" | compose_filter)"
+  [ -n "$yaml" ] && yaml="$(printf '%s\n' "$yaml" | compose_filter repos)"
   # git repositories: in the container, else on the host for the bind-mounted ones
   binds="$(binds_of "$flat")"
   while IFS= read -r line; do

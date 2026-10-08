@@ -4,7 +4,9 @@
         "RepoTags": [
             "odoo:17.0"
         ],
-        "RepoDigests": [],
+        "RepoDigests": [
+            "reg:5000/odoo@sha256:abababababababababababababababababababababababababababababababab"
+        ],
         "Created": "2026-09-01T00:00:00Z",
         "ContainerConfig": {
             "Cmd": [

@@ -74,7 +74,8 @@
                 "ODOO_ARGS2=--db_password=LEAK30",
                 "GIT_URL=https://LEAK36@github.com/a.git",
                 "DSN=u:LEAK42@db:5432/x",
-                "CONTACT=admin@example.com"
+                "CONTACT=admin@example.com",
+                "IMG=odoo:17.0@sha256:abababababababababababababababababababababababababababababababab"
             ],
             "Cmd": [
                 "odoo",
@@ -87,7 +88,7 @@
                     "redis-cli -a LEAK22 ping"
                 ]
             },
-            "Image": "odoo:17.0",
+            "Image": "odoo:17.0@sha256:abababababababababababababababababababababababababababababababab",
             "Entrypoint": [
                 "/entrypoint.sh"
             ],

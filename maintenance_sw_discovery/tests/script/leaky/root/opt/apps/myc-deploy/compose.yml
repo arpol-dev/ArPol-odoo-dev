@@ -1,7 +1,7 @@
 odoo:
   charm: odoo-tecnativa
   docker-compose:
-    image: odoo:17.0
+    image: reg:5000/odoo@sha256:abababababababababababababababababababababababababababababababab
     command:
       - --db_password
       - LEAK18
@@ -14,3 +14,20 @@ odoo:
       SMTP_PWD: LEAK27
       INIT2: "--db_password	LEAK41"
       DSN: u:LEAK43@db:5432/x
+
+flowsvc:
+  docker-compose:
+    command: ["odoo", "--db_password", "LEAK44"]
+    environment: {DB_PASSWORD: LEAK45, X: y}
+  credentials:
+    github: LEAK46
+  passwords:
+    admin: LEAK47
+  keys:
+    k1: LEAK48
+  ssh_keys:
+    deploy: {key: LEAK49}
+
+bare:
+  docker-compose:
+    command: [odoo, --db_password, LEAK50, -w, LEAK51]

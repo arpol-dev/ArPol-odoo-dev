@@ -294,14 +294,8 @@ class TestDiscoverScript(BaseCase):
         )
         zerok = self.data(sections, "zerok")
         self.assertEqual(zerok["path"], "/opt/apps/myc-deploy")
-        self.assertIn("charm: odoo-tecnativa", zerok["compose_yml"])
-        self.assertIn("workers: 4", zerok["compose_yml"])
-        # Secret keys are dropped with their nested block; inline `--x_password=` values masked.
-        self.assertNotRegex(
-            zerok["compose_yml"], re.compile("admin-password|private_key|BEGIN|api_token", re.I)
-        )
-        self.assertIn("--db_password=***", zerok["compose_yml"])
-        self.assertIn("domain: arpol.fr", zerok["compose_yml"])
+        # The raw compose.yml is not output (only the extracted services, masked).
+        self.assertNotIn("compose_yml", zerok)
         self.assertEqual(zerok["services"], [
             {"name": "odoo-v18", "charm": "odoo-tecnativa",
              "image": "docker.0k.io/mirror/odoo:rc_18.0-ARPOL-ODOO-DEV-18.0",
@@ -543,6 +537,7 @@ class TestDiscoverScript(BaseCase):
             "GIT_URL=https://***@github.com/a.git",
             "DSN=***@db:5432/x",
             "CONTACT=admin@example.com",
+            "IMG=odoo:17.0@sha256:abababababababababababababababababababababababababababababababab",
         ])
         self.assertEqual(redis["Args"], ["redis-server", "--requirepass", "***"])
         # Reduced objects: no Healthcheck, health log, binds, other labels, image history.
@@ -560,14 +555,19 @@ class TestDiscoverScript(BaseCase):
         self.assertNotIn("ContainerConfig", image)
         self.assertEqual(image["RepoTags"], ["odoo:17.0"])
         self.assertEqual(image["Config"]["Labels"], {"org.opencontainers.image.source": "https://***@h/x"})
-        # compose.yml text
-        compose = self.data(sections, "zerok")["compose_yml"]
-        self.assertIn("postgres://***@db/x", compose)
-        self.assertIn("PGPASSWORD='***' psql", compose)
-        self.assertIn("DSN: ***@db:5432/x", compose)
-        self.assertEqual(self.data(sections, "zerok")["services"][0]["command"],
+        # compose.yml: services only; block and flow lists masked, image digest kept
+        services = self.data(sections, "zerok")["services"]
+        self.assertNotIn("compose_yml", self.data(sections, "zerok"))
+        self.assertEqual(services[0]["image"], "reg:5000/odoo@sha256:abababababababababababababababababababababababababababababababab")
+        self.assertEqual(services[0]["command"],
                          ["--db_password", "***", "PGPASSWORD=***", "--workers=2",
                           "ODOO_ARGS=--db_password=***"])
+        self.assertEqual([s["name"] for s in services], ["odoo", "flowsvc", "bare"])
+        self.assertEqual(services[1]["command"], ["odoo", "--db_password", "***"])
+        self.assertEqual(services[2]["command"], ["odoo", "--db_password", "***", "-w", "***"])
+        # Image references with a digest are not taken for user:password@host
+        self.assertEqual(odoo["Config"]["Image"], "odoo:17.0@sha256:abababababababababababababababababababababababababababababababab")
+        self.assertEqual(image["RepoDigests"], ["reg:5000/odoo@sha256:abababababababababababababababababababababababababababababababab"])
         odoo_instance = self.data(sections, "odoo")["instances"][0]
         self.assertEqual(odoo_instance["mount_repos"], [{
             "path": "/mnt/r1", "url": "https://***@gitlab.com/r1.git", "branch": "main",
@@ -577,7 +577,13 @@ class TestDiscoverScript(BaseCase):
         repos_yaml = odoo_instance["repos_yaml"]
         self.assertIn("./private-addons:", repos_yaml)
         self.assertIn("origin: https://***@github.com/x/private.git", repos_yaml)
-        self.assertIn("  auth:\n  target: origin 17.0", repos_yaml)  # password: dropped
+        self.assertIn("  auth:\n    password: ***\n  target: origin 17.0", repos_yaml)
+        self.assertNotIn("token:", repos_yaml)  # secret key with a value: dropped
+        # children of secret-named mappings: values masked, structure kept
+        self.assertIn("  credentials:\n    github: ***\n", repos_yaml)
+        self.assertIn("  passwords:\n    admin: ***\n    list:\n      - ***\n", repos_yaml)
+        self.assertIn("  ssh_keys:\n    deploy: ***\n    pem: ***\n", repos_yaml)
+        self.assertIn("  extra: ADMIN_PASSWORD=***\n  merges:", repos_yaml)
 
     def test_leaky_odoo_command_line(self):
         """-c, --db_host and -r of the command line win over the defaults and odoo.conf."""
@@ -617,6 +623,29 @@ class TestDiscoverScript(BaseCase):
         sections = json.loads(proc.stdout.decode())["sections"]
         self.assertEqual(sections["docker"]["status"], "skipped")
         self.assertIn("not allowed", sections["docker"]["reason"])
+
+    def test_sudo_localized_and_command_errors(self):
+        """sudo refusals are recognised whatever the locale (sudo runs with LC_ALL=C); an error
+        of the command run by sudo is not taken for a sudo refusal."""
+        sudo_fr = ("#!/usr/bin/env bash\n"
+                   "if [ \"${LC_ALL:-}\" = C ]; then echo 'sudo: a password is required' >&2\n"
+                   "else echo 'sudo: un mot de passe est nécessaire' >&2; fi\nexit 1\n")
+        proc, _leftovers = run_raw(
+            "proxmox", extra_env={"STUB_UID": "1000", "LC_ALL": "fr_FR.UTF-8"}, args=["--sudo"],
+            extra_bin={"sudo": sudo_fr},
+        )
+        sections = json.loads(proc.stdout.decode())["sections"]
+        self.assertEqual(sections["proxmox"]["status"], "skipped")
+        self.assertIn("password", sections["proxmox"]["reason"])
+        # sudo runs the command, which fails saying "not allowed": an error, not a skip
+        sudo_ok = ("#!/usr/bin/env bash\nshift\n"
+                   "echo \"$1: operation not allowed on this cluster\" >&2\nexit 1\n")
+        proc, _leftovers = run_raw(
+            "proxmox", extra_env={"STUB_UID": "1000"}, args=["--sudo"],
+            extra_bin={"sudo": sudo_ok},
+        )
+        sections = json.loads(proc.stdout.decode())["sections"]
+        self.assertEqual(sections["proxmox"]["status"], "error")
 
     def test_sudo_least_privilege(self):
         """sudoers allowing docker only (no `true`, no probe): docker reached through sudo -n."""
