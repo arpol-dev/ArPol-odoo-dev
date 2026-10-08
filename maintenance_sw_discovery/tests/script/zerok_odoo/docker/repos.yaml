@@ -8,3 +8,11 @@ private-addons:
   remotes:
     origin: https://deploy:secret123@git.example.com/arpol/private.git
   merges: [origin 18.0]
+./ArPol-odoo-dev:
+    remotes:
+        # # Automatically frozen:
+        # origin: https://github.com/arpol/ArPol-odoo-dev.git
+        origin: https://git.0k.io/mirror/arpol/ArPol-odoo-dev.git
+    target: origin 18.0
+    merges:
+    - origin 18.0

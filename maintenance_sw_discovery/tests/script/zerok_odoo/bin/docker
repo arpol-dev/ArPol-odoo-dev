@@ -51,6 +51,7 @@ if [ "$c" = $ODOO ]; then
         discover-links)
           printf '%s\t%s\n' \
             /opt/odoo/auto/addons/base /opt/odoo/custom/src/odoo/odoo/addons/base \
+            /opt/odoo/auto/addons/maintenance_sw_base /opt/odoo/custom/src/ArPol-odoo-dev/maintenance_sw_base \
             /opt/odoo/auto/addons/ovh_api /opt/odoo/auto/dev/ovh_connector/ovh_api \
             /opt/odoo/auto/addons/sale /opt/odoo/custom/src/odoo/addons/sale ;;
         *) fail exec "$c" "$tag" "$@" ;;
@@ -73,12 +74,14 @@ if [ "$c" = $PG ] && [ "$1" = psql ]; then
   done
   [ "$user" = odoo-v18 ] || { echo "psql: error: FATAL:  role \"$user\" does not exist" >&2; exit 2; }
   case "$db:$query" in
-    "postgres:"*pg_database*) printf '%s\n' arpol scratch ;;
-    "arpol:"*to_regclass*) echo t ;;
+    "postgres:"*pg_database*) printf '%s\n' arpol arpol_test scratch ;;
+    "arpol:"*to_regclass*|"arpol_test:"*to_regclass*) echo t ;;
     "scratch:"*to_regclass*) echo f ;;
     "arpol:"*ir_module_module*)
       printf '%s\n' "base|18.0.1.3|installed" "maintenance_sw_base|18.0.1.0.0|to upgrade" \
         "old_module||to remove" "sale|18.0.1.2|installed" ;;
+    "arpol_test:"*ir_module_module*)
+      printf '%s\n' "base|18.0.1.3|installed" "ovh_api|18.0.1.5.0|installed" ;;
     *) echo "psql: error: unexpected query on $db: $query" >&2; exit 1 ;;
   esac
   exit 0

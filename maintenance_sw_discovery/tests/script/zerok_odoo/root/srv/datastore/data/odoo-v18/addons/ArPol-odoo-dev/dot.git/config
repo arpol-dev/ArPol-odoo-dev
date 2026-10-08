@@ -1,0 +1,4 @@
+[core]
+	bare = false
+[remote "origin"]
+	url = https://github.com/arpol/ArPol-odoo-dev.git

@@ -385,13 +385,35 @@ class TestDiscoverScript(BaseCase):
              "target": None,
              "remotes": {"origin": "https://***@git.example.com/arpol/private.git"},
              "upstreams": {}, "merges": ["origin 18.0"]},
+            {"name": "ArPol-odoo-dev", "path": "/opt/odoo/custom/src/ArPol-odoo-dev",
+             "target": {"remote": "origin", "ref": "18.0"},
+             "remotes": {"origin": "https://git.0k.io/mirror/arpol/ArPol-odoo-dev.git"},
+             "upstreams": {"origin": "https://github.com/arpol/ArPol-odoo-dev.git"},
+             "merges": ["origin 18.0"]},
         ]})
         self.assertEqual(odoo["repos"], [{
             "path": "/opt/odoo/custom/src/private-addons",
             "url": "https://***@git.example.com/arpol/private.git",
             "branch": "18.0", "commit": "0123456789abcdef0123456789abcdef01234567",
         }])
-        self.assertEqual(odoo["mount_repos"], [])
+        # The dev addons mount holds a git checkout (read on the host, without git).
+        self.assertEqual(odoo["mount_repos"], [{
+            "path": "/opt/odoo/auto/dev/ArPol-odoo-dev",
+            "url": "https://github.com/arpol/ArPol-odoo-dev.git",
+            "branch": "18.0-maintenance-sw", "commit": "4444dddd4444dddd4444dddd4444dddd4444dddd",
+        }])
+        # Every link of /opt/odoo/auto/addons (which repository provides each module) ...
+        self.assertEqual(odoo["addons_links"], [
+            {"link": "/opt/odoo/auto/addons/base",
+             "target": "/opt/odoo/custom/src/odoo/odoo/addons/base"},
+            {"link": "/opt/odoo/auto/addons/maintenance_sw_base",
+             "target": "/opt/odoo/custom/src/ArPol-odoo-dev/maintenance_sw_base"},
+            {"link": "/opt/odoo/auto/addons/ovh_api",
+             "target": "/opt/odoo/auto/dev/ovh_connector/ovh_api"},
+            {"link": "/opt/odoo/auto/addons/sale",
+             "target": "/opt/odoo/custom/src/odoo/addons/sale"},
+        ])
+        # ... and those outside the image sources.
         self.assertEqual(odoo["runtime_links"], [{
             "link": "/opt/odoo/auto/addons/ovh_api",
             "target": "/opt/odoo/auto/dev/ovh_connector/ovh_api",
@@ -409,6 +431,9 @@ class TestDiscoverScript(BaseCase):
             {"name": "maintenance_sw_base", "version": "18.0.1.0.0", "state": "to_upgrade"},
             {"name": "old_module", "version": None, "state": "to_remove"},
             {"name": "sale", "version": "18.0.1.2", "state": "installed"},
+        ]}, {"name": "arpol_test", "modules": [
+            {"name": "base", "version": "18.0.1.3", "state": "installed"},
+            {"name": "ovh_api", "version": "18.0.1.5.0", "state": "installed"},
         ]}])
 
     # ------------------------------------------------------------------ manual_odoo
@@ -429,6 +454,7 @@ class TestDiscoverScript(BaseCase):
                          ["web_environment_ribbon", "web_responsive"])
         self.assertIsNone(odoo["repos_spec"])
         self.assertEqual(odoo["runtime_links"], [])
+        self.assertEqual(odoo["addons_links"], [])
         oca_web = {"path": "/mnt/extra-addons/oca-web", "url": "https://github.com/OCA/web.git",
                    "branch": "18.0", "commit": "1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa"}
         custom = {"path": "/mnt/extra-addons/custom",

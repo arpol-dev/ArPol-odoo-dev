@@ -1211,6 +1211,7 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
   local cmd_path="" cmd_conf="" cmd_host="" cmd_user=""
   local binds addons="" asep="" yaml spec repos="" rsep="" seen=" " st rest u b c hp rel
   local mrepos="" msep="" src dst links="" lsep="" config="" csep="" host user plist=""
+  local alinks="" alsep=""
   local -a paths=() confs=()
   local -A mods=()
   name="$(jget "$flat" .Name)"; name="${name#/}"
@@ -1296,9 +1297,11 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
       msep=", "
     done < <(host_git_dirs "$src")
   done <<<"$binds"
-  # links of /opt/odoo/auto/addons outside the image sources
+  # links of /opt/odoo/auto/addons: all of them (addons_links: which repository provides each
+  # module), and those outside the image sources (runtime_links)
   while IFS=$'\t' read -r d t; do
     [ -n "$d" ] || continue
+    alinks+="$alsep{\"link\": $(json_str "$d"), \"target\": $(jnull "$t")}"; alsep=", "
     case "$t" in /opt/odoo/custom/src/*) continue ;; esac
     links+="$lsep{\"link\": $(json_str "$d"), \"target\": $(jnull "$t")}"; lsep=", "
   done < <(dk exec "$id" sh -c "$LINKS_SH" discover-links)
@@ -1318,9 +1321,9 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
   [ -n "$user" ] || user="$(env_get "$flat" PGUSER)"
   [ -n "$user" ] || user=postgres
   for d in "${paths[@]}"; do plist+="${plist:+, }$(json_str "$d")"; done
-  printf '{"container": %s, "version": %s, "addons_path": [%s], "addons": {%s}, "repos_spec": %s, "repos": [%s], "mount_repos": [%s], "runtime_links": [%s], "config": {%s}, "databases": %s}' \
+  printf '{"container": %s, "version": %s, "addons_path": [%s], "addons": {%s}, "repos_spec": %s, "repos": [%s], "mount_repos": [%s], "addons_links": [%s], "runtime_links": [%s], "config": {%s}, "databases": %s}' \
     "$(json_str "$name")" "$(jnull "$ver")" "$plist" \
-    "$addons" "$spec" "$repos" "$mrepos" "$links" "$config" \
+    "$addons" "$spec" "$repos" "$mrepos" "$alinks" "$links" "$config" \
     "$(odoo_databases "$id" "$host" "$user")"
 }
 collect_odoo() {

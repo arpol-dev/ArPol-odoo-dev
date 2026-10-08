@@ -1,1 +1,1 @@
-Not a git repository: the dev addons of this 0k server are plain copies.
+Git checkout of the dev addons of this 0k server (bind-mounted at /opt/odoo/auto/dev); dot.git is renamed .git by the test harness. It overrides the ArPol-odoo-dev repository of the image.
