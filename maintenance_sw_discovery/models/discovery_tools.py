@@ -122,3 +122,8 @@ def machine_ids(data):
     hostname = machine.get("hostname") or "unknown"
     mid = machine.get("machine_id") or f"host-{hostname}"
     return mid, hostname, f"machine:{mid}"
+
+
+def clean_url(url):
+    """URL without the credentials the script masked: https://***@host/x -> https://host/x."""
+    return re.sub(r"://\*\*\*@", "://", (url or "").strip())

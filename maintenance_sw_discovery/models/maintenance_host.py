@@ -7,7 +7,6 @@ class MaintenanceHost(models.Model):
     _inherit = "maintenance.host"
 
     discovery_key = fields.Char(
-        index=True,
         copy=False,
         help="Identity of the host in the discovery files (pve-guest:<machine-id>:<vmid>).",
     )

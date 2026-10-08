@@ -13,7 +13,6 @@ class MaintenanceEquipment(models.Model):
     _inherit = "maintenance.equipment"
 
     discovery_key = fields.Char(
-        index=True,
         copy=False,
         help="Identity of the equipment in the discovery files (e.g. machine:<machine-id>, "
         "container:<machine-id>:<name>): a new discovery updates it instead of creating another.",

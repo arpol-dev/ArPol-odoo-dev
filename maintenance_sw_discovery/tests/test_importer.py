@@ -97,7 +97,7 @@ class TestImporter(DiscoveryCase):
         private = components["/opt/odoo/custom/src/private-addons"]
         # no target: the remote of the first merge; the commit is the one found by git
         self.assertEqual(private.repository_id.url,
-                         "https://***@git.example.com/arpol/private.git")
+                         "https://git.example.com/arpol/private.git")
         self.assertEqual(private.commit, "0123456789abcdef0123456789abcdef01234567")
         self.assertEqual(private.ref, "18.0")
 
@@ -354,6 +354,131 @@ class TestImporter(DiscoveryCase):
         self.assertEqual(self.Importer._suggest(REFERENCE_RAW), {"host_id": False, "matches": {}})
 
 
+class TestImporterFixes(DiscoveryCase):
+    def test_vanished_mount_deleted(self):
+        self.Importer._apply(REFERENCE_RAW)
+        odoo = self.container(ODOO)
+        dev_mount = odoo.mount_ids.filtered(lambda m: m.destination == "/opt/odoo/auto/dev")
+        mounted = dev_mount.component_ids
+        image_dev = mounted.overrides_id
+        self.assertNotIn(image_dev, odoo.effective_component_ids)
+
+        data = self.reference()
+        inspect = self.docker_container(data, ODOO)["inspect"]
+        inspect["Mounts"] = [m for m in inspect["Mounts"] if m["Destination"] != "/opt/odoo/auto/dev"]
+        self.odoo_instance(data)["mount_repos"] = []
+        plan = {op["key"]: op for op in self.Importer._plan(data)}
+        mount_key = f"mount:container:{MID}:{ODOO}:/opt/odoo/auto/dev"
+        self.assertEqual(plan[mount_key]["action"], "missing")
+        self.assertEqual(plan[mount_key]["record_id"], dev_mount.id)
+        self.Importer._apply(data)
+        self.assertFalse(dev_mount.exists())
+        self.assertFalse(mounted.exists())
+        self.assertIn(image_dev, odoo.effective_component_ids)
+        self.assertEqual(odoo.mount_ids.mapped("destination"), ["/var/lib/odoo"])
+
+    def test_vanished_mount_component_deleted(self):
+        self.Importer._apply(REFERENCE_RAW)
+        odoo = self.container(ODOO)
+        mounted = odoo.mount_ids.component_ids
+        data = self.reference()
+        self.odoo_instance(data)["mount_repos"] = []
+        plan = {op["key"]: op for op in self.Importer._plan(data)}
+        mount_key = f"mount:container:{MID}:{ODOO}:/opt/odoo/auto/dev"
+        self.assertEqual(plan[f"component:{mount_key}:/opt/odoo/auto/dev/ArPol-odoo-dev"]["action"],
+                         "missing")
+        self.assertEqual(plan[mount_key]["action"], "unchanged")
+        self.Importer._apply(data)
+        self.assertFalse(mounted.exists())
+        self.assertEqual(len(odoo.mount_ids), 2)
+
+    def test_key_of_another_company(self):
+        company_a = self.env.company
+        company_b = self.env["res.company"].create({"name": "Company B"})
+        user = self.env["res.users"].create({
+            "name": "Manager", "login": "discovery_manager",
+            "company_id": company_a.id, "company_ids": [(6, 0, (company_a | company_b).ids)],
+            "groups_id": [(6, 0, [self.env.ref("maintenance.group_equipment_manager").id,
+                                  self.env.ref("base.group_user").id])],
+        })
+        importer = self.Importer.with_user(user)
+        root = importer.with_company(company_b)._apply(REFERENCE_RAW)
+        self.assertEqual(root.company_id, company_b)
+        with self.assertRaisesRegex(UserError, "Debian \\(arpol\\)"):
+            importer.with_company(company_a)._plan(REFERENCE_RAW)
+
+    def test_inherited_host_not_forced(self):
+        host = self.env["maintenance.host"].create({"name": "VPS", "host_type": "vps"})
+        customer = self.env["res.partner"].create({"name": "Customer"})
+        vps = self.Equipment.create({"name": "VPS arpol.fr", "physical_host_id": host.id,
+                                     "customer_id": customer.id})
+        system = self.Equipment.create({
+            "name": "Debian (arpol.fr)", "equipment_kind": "software", "install_type": "os",
+            "parent_id": vps.id,
+        })
+        self.assertEqual(system.physical_host_id, host)
+        self.assertFalse(system.physical_host_forced)
+        plan = self.Importer._plan(REFERENCE_RAW, host=host, customer=customer,
+                                   matches={ROOT_KEY: system.id})
+        root_op = next(op for op in plan if op["key"] == ROOT_KEY)
+        for fname in ("physical_host_id", "physical_host_forced", "customer_id",
+                      "customer_forced"):
+            self.assertNotIn(fname, root_op["values"])
+        self.Importer._apply(REFERENCE_RAW, host=host, customer=customer,
+                             matches={ROOT_KEY: system.id})
+        self.assertFalse(system.physical_host_forced)
+        self.assertFalse(system.customer_forced)
+        # another host than the inherited one is forced
+        other = self.env["maintenance.host"].create({"name": "Other", "host_type": "vps"})
+        self.Importer._apply(REFERENCE_RAW, host=other)
+        self.assertEqual(system.physical_host_id, other)
+        self.assertTrue(system.physical_host_forced)
+
+    def test_duplicate_match_targets(self):
+        system = self.Equipment.create({"name": "Debian (arpol.fr)", "equipment_kind": "software"})
+        with self.assertRaisesRegex(UserError, "Debian \\(arpol.fr\\)"):
+            self.Importer._plan(REFERENCE_RAW, matches={
+                ROOT_KEY: system.id, f"container:{MID}:{ODOO}": system.id,
+            })
+
+    def test_runtime_changes_link_boundaries(self):
+        """A link is mentioned only as a whole word: /ovh is not mentioned by /ovh_api."""
+        container = self.Equipment.create({
+            "name": ODOO, "equipment_kind": "software",
+            "runtime_changes": "Link /opt/odoo/auto/addons/ovh_api added by hand.",
+        })
+        data = self.reference()
+        self.odoo_instance(data)["runtime_links"] = [
+            {"link": "/opt/odoo/auto/addons/ovh", "target": "/opt/odoo/auto/dev/ovh"},
+            {"link": "/opt/odoo/auto/addons/ovh_api", "target": "/opt/odoo/auto/dev/x"},
+        ]
+        self.Importer._apply(data, matches={f"container:{MID}:{ODOO}": container.id})
+        self.assertTrue(container.runtime_changes.endswith(
+            ":\n/opt/odoo/auto/addons/ovh -> /opt/odoo/auto/dev/ovh"), container.runtime_changes)
+
+    def test_repository_identity(self):
+        from odoo.addons.maintenance_sw_discovery.models.discovery_importer import PlanState
+        state = PlanState(self.reference(), self.env["maintenance.host"],
+                          self.env["res.partner"], {})
+        url = "https://***@git.example.com/arpol/mirror.git"
+        key = self.Importer._plan_repository(state, url)
+        self.assertEqual(key, "repo:https://git.example.com/arpol/mirror.git")
+        upstream = "https://github.com/arpol/upstream.git"
+        self.assertEqual(self.Importer._plan_repository(state, url, upstream), key)
+        keys = [op["key"] for op in state.ops]
+        self.assertLess(keys.index(f"repo:{upstream}"), keys.index(key))
+        self.assertEqual(state.by_key[key]["values"]["upstream_id"], {"ref": f"repo:{upstream}"})
+        # an existing repository gets the upstream as an update
+        self.env["git.repository"].create({"name": "x", "url": "https://h/x.git"})
+        state = PlanState(self.reference(), self.env["maintenance.host"],
+                          self.env["res.partner"], {})
+        self.Importer._plan_repository(state, "https://h/x.git")
+        self.Importer._plan_repository(state, "https://h/x.git", upstream)
+        op = state.by_key["repo:https://h/x.git"]
+        self.assertEqual(op["action"], "update")
+        self.assertTrue(op["changes"])
+
+
 class TestImporterScenarios(DiscoveryCase):
     """The other script scenarios, run live (they need bash, as the script tests)."""
 
@@ -380,6 +505,8 @@ class TestImporterScenarios(DiscoveryCase):
                          [f"pve-guest:{mid}:104"])
         self.Importer._apply(data, host=host)
         self.assertEqual(len(guests.filtered("active")), 2)
+        self.assertEqual({op["action"] for op in self.Importer._plan(data, host=host)},
+                         {"unchanged"})
 
     def test_cloudron(self):
         data = run_scenario("cloudron")
@@ -396,6 +523,7 @@ class TestImporterScenarios(DiscoveryCase):
         self.assertEqual(odoo.name, "Odoo (odoo.eoloa.eu)")
         self.assertEqual(odoo.parent_id, cloudron)
         self.assertEqual(odoo.deployment_method_id, method)
+        self.assertEqual({op["action"] for op in self.Importer._plan(data)}, {"unchanged"})
 
     def test_manual_odoo(self):
         data = run_scenario("manual_odoo")

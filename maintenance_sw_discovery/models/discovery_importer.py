@@ -1,8 +1,9 @@
 import json
 import posixpath
+import re
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 from odoo.osv import expression
 from odoo.tools import SQL
 
@@ -10,6 +11,9 @@ from . import discovery_tools as tools
 
 SCHEMA_VERSION = 1
 MODULE_STATES = ("installed", "to_upgrade", "to_remove")
+# models without active field: what vanished from the server is deleted, not archived
+DELETED_WHEN_MISSING = ("docker.mount", "docker.component")
+INHERITED_FLAGS = {"physical_host_id": "physical_host_forced", "customer_id": "customer_forced"}
 METHODS = {
     "manual": "maintenance_sw_base.deployment_method_manual",
     "myc": "maintenance_sw_base.deployment_method_myc",
@@ -109,9 +113,10 @@ class DiscoveryImporter(models.AbstractModel):
         mid, hostname, root_key = tools.machine_ids(data)
         Equipment = self.env["maintenance.equipment"]
         # archived (missing) records keep their key: they are found by it, not by name
-        Known = Equipment.with_context(active_test=False)
+        # (in any company: a key is unique across them)
+        Known = Equipment.sudo().with_context(active_test=False)
         matches = {}
-        system = Known.search([("discovery_key", "=", root_key)], limit=1)
+        system = self._find_by_key("maintenance.equipment", root_key)
         if not system:
             candidates = Equipment.search([
                 ("discovery_key", "=", False), ("install_type", "=", "os"),
@@ -155,6 +160,7 @@ class DiscoveryImporter(models.AbstractModel):
             self._as_record("res.partner", customer),
             matches,
         )
+        self._check_matches(state)
         self._plan_os(state)
         self._plan_platforms(state)
         self._plan_containers(state)
@@ -162,6 +168,20 @@ class DiscoveryImporter(models.AbstractModel):
         self._plan_odoo(state)
         self._plan_missing(state)
         return state.ops
+
+    def _check_matches(self, state):
+        """One existing equipment cannot stand for two discovered objects."""
+        keys_by_id = {}
+        for key, record_id in state.matches.items():
+            keys_by_id.setdefault(record_id, []).append(key)
+        for record_id, keys in keys_by_id.items():
+            if len(keys) > 1:
+                record = self.env["maintenance.equipment"].sudo().browse(record_id)
+                raise UserError(self.env._(
+                    "%(record)s is chosen for several discovered objects (%(keys)s): choose it "
+                    "for one of them only.",
+                    record=record.display_name, keys=", ".join(sorted(keys)),
+                ))
 
     def _plan_op(self, state, key, model, record, values, create_values=None, label=None,
                  parent_key=None):
@@ -188,7 +208,11 @@ class DiscoveryImporter(models.AbstractModel):
         op = {
             "key": key, "model": record._name, "action": "missing", "record_id": record.id,
             "label": record.display_name, "values": values,
-            "changes": [self.env._("Absent from the discovery: archived")],
+            "changes": [
+                self.env._("Absent from the discovery: deleted")
+                if record._name in DELETED_WHEN_MISSING
+                else self.env._("Absent from the discovery: archived")
+            ],
             "parent_key": parent_key,
         }
         state.ops.append(op)
@@ -271,9 +295,28 @@ class DiscoveryImporter(models.AbstractModel):
         }, label=f"{product_name} {version_name}", parent_key=product_key)
         return ref(version_key)
 
+    def _find_by_key(self, model, key):
+        """Record of a discovery key, in any company (the key is unique across them). One the
+        user cannot write (another company not selected...) is refused by name: creating it
+        again would break the unique key."""
+        found = self.env[model].sudo().with_context(active_test=False).search(
+            [("discovery_key", "=", key)], limit=1
+        )
+        record = self.env[model].with_context(active_test=False).browse(found.id)
+        if found:
+            try:
+                record.check_access("write")
+            except AccessError as error:
+                raise UserError(self.env._(
+                    "%(record)s (%(key)s) was already discovered, but you cannot modify it: "
+                    "select its company, or ask a user who can.",
+                    record=found.display_name, key=key,
+                )) from error
+        return record
+
     def _find_equipment(self, state, key):
         Equipment = self.env["maintenance.equipment"].with_context(active_test=False)
-        record = Equipment.search([("discovery_key", "=", key)], limit=1)
+        record = self._find_by_key("maintenance.equipment", key)
         if not record and state.matches.get(key):
             record = Equipment.browse(state.matches[key]).exists()
             if record.discovery_key:
@@ -307,12 +350,16 @@ class DiscoveryImporter(models.AbstractModel):
             values["software_version_id"] = version
         elif os_data.get("pretty_name"):
             values["version_note"] = os_data["pretty_name"]
-        if state.host:
-            values.update(physical_host_id=state.host.id, physical_host_forced=True)
-        if state.customer:
-            values.update(customer_id=state.customer.id, customer_forced=True)
+        record = self._find_equipment(state, state.root_key)
+        for fname, value in (("physical_host_id", state.host), ("customer_id", state.customer)):
+            flag = INHERITED_FLAGS[fname]
+            # the value it inherits from its parent (e.g. proposed back by the wizard) is no
+            # reason to force it
+            if not value or (record and not record[flag] and record.parent_id[fname] == value):
+                continue
+            values.update({fname: value.id, flag: True})
         name = f"{product or os_data.get('pretty_name') or 'Server'} ({state.hostname})"
-        self._plan_equipment(state, state.root_key, values, name)
+        self._plan_equipment(state, state.root_key, values, name, record=record)
 
     def _plan_platforms(self, state):
         """Under the OS: Proxmox VE (and its guests), the 0k stack, the Cloudron instance."""
@@ -363,7 +410,6 @@ class DiscoveryImporter(models.AbstractModel):
         support = state.host or self.env["maintenance.equipment"].browse(
             root_op["record_id"] or ()
         ).physical_host_id
-        Host = self.env["maintenance.host"].with_context(active_test=False)
         for guest in proxmox.get("guests") or []:
             vmid = guest.get("vmid")
             if not vmid:
@@ -374,8 +420,7 @@ class DiscoveryImporter(models.AbstractModel):
                 values["equipment_id"] = support.equipment_id.id
             state.seen_hosts.add(key)
             name = guest.get("name") or f"VM {vmid}"
-            self._plan_op(state, key, "maintenance.host",
-                          Host.search([("discovery_key", "=", key)], limit=1),
+            self._plan_op(state, key, "maintenance.host", self._find_by_key("maintenance.host", key),
                           values, {"name": name}, label=name, parent_key=f"pve:{state.mid}")
 
     def _plan_containers(self, state):
@@ -432,7 +477,7 @@ class DiscoveryImporter(models.AbstractModel):
         lines = [
             f"{link['link']} -> {link.get('target') or '?'}"
             for link in (instance or {}).get("runtime_links") or []
-            if link.get("link") and link["link"] not in current
+            if link.get("link") and not re.search(re.escape(link["link"]) + r"(\s|$)", current)
         ]
         if not lines:
             return None
@@ -545,16 +590,44 @@ class DiscoveryImporter(models.AbstractModel):
                 state.core_components.setdefault(image_key, key)
 
     def _plan_repository(self, state, url, upstream=None):
+        """git.repository by URL, without the masked credentials (the script writes
+        https://***@host/...): the credential-free URL is the identity."""
+        url = tools.clean_url(url)
+        upstream = tools.clean_url(upstream) if upstream else None
         upstream_key = None
         if upstream and upstream != url:
             upstream_key = self._plan_repository(state, upstream)
         key = f"repo:{url}"
+        values = {"upstream_id": ref(upstream_key)} if upstream_key else {}
+        if key in state.by_key:
+            if upstream_key:
+                self._plan_late_upstream(state, state.by_key[key], upstream_key, values)
+            return key
         record = self.env["git.repository"].search([("url", "=", url)], limit=1)
         name = tools.repository_name(url)
-        self._plan_op(state, key, "git.repository", record,
-                      {"upstream_id": ref(upstream_key)} if upstream_key else {},
+        self._plan_op(state, key, "git.repository", record, values,
                       {"name": name, "url": url}, label=name)
         return key
+
+    def _plan_late_upstream(self, state, op, upstream_key, values):
+        """A repository planned without upstream, then seen with one: keep the upstream, its
+        operation placed before the repository's (it is created first)."""
+        if "upstream_id" in op["values"]:
+            return
+        if op["action"] == "create":
+            op["values"]["upstream_id"] = values["upstream_id"]
+        else:
+            record = self.env["git.repository"].browse(op["record_id"])
+            changes, to_write = self._plan_diff(state, record, values)
+            if not to_write:
+                return
+            op["values"].update(to_write)
+            op["changes"] += changes
+            op["action"] = "update"
+        upstream_op = state.by_key[upstream_key]
+        if state.ops.index(upstream_op) > state.ops.index(op):
+            state.ops.remove(upstream_op)
+            state.ops.insert(state.ops.index(op), upstream_op)
 
     def _plan_mounts(self, state, container_key, container_record, inspect, instance, image_key):
         """docker.mount by (container, destination), and the git checkouts they bring."""
@@ -602,6 +675,21 @@ class DiscoveryImporter(models.AbstractModel):
             }, label=f"{tools.repository_name(url)} — {path}", parent_key=mount_key)
             components.append((path, key))
         state.container_components[container_key] = components
+        self._plan_vanished_mounts(state, container_key, existing, mounts)
+
+    def _plan_vanished_mounts(self, state, container_key, existing, mounts):
+        """Mounts gone from the container, and checkouts gone from a mount: deleted (a stale
+        mount component would still override an image component)."""
+        kept = {dest for dest, _key, _record in mounts}
+        for dest, record in existing.items():
+            if dest not in kept:
+                self._plan_missing_op(state, f"mount:{container_key}:{dest}", record, {},
+                                      parent_key=container_key)
+        for _dest, mount_key, record in mounts:
+            for component in record.component_ids:
+                key = f"component:{mount_key}:{component.path}"
+                if key not in state.by_key:
+                    self._plan_missing_op(state, key, component, {}, parent_key=mount_key)
 
     def _plan_cloudron_apps(self, state):
         """Cloudron applications without a visible container: one software equipment each."""
@@ -778,6 +866,10 @@ class DiscoveryImporter(models.AbstractModel):
         Model = self.env[op["model"]].with_context(active_test=False)
         if op["action"] == "create":
             return Model.create(values).id
+        if op["action"] == "missing" and op["model"] in DELETED_WHEN_MISSING:
+            # a mount deleted with its components: they are gone too
+            Model.browse(op["record_id"]).exists().unlink()
+            return False
         Model.browse(op["record_id"]).write(values)
         return op["record_id"]
 
