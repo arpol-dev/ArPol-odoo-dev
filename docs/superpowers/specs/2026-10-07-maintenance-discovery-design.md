@@ -48,10 +48,10 @@ elle et sans root, les sections qui en ont besoin sont marquées sautées.
 | `os` | `ID`, `VERSION_ID`, `VERSION_CODENAME`, `PRETTY_NAME`, noyau, gestionnaire de paquets (`dpkg`, `rpm`, `apk` ou aucun) | `/etc/os-release`, `uname -r` |
 | `platforms` | détections : `proxmox` (version), `0k` (chemin `/opt/apps/myc-deploy`, présence de `compose`), `cloudron` (version), `docker` (version) | `pveversion`, fichiers, `cloudron`/`/home/yellowtent`, `docker version` |
 | `proxmox` | VM et LXC : `vmid`, nom, type (`qemu`/`lxc`), état, `ostype` | `qm list`, `pct list`, `pct config`, `qm config` (lecture) |
-| `zerok` | services du `compose.yml` (nom, charm, image, `command`, volumes) | `/opt/apps/myc-deploy/compose.yml` (texte brut + extraction) |
+| `zerok` | services du `compose.yml` lus en données structurées (nom, charm, image, `command`, volumes) + `parse_warnings` ; **aucun texte brut** | `/opt/apps/myc-deploy/compose.yml` |
 | `cloudron` | version ; applications (id, nom, version, domaine) | `cloudron` CLI si présent, sinon `docker ps` des conteneurs Cloudron |
 | `docker` | pour chaque conteneur en cours : `docker inspect` brut (variables d'environnement filtrées), `docker image inspect` de son image | `docker` |
-| `odoo` | pour chaque conteneur Odoo (image ou commande contenant `odoo`) : version (`odoo --version`), `addons_path` effectif (commande puis `odoo.conf`), modules présents par dossier de l'`addons_path` (dossiers avec `__manifest__.py`), `repos.yaml` brut s'il existe, dépôts git (URL, branche, commit) des dossiers de l'image et des montages, liens symboliques de `/opt/odoo/auto/addons` absents de l'image, bases et modules installés | `docker exec` (lecture), `psql` dans le conteneur Postgres relié |
+| `odoo` | pour chaque conteneur Odoo (image ou commande contenant `odoo`) : version (`odoo --version`), `addons_path` effectif (commande puis `odoo.conf`), modules présents par dossier de l'`addons_path` (dossiers avec `__manifest__.py`), `repos.yaml` lu en données structurées (`repos_spec` : par dépôt `name`, `path`, `target` {remote, ref}, `remotes`, `upstreams` des commentaires « Automatically frozen », `merges`), sans texte brut, dépôts git (URL, branche, commit) des dossiers de l'image et des montages, liens symboliques de `/opt/odoo/auto/addons` absents de l'image, bases et modules installés | `docker exec` (lecture), `psql` dans le conteneur Postgres relié |
 
 **Bases et modules** : le conteneur Postgres est trouvé par `db_host` (configuration Odoo ou variable
 `HOST`/`PGHOST`), puis le nom de conteneur ou le réseau Docker ; requête en lecture seule, par base listée
@@ -89,8 +89,7 @@ Introuvable ou refus : section `skipped` avec la raison, sans échec.
 }
 ```
 
-`status` ∈ `ok`, `skipped` (avec `reason`), `error` (avec `message`). Les réponses brutes utiles
-(`docker inspect`, `repos.yaml`, `compose.yml` filtré) sont conservées telles quelles sous `raw`.
+`status` ∈ `ok`, `skipped` (avec `reason`), `error` (avec `message`). Aucun texte YAML brut n'est émis (compose.yml et repos.yaml sont lus en données structurées) ; de `docker inspect` / `image inspect`, seule une liste blanche de clés utiles est gardée, valeurs sensibles masquées (décision du 2026-10-08 après trois tours de fuites sur le masquage de texte libre).
 
 ---
 
