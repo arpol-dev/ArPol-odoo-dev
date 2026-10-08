@@ -46,18 +46,32 @@ run() {  # run a command with a timeout when available; never fails the script
   if have timeout; then timeout 30 "$@" 2>/dev/null; else "$@" 2>/dev/null; fi
 }
 NO_PRIV=126       # priv: not root and no --sudo
-SUDO_PASSWORD=120 # priv: --sudo but sudo -n refuses (password required)
-priv() {  # command needing root: as is when root, with sudo -n when --sudo
+SUDO_PASSWORD=120 # priv: --sudo but sudo -n wants a password for this command
+SUDO_DENIED=121   # priv: --sudo but this command is not allowed by sudoers
+priv() {  # command needing root: as is when root, with sudo -n when --sudo (no probe: works with
+          # sudoers allowing only the needed commands); stdout passes through, stderr is read
+  local err rc
   if [ "$(id -u)" = 0 ]; then run "$@"
   elif [ "$USE_SUDO" = 1 ] && have sudo; then
-    run sudo -n true || return $SUDO_PASSWORD
-    run sudo -n "$@"
+    exec 4>&1
+    if have timeout; then err="$(timeout 30 sudo -n "$@" 2>&1 1>&4)"; rc=$?
+    else err="$(sudo -n "$@" 2>&1 1>&4)"; rc=$?; fi
+    exec 4>&-
+    if [ $rc -ne 0 ]; then
+      case "$err" in
+        *"password is required"*|*"a terminal is required"*) return $SUDO_PASSWORD ;;
+        *"not allowed"*|*"may not run"*|*"not in the sudoers"*) return $SUDO_DENIED ;;
+      esac
+    fi
+    return $rc
   else return $NO_PRIV; fi
 }
-priv_denied() { [ "$1" -eq $NO_PRIV ] || [ "$1" -eq $SUDO_PASSWORD ]; }
+priv_denied() { [ "$1" -eq $NO_PRIV ] || [ "$1" -eq $SUDO_PASSWORD ] || [ "$1" -eq $SUDO_DENIED ]; }
 priv_reason() {  # priv_reason RC -> why priv could not run the command
   if [ "$1" -eq $SUDO_PASSWORD ]; then
-    echo "root privileges required: sudo -n refused (a password is required; allow these read-only commands without password or run as root)"
+    echo "root privileges required: sudo -n refused, a password is required (allow these read-only commands without password, or run as root)"
+  elif [ "$1" -eq $SUDO_DENIED ]; then
+    echo "root privileges required: sudo refused, the command is not allowed for this user (sudoers)"
   else
     echo "$ROOT_REASON"
   fi
@@ -398,37 +412,66 @@ function qend(s, i, q,   n, c) {  # index after the quote q closing a value that
   }
   return n + 1
 }
-function mask_text(s,   out, i, j, n, tok, e, name, v, q, nxt) {
-  # NAME=value / NAME='v' / NAME="v" / NAME=\"v\" with a secret-like NAME, the word after
-  # a secret option (--db_password x, -a x, -w x, NAME=--db_password x), -p<value>
+function sep_len(s, i,   c) {  # separator at i: blank, tab, newline, JSON escapes \n \t \r
+  c = substr(s, i, 1)
+  if (c == " " || c == "\t" || c == "\n" || c == "\r") return 1
+  if (c == "\\") { c = substr(s, i + 1, 1); if (c == "n" || c == "t" || c == "r") return 2 }
+  return 0
+}
+function word_end(s, i, n) {  # index after the word starting at i (escapes kept whole)
+  while (i <= n && !sep_len(s, i)) i += (substr(s, i, 1) == "\\") ? 2 : 1
+  return i > n ? n + 1 : i
+}
+function unquote(t) {  # t without the quotes / parentheses around it (for option tests)
+  gsub("^[\\\\\"" SQ "(]+", "", t); gsub("[\\\\\"" SQ ")]+$", "", t)
+  return t
+}
+function mask_userinfo(t,   a, k, st, ui) {  # user:password@host without scheme -> ***@host
+  if (index(t, "://")) return t
+  a = 0; for (k = length(t); k > 0; k--) if (substr(t, k, 1) == "@") { a = k; break }
+  if (!a) return t
+  st = 1
+  for (k = a - 1; k > 0; k--) if (index("=\"(,;" SQ, substr(t, k, 1))) { st = k + 1; break }
+  ui = substr(t, st, a - st)
+  if (ui ~ /^[A-Za-z0-9_.%+-]+:/) return substr(t, 1, st - 1) "***" substr(t, a)
+  return t
+}
+function mask_text(s,   out, i, j, n, tok, bare, k, e, last, name, v, q, nxt, l) {
+  # NAME=value / NAME=<quote>v<quote> (single, double, \" quotes) with a secret-like NAME at any "=" of a
+  # word (ODOO_ARGS=--db_password=x), the word after a secret option (--db_password x, -a x,
+  # ODOO_ARGS=--db_password x), -p<value>, user:password@host
   out = ""; n = length(s); i = 1; nxt = 0
   while (i <= n) {
-    if (substr(s, i, 1) == " ") { out = out " "; i++; continue }
-    j = i; while (j <= n && substr(s, j, 1) != " ") j++
-    tok = substr(s, i, j - i)
+    if ((l = sep_len(s, i)) > 0) { out = out substr(s, i, l); i += l; continue }
+    j = word_end(s, i, n); tok = substr(s, i, j - i); bare = unquote(tok)
     if (nxt) {
       nxt = 0; q = quote_at(s, i)
       if (q != "") { out = out "***"; i = qend(s, i + length(q), q); continue }
       out = out "***"; i = j; continue
     }
-    if (is_flag(tok)) { out = out tok; nxt = 1; i = j; continue }
-    if (tok ~ /^-p[^-=]/) { out = out "-p***"; i = j; continue }
-    e = index(tok, "=")
-    if (e > 0) {
-      name = substr(tok, 1, e - 1); sub(/.*[^A-Za-z0-9_.-]/, "", name)
-      if (name != "" && secret_name(name)) {
-        out = out substr(s, i, e); v = i + e; q = quote_at(s, v)
-        if (q != "") { out = out q "***" q; i = qend(s, v + length(q), q); continue }
-        out = out "***"; i = j; continue
-      }
-      if (is_flag(substr(tok, e + 1))) { out = out tok; nxt = 1; i = j; continue }
+    if (is_flag(bare)) { out = out tok; nxt = 1; i = j; continue }
+    if (bare ~ /^-p[^-=]/) { out = out substr(tok, 1, index(tok, "-p") + 1) "***"; i = j; continue }
+    e = 0; last = 0
+    for (k = 1; k <= length(tok); k++) {
+      if (substr(tok, k, 1) == "\\") { k++; continue }
+      if (substr(tok, k, 1) != "=") continue
+      last = k
+      name = substr(tok, 1, k - 1); sub(/.*[^A-Za-z0-9_.-]/, "", name)
+      if (name != "" && secret_name(name)) { e = k; break }
     }
-    out = out tok; i = j
+    if (e) {
+      out = out substr(s, i, e); v = i + e; q = quote_at(s, v)
+      if (q != "") { out = out q "***" q; i = qend(s, v + length(q), q); continue }
+      out = out "***"; i = j; continue
+    }
+    if (last && is_flag(unquote(substr(tok, last + 1)))) { out = out tok; nxt = 1; i = j; continue }
+    out = out mask_userinfo(tok); i = j
   }
   return out
 }
 function mask_url(s,   out, k, r, e, m, a, c) {
-  # scheme://user:password@host -> scheme://***@host, up to the LAST @ before a blank or quote
+  # scheme://userinfo@host -> scheme://***@host (token or user:password), up to the LAST @
+  # before a blank or quote
   out = ""
   while ((k = index(s, "://")) > 0) {
     out = out substr(s, 1, k + 2); s = substr(s, k + 3)
@@ -436,7 +479,7 @@ function mask_url(s,   out, k, r, e, m, a, c) {
     while (e <= m) { c = substr(s, e, 1); if (c == " " || c == "\t" || c == SQ || c == "\"" || c == "<" || c == ">") break; e++ }
     r = substr(s, 1, e - 1); a = 0
     for (k = length(r); k > 0; k--) if (substr(r, k, 1) == "@") { a = k; break }
-    if (a > 0 && index(substr(r, 1, a - 1), ":") > 0) { out = out "***"; s = substr(s, a) }
+    if (a > 1) { out = out "***"; s = substr(s, a) }
   }
   return out s
 }
@@ -529,11 +572,25 @@ json_pick() {  # json_pick PATTERNS < JSON -> compact JSON keeping only the memb
 
 # ----------------------------------------------------------------------------- zerok
 ZEROK_DIR=/opt/apps/myc-deploy
-compose_filter() {  # stdin compose.yml -> stdout without secret keys (and their nested block)
-  local line stripped item key indent drop=-1
+compose_filter() {  # stdin YAML (compose.yml, repos.yaml) -> stdout without secret keys: a
+                    # secret key with a value (or a | > block) is dropped with its nested block; a
+                    # secret key without value is kept only when its block is a mapping (its
+                    # children are filtered in turn), else dropped with its block
+  local line stripped item key indent rest drop=-1 hold="" hold_indent=-1
   while IFS= read -r line || [ -n "$line" ]; do
     stripped="${line#"${line%%[![:space:]]*}"}"
     indent=$(( ${#line} - ${#stripped} ))
+    if [ -n "$hold" ]; then
+      if [ -z "$stripped" ]; then continue; fi
+      if [ $indent -gt $hold_indent ]; then
+        if [[ $stripped != "- "* && $stripped =~ ^[\"\']?[A-Za-z0-9_.-]+[\"\']?:([[:space:]]|$) ]]; then
+          printf '%s\n' "$hold"
+        else
+          drop=$hold_indent
+        fi
+      fi
+      hold=""
+    fi
     if [ $drop -ge 0 ]; then
       if [ -z "$stripped" ] || [ $indent -gt $drop ]; then continue; fi
       drop=-1
@@ -541,7 +598,12 @@ compose_filter() {  # stdin compose.yml -> stdout without secret keys (and their
     item="${stripped#- }"
     if [[ $item =~ ^[\"\']?([A-Za-z0-9_.-]+)[\"\']?:([[:space:]]|$) ]]; then
       key="${BASH_REMATCH[1]}"
-      if is_secret_name "$key"; then drop=$indent; continue; fi
+      if is_secret_name "$key"; then
+        rest="$(trim "${item#*:}")"; rest="$(trim "${rest%%#*}")"
+        if [ -z "$rest" ] && [[ $stripped != "- "* ]]; then hold="$line"; hold_indent=$indent
+        else drop=$indent; fi
+        continue
+      fi
     fi
     printf '%s\n' "$line"
   done | text_mask
@@ -985,9 +1047,9 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
     done < <(printf '%s' "${mods[$d]:-}" | LC_ALL=C sort -u)
     addons+="${addons:+, }$(json_str "$d"): [$m]"
   done
-  # repos.yaml as is, secrets masked (text_mask)
+  # repos.yaml as is, secret keys dropped and secrets masked (compose_filter)
   yaml="$(dk exec "$id" cat /opt/odoo/custom/src/repos.yaml)" || yaml=""
-  [ -n "$yaml" ] && yaml="$(printf '%s\n' "$yaml" | text_mask)"
+  [ -n "$yaml" ] && yaml="$(printf '%s\n' "$yaml" | compose_filter)"
   # git repositories: in the container, else on the host for the bind-mounted ones
   binds="$(binds_of "$flat")"
   while IFS= read -r line; do

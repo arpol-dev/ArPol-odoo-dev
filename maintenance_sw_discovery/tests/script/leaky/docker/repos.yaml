@@ -4,3 +4,10 @@
     other: postgres://u:pa/LEAK25@h
   merges:
     - origin 17.0
+./private-addons:
+  remotes:
+    origin: https://ghp_LEAK31@github.com/x/private.git
+  token: LEAK32
+  auth:
+    password: LEAK33
+  target: origin 17.0

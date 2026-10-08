@@ -22,7 +22,10 @@
             "x; PGPASSWORD='LEAK04' psql",
             "y; DB_PASSWORD=\"LEAK05\" z",
             "mysql -uroot -pLEAK12",
-            "redis-cli -a LEAK13 ping"
+            "redis-cli -a LEAK13 ping",
+            "EXTRA=\"--db_password=LEAK34 --workers=2\"",
+            "--DB_PASSWORD LEAK38\n--db_password LEAK39",
+            "--db_password\tLEAK40"
         ],
         "State": {
             "Status": "running",
@@ -48,7 +51,16 @@
                 "MaximumRetryCount": 0
             }
         },
-        "Mounts": [],
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/srv/addons",
+                "Destination": "/mnt",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ],
         "Config": {
             "Hostname": "0d0000000001",
             "Env": [
@@ -58,7 +70,11 @@
                 "SMTP_PWD=LEAK15",
                 "HTTP_AUTH=LEAK16",
                 "GIT_AUTHOR_NAME=Armand",
-                "PWD=/srv"
+                "PWD=/srv",
+                "ODOO_ARGS2=--db_password=LEAK30",
+                "GIT_URL=https://LEAK36@github.com/a.git",
+                "DSN=u:LEAK42@db:5432/x",
+                "CONTACT=admin@example.com"
             ],
             "Cmd": [
                 "odoo",

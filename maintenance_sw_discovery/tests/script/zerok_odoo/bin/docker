@@ -5,6 +5,10 @@ D="$SCENARIO_DIR/docker"
 ODOO=a1b2c3d4e5f6
 PG=b2c3d4e5f6a7
 fail() { echo "docker stub: unexpected call: docker $*" >&2; exit 1; }
+# STUB_DOCKER_ROOT_ONLY=1: the daemon socket needs root (sudo stubs set STUB_AS_ROOT=1)
+if [ -n "${STUB_DOCKER_ROOT_ONLY:-}" ] && [ "${STUB_AS_ROOT:-}" != 1 ]; then
+  echo "permission denied while trying to connect to the Docker daemon socket" >&2; exit 1
+fi
 
 case "$1" in
   version) [ "$*" = "version --format {{.Server.Version}}" ] && { echo 20.10.24; exit 0; }; fail "$@" ;;

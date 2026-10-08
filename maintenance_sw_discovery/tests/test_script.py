@@ -526,6 +526,9 @@ class TestDiscoverScript(BaseCase):
             'y; DB_PASSWORD="***" z',
             "mysql -uroot -p***",
             "redis-cli -a *** ping",
+            'EXTRA="--db_password=*** --workers=2"',
+            "--DB_PASSWORD ***\n--db_password ***",
+            "--db_password\t***",
         ])
         self.assertEqual(odoo["Config"]["Cmd"], ["odoo", "--db_password", "***"])
         self.assertEqual(odoo["Config"]["Env"], [
@@ -536,6 +539,10 @@ class TestDiscoverScript(BaseCase):
             "HTTP_AUTH=***",
             "GIT_AUTHOR_NAME=Armand",
             "PWD=/srv",
+            "ODOO_ARGS2=--db_password=***",
+            "GIT_URL=https://***@github.com/a.git",
+            "DSN=***@db:5432/x",
+            "CONTACT=admin@example.com",
         ])
         self.assertEqual(redis["Args"], ["redis-server", "--requirepass", "***"])
         # Reduced objects: no Healthcheck, health log, binds, other labels, image history.
@@ -557,8 +564,20 @@ class TestDiscoverScript(BaseCase):
         compose = self.data(sections, "zerok")["compose_yml"]
         self.assertIn("postgres://***@db/x", compose)
         self.assertIn("PGPASSWORD='***' psql", compose)
+        self.assertIn("DSN: ***@db:5432/x", compose)
         self.assertEqual(self.data(sections, "zerok")["services"][0]["command"],
-                         ["--db_password", "***", "PGPASSWORD=***", "--workers=2"])
+                         ["--db_password", "***", "PGPASSWORD=***", "--workers=2",
+                          "ODOO_ARGS=--db_password=***"])
+        odoo_instance = self.data(sections, "odoo")["instances"][0]
+        self.assertEqual(odoo_instance["mount_repos"], [{
+            "path": "/mnt/r1", "url": "https://***@gitlab.com/r1.git", "branch": "main",
+            "commit": "cafecafecafecafecafecafecafecafecafecafe",
+        }])
+        # repos.yaml: secret keys dropped, the repository block itself kept
+        repos_yaml = odoo_instance["repos_yaml"]
+        self.assertIn("./private-addons:", repos_yaml)
+        self.assertIn("origin: https://***@github.com/x/private.git", repos_yaml)
+        self.assertIn("  auth:\n  target: origin 17.0", repos_yaml)  # password: dropped
 
     def test_leaky_odoo_command_line(self):
         """-c, --db_host and -r of the command line win over the defaults and odoo.conf."""
@@ -591,3 +610,27 @@ class TestDiscoverScript(BaseCase):
         for name in ("docker", "odoo"):
             self.assertEqual(sections[name]["status"], "skipped", name)
             self.assertIn("password", sections[name]["reason"])
+        # sudo refusing the command itself: "not allowed"
+        denied = ("#!/usr/bin/env bash\n"
+                  "echo 'Sorry, user u is not allowed to execute this as root.' >&2\nexit 1\n")
+        proc, _leftovers = run_raw("docker_denied", args=["--sudo"], extra_bin={"sudo": denied})
+        sections = json.loads(proc.stdout.decode())["sections"]
+        self.assertEqual(sections["docker"]["status"], "skipped")
+        self.assertIn("not allowed", sections["docker"]["reason"])
+
+    def test_sudo_least_privilege(self):
+        """sudoers allowing docker only (no `true`, no probe): docker reached through sudo -n."""
+        sudo = ("#!/usr/bin/env bash\n"
+                "[ \"$1\" = -n ] || exit 1\nshift\n"
+                "case \"$1\" in docker) STUB_AS_ROOT=1 exec \"$@\" ;; esac\n"
+                "echo 'sudo: a password is required' >&2\nexit 1\n")
+        uid = "#!/usr/bin/env bash\necho 1000\n"
+        proc, _leftovers = run_raw(
+            "zerok_odoo", args=["--sudo"], extra_env={"STUB_DOCKER_ROOT_ONLY": "1"},
+            extra_bin={"sudo": sudo, "id": uid},
+        )
+        sections = json.loads(proc.stdout.decode())["sections"]
+        self.assertEqual(len(self.data(sections, "docker")["containers"]), 3)
+        odoo = self.data(sections, "odoo")["instances"][0]
+        self.assertEqual(odoo["databases"]["status"], "ok")
+        self.assertEqual(self.data(sections, "platforms")["docker"], {"version": "20.10.24"})
