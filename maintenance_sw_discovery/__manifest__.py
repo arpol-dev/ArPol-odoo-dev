@@ -10,8 +10,14 @@ Maintenance - Server Discovery
 ==============================
 
 A read-only bash script (static/discover.sh) describes a server as JSON: machine, operating
-system, platforms (Proxmox VE, 0k, Cloudron, Docker), containers and Odoo instances. The
-result is meant to be imported into the software inventory.
+system, platforms (Proxmox VE, 0k, Cloudron, Docker), containers and Odoo instances.
+
+The importer turns such a file into a plan (what is created, updated, unchanged or missing),
+then applies it: operating system, Proxmox VE and its guests, 0k stack, Cloudron instance and
+applications, containers with their image, mounts and git components, Odoo databases and
+installed modules linked to the component that provides them. Every discovered object keeps a
+discovery key, so that a new discovery of the same server updates the tree instead of
+duplicating it; manual entries (name, notes, forced host or customer) are kept.
 """,
     "author": "Armand Polmard",
     "website": "https://arpol.fr",

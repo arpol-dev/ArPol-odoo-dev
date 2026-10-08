@@ -1,0 +1,489 @@
+{
+ "schema_version": 1,
+ "script_version": "1.0.0",
+ "collected_at": "2026-10-08T18:21:18Z",
+ "sections": {
+  "machine": {
+   "status": "ok",
+   "data": {
+    "hostname": "arpol",
+    "machine_id": "7c1e2d3f4a5b6c7d8e9f0a1b2c3d4e5f",
+    "ips": [
+     {
+      "address": "192.168.1.20",
+      "family": "inet",
+      "interface": "eth0"
+     },
+     {
+      "address": "2001:db8::20",
+      "family": "inet6",
+      "interface": "eth0"
+     }
+    ],
+    "virtualization": "vm"
+   }
+  },
+  "os": {
+   "status": "ok",
+   "data": {
+    "id": "debian",
+    "version_id": "10",
+    "version_codename": "buster",
+    "pretty_name": "Debian GNU/Linux 10 (buster)",
+    "kernel": "6.1.0-25-amd64",
+    "package_manager": "dpkg"
+   }
+  },
+  "platforms": {
+   "status": "ok",
+   "data": {
+    "proxmox": null,
+    "zerok": {
+     "path": "/opt/apps/myc-deploy",
+     "compose": true
+    },
+    "cloudron": null,
+    "docker": {
+     "version": "20.10.24"
+    }
+   }
+  },
+  "proxmox": {
+   "status": "skipped",
+   "reason": "not a Proxmox host"
+  },
+  "zerok": {
+   "status": "ok",
+   "data": {
+    "path": "/opt/apps/myc-deploy",
+    "services": [
+     {
+      "name": "odoo-v18",
+      "charm": "odoo-tecnativa",
+      "image": "docker.0k.io/mirror/odoo:rc_18.0-ARPOL-ODOO-DEV-18.0",
+      "command": [
+       "--workers=4"
+      ],
+      "volumes": [
+       "/srv/datastore/data/odoo-v18/addons:/opt/odoo/auto/dev:rw"
+      ]
+     },
+     {
+      "name": "postgres",
+      "charm": null,
+      "image": "docker.0k.io/postgres:16.0-myc",
+      "command": [],
+      "volumes": []
+     }
+    ],
+    "parse_warnings": 0
+   }
+  },
+  "cloudron": {
+   "status": "skipped",
+   "reason": "not a Cloudron server"
+  },
+  "docker": {
+   "status": "ok",
+   "data": {
+    "version": "20.10.24",
+    "containers": [
+     {
+      "name": "myc_odoo-v18_1",
+      "inspect": {
+       "Id": "a1b2c3d4e5f60000000000000000000000000000000000000000000000000001",
+       "Created": "2026-09-30T08:00:00.123456789Z",
+       "Path": "/opt/odoo/common/entrypoint",
+       "Args": [
+        "odoo",
+        "--addons-path=/opt/odoo/auto/dev/ArPol-odoo-dev, /opt/odoo/auto/addons",
+        "--workers=4",
+        "--db_password=***"
+       ],
+       "State": {
+        "Status": "running",
+        "Running": true,
+        "Pid": 4242,
+        "StartedAt": "2026-09-30T08:00:01.5Z"
+       },
+       "Image": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+       "Name": "/myc_odoo-v18_1",
+       "RestartCount": 0,
+       "HostConfig": {
+        "RestartPolicy": {
+         "Name": "unless-stopped",
+         "MaximumRetryCount": 0
+        }
+       },
+       "Mounts": [
+        {
+         "Type": "bind",
+         "Source": "/srv/datastore/data/odoo-v18/addons",
+         "Destination": "/opt/odoo/auto/dev",
+         "Mode": "rw",
+         "RW": true,
+         "Propagation": "rprivate"
+        },
+        {
+         "Type": "volume",
+         "Name": "myc_odoo-v18-data",
+         "Source": "/var/lib/docker/volumes/myc_odoo-v18-data/_data",
+         "Destination": "/var/lib/odoo",
+         "Driver": "local",
+         "Mode": "z",
+         "RW": true,
+         "Propagation": ""
+        }
+       ],
+       "Config": {
+        "Hostname": "a1b2c3d4e5f6",
+        "User": "odoo",
+        "Env": [
+         "PGHOST=postgres",
+         "PGUSER=odoo-v18",
+         "PGPASSWORD=***",
+         "ADMIN_PASSWORD=***",
+         "smtp_password=***",
+         "Api_Token=***",
+         "OPENERP_SERVER=/opt/odoo/auto/odoo.conf",
+         "ODOO_VERSION=18.0",
+         "PATH=/usr/local/bin:/usr/bin:/bin",
+         "DB_FILTER=^arpol$"
+        ],
+        "Cmd": [
+         "odoo",
+         "--addons-path=/opt/odoo/auto/dev/ArPol-odoo-dev, /opt/odoo/auto/addons",
+         "--workers=4",
+         "--db_password=***"
+        ],
+        "Image": "docker.0k.io/mirror/odoo:rc_18.0-ARPOL-ODOO-DEV-18.0",
+        "Entrypoint": [
+         "/opt/odoo/common/entrypoint"
+        ],
+        "Labels": {
+         "com.docker.compose.project": "myc",
+         "com.docker.compose.service": "odoo-v18"
+        }
+       },
+       "NetworkSettings": {
+        "Networks": {
+         "myc_default": {
+          "Aliases": [
+           "odoo-v18",
+           "a1b2c3d4e5f6"
+          ],
+          "NetworkID": "9f8e7d6c5b4a",
+          "IPAddress": "172.18.0.3"
+         }
+        }
+       }
+      },
+      "image_inspect": {
+       "Id": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+       "RepoTags": [
+        "docker.0k.io/mirror/odoo:rc_18.0-ARPOL-ODOO-DEV-18.0"
+       ],
+       "RepoDigests": [
+        "docker.0k.io/mirror/odoo@sha256:f46e1a70b686d85611004e4da6456e71680ab0f22f4ba801de95b54fbd90757e"
+       ],
+       "Created": "2026-09-29T21:00:00Z",
+       "Config": {
+        "Env": [
+         "ODOO_VERSION=18.0",
+         "GEOIP_LICENSE_KEY=***"
+        ],
+        "Labels": {
+         "org.opencontainers.image.version": "18.0"
+        }
+       },
+       "Architecture": "amd64",
+       "Os": "linux",
+       "Size": 2147483648
+      }
+     },
+     {
+      "name": "myc_postgres_1",
+      "inspect": {
+       "Id": "b2c3d4e5f6a70000000000000000000000000000000000000000000000000002",
+       "Path": "docker-entrypoint.sh",
+       "Args": [
+        "postgres"
+       ],
+       "State": {
+        "Status": "running",
+        "Running": true
+       },
+       "Image": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+       "Name": "/myc_postgres_1",
+       "Mounts": [
+        {
+         "Type": "bind",
+         "Source": "/srv/datastore/data/postgres/var/lib/postgresql",
+         "Destination": "/var/lib/postgresql",
+         "Mode": "rw",
+         "RW": true,
+         "Propagation": "rprivate"
+        }
+       ],
+       "Config": {
+        "Hostname": "b2c3d4e5f6a7",
+        "Env": [
+         "POSTGRES_PASSWORD=***",
+         "PGDATA=/var/lib/postgresql/data"
+        ],
+        "Cmd": [
+         "postgres"
+        ],
+        "Image": "docker.0k.io/postgres:16.0-myc",
+        "Entrypoint": [
+         "docker-entrypoint.sh"
+        ],
+        "Labels": {
+         "com.docker.compose.service": "postgres"
+        }
+       },
+       "NetworkSettings": {
+        "Networks": {
+         "myc_default": {
+          "Aliases": [
+           "postgres",
+           "b2c3d4e5f6a7"
+          ],
+          "NetworkID": "9f8e7d6c5b4a",
+          "IPAddress": "172.18.0.2"
+         }
+        }
+       }
+      },
+      "image_inspect": {
+       "Id": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+       "RepoTags": [
+        "docker.0k.io/postgres:16.0-myc"
+       ],
+       "RepoDigests": [],
+       "Config": {
+        "Env": [
+         "PG_MAJOR=16"
+        ]
+       }
+      }
+     },
+     {
+      "name": "myc_frontend_1",
+      "inspect": {
+       "Id": "c3d4e5f6a7b80000000000000000000000000000000000000000000000000003",
+       "Path": "httpd-foreground",
+       "Args": [],
+       "State": {
+        "Status": "running",
+        "Running": true
+       },
+       "Image": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+       "Name": "/myc_frontend_1",
+       "Mounts": [],
+       "Config": {
+        "Hostname": "c3d4e5f6a7b8",
+        "Env": null,
+        "Cmd": [
+         "httpd-foreground"
+        ],
+        "Image": "docker.0k.io/apache:2.4",
+        "Entrypoint": null
+       },
+       "NetworkSettings": {
+        "Networks": {
+         "myc_default": {
+          "Aliases": [
+           "frontend"
+          ],
+          "NetworkID": "9f8e7d6c5b4a",
+          "IPAddress": "172.18.0.4"
+         }
+        }
+       }
+      },
+      "image_inspect": {
+       "Id": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+       "RepoTags": [
+        "docker.0k.io/apache:2.4"
+       ],
+       "RepoDigests": [],
+       "Config": {
+        "Env": null
+       }
+      }
+     }
+    ]
+   }
+  },
+  "odoo": {
+   "status": "ok",
+   "data": {
+    "instances": [
+     {
+      "container": "myc_odoo-v18_1",
+      "version": "18.0",
+      "addons_path": [
+       "/opt/odoo/auto/dev/ArPol-odoo-dev",
+       "/opt/odoo/auto/addons"
+      ],
+      "addons": {
+       "/opt/odoo/auto/dev/ArPol-odoo-dev": [
+        "maintenance_sw_base",
+        "maintenance_sw_odoo"
+       ],
+       "/opt/odoo/auto/addons": [
+        "base",
+        "maintenance_sw_base",
+        "ovh_api",
+        "sale"
+       ]
+      },
+      "repos_spec": {
+       "items": [
+        {
+         "name": "odoo",
+         "path": "/opt/odoo/custom/src/odoo",
+         "target": {
+          "remote": "origin",
+          "ref": "18.0"
+         },
+         "remotes": {
+          "origin": "https://github.com/OCA/OCB.git"
+         },
+         "upstreams": {},
+         "merges": [
+          "origin 18.0"
+         ]
+        },
+        {
+         "name": "private-addons",
+         "path": "/opt/odoo/custom/src/private-addons",
+         "target": null,
+         "remotes": {
+          "origin": "https://***@git.example.com/arpol/private.git"
+         },
+         "upstreams": {},
+         "merges": [
+          "origin 18.0"
+         ]
+        },
+        {
+         "name": "ArPol-odoo-dev",
+         "path": "/opt/odoo/custom/src/ArPol-odoo-dev",
+         "target": {
+          "remote": "origin",
+          "ref": "18.0"
+         },
+         "remotes": {
+          "origin": "https://git.0k.io/mirror/arpol/ArPol-odoo-dev.git"
+         },
+         "upstreams": {
+          "origin": "https://github.com/arpol/ArPol-odoo-dev.git"
+         },
+         "merges": [
+          "origin 18.0"
+         ]
+        }
+       ],
+       "parse_warnings": 0
+      },
+      "repos": [
+       {
+        "path": "/opt/odoo/custom/src/private-addons",
+        "url": "https://***@git.example.com/arpol/private.git",
+        "branch": "18.0",
+        "commit": "0123456789abcdef0123456789abcdef01234567"
+       }
+      ],
+      "mount_repos": [
+       {
+        "path": "/opt/odoo/auto/dev/ArPol-odoo-dev",
+        "url": "https://github.com/arpol/ArPol-odoo-dev.git",
+        "branch": "18.0-maintenance-sw",
+        "commit": "4444dddd4444dddd4444dddd4444dddd4444dddd"
+       }
+      ],
+      "addons_links": [
+       {
+        "link": "/opt/odoo/auto/addons/base",
+        "target": "/opt/odoo/custom/src/odoo/odoo/addons/base"
+       },
+       {
+        "link": "/opt/odoo/auto/addons/maintenance_sw_base",
+        "target": "/opt/odoo/custom/src/ArPol-odoo-dev/maintenance_sw_base"
+       },
+       {
+        "link": "/opt/odoo/auto/addons/ovh_api",
+        "target": "/opt/odoo/auto/dev/ovh_connector/ovh_api"
+       },
+       {
+        "link": "/opt/odoo/auto/addons/sale",
+        "target": "/opt/odoo/custom/src/odoo/addons/sale"
+       }
+      ],
+      "runtime_links": [
+       {
+        "link": "/opt/odoo/auto/addons/ovh_api",
+        "target": "/opt/odoo/auto/dev/ovh_connector/ovh_api"
+       }
+      ],
+      "config": {
+       "db_host": "postgres",
+       "db_port": "5432",
+       "db_name": "False",
+       "dbfilter": "^arpol$",
+       "data_dir": "/var/lib/odoo",
+       "addons_path": "/opt/odoo/auto/addons"
+      },
+      "databases": {
+       "status": "ok",
+       "items": [
+        {
+         "name": "arpol",
+         "modules": [
+          {
+           "name": "base",
+           "version": "18.0.1.3",
+           "state": "installed"
+          },
+          {
+           "name": "maintenance_sw_base",
+           "version": "18.0.1.0.0",
+           "state": "to_upgrade"
+          },
+          {
+           "name": "old_module",
+           "version": null,
+           "state": "to_remove"
+          },
+          {
+           "name": "sale",
+           "version": "18.0.1.2",
+           "state": "installed"
+          }
+         ]
+        },
+        {
+         "name": "arpol_test",
+         "modules": [
+          {
+           "name": "base",
+           "version": "18.0.1.3",
+           "state": "installed"
+          },
+          {
+           "name": "ovh_api",
+           "version": "18.0.1.5.0",
+           "state": "installed"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ }
+}
