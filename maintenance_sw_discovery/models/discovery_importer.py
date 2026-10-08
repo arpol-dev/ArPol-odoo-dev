@@ -42,7 +42,9 @@ class PlanState:
         self.seen_hosts = set()
         self.cloudron_app_containers = set()
         self.image_components = {}  # image key -> [(path, component key)]
+        self.core_components = {}  # image key -> component key of the Odoo server
         self.container_components = {}  # container key -> [(path, component key)]
+        self.container_images = {}  # container key -> image key
 
 
 class DiscoveryImporter(models.AbstractModel):
@@ -402,7 +404,7 @@ class DiscoveryImporter(models.AbstractModel):
             parent_key, method = state.stack_key, "myc"
         else:
             parent_key, method = state.root_key, "manual"
-        image_key = self._plan_image(state, container, instance)
+        image_key = state.container_images[key] = self._plan_image(state, container, instance)
         record = self._find_equipment(state, key)
         values = {
             "install_type": "docker_container", "deployment_method_id": self._method(method),
@@ -530,15 +532,17 @@ class DiscoveryImporter(models.AbstractModel):
                 continue
             repo_key = self._plan_repository(state, url, item["upstream"])
             key = f"component:{image_key}:{path}"
+            role = tools.component_role(item["name"], url, item["upstream"])
             self._plan_op(state, key, "docker.component",
                           existing.get(path, self.env["docker.component"]), {
                               "repository_id": ref(repo_key), "ref": item["ref"] or False,
                               "commit": item["commit"] or False, "merges": item["merges"] or False,
                           }, {
-                              "image_id": ref(image_key), "path": path,
-                              "role": tools.component_role(item["name"], url, item["upstream"]),
+                              "image_id": ref(image_key), "path": path, "role": role,
                           }, label=f"{tools.repository_name(url)} — {path}", parent_key=image_key)
             components.append((path, key))
+            if role == "core":
+                state.core_components.setdefault(image_key, key)
 
     def _plan_repository(self, state, url, upstream=None):
         upstream_key = None
@@ -633,7 +637,8 @@ class DiscoveryImporter(models.AbstractModel):
             existing = {}
             if container_id:
                 existing = {d.name: d for d in Database.search([("equipment_id", "=", container_id)])}
-            resolve = self._module_resolver(state, key, instance)
+            core_key = state.core_components.get(state.container_images.get(key))
+            resolve = self._module_resolver(state, key, instance, core_key)
             seen = set()
             for database in databases.get("items") or []:
                 name = database.get("name")
@@ -677,10 +682,12 @@ class DiscoveryImporter(models.AbstractModel):
                 self._plan_missing_op(state, f"module:{db_key}:{name}", record, {"active": False},
                                       parent_key=db_key)
 
-    def _module_resolver(self, state, container_key, instance):
+    def _module_resolver(self, state, container_key, instance, core_key=None):
         """module name -> key of the component providing it: the first addons_path directory
         holding the module, followed through its link (/opt/odoo/auto/addons/<module> ->
-        /opt/odoo/custom/src/<repository>/<module>), inside the component of longest path."""
+        /opt/odoo/custom/src/<repository>/<module>), inside the component of longest path.
+        base (and the test_* modules) are in the server's own odoo/addons, which Odoo adds by
+        itself: they come from the core component (the server repository)."""
         components = state.container_components.get(container_key) or []
         addons = {d: set(mods or []) for d, mods in (instance.get("addons") or {}).items()}
         links = {
@@ -696,6 +703,8 @@ class DiscoveryImporter(models.AbstractModel):
                     real = links.get(path) or path
                     owners = [(p, k) for p, k in components if tools.is_under(real, p)]
                     return max(owners, key=lambda pk: len(pk[0]))[1] if owners else None
+            if module == "base" or module.startswith("test_"):
+                return core_key
             return None
 
         return resolve

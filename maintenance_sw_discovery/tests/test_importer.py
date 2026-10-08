@@ -158,6 +158,23 @@ class TestImporter(DiscoveryCase):
         self.assertEqual(attachment.name, "discovery-arpol-2026-10-08.json")
         self.assertEqual(json.loads(attachment.raw)["schema_version"], 1)
 
+    def test_base_module_from_the_server_directory(self):
+        """base is in the server's own odoo/addons, never in the addons_path: core component."""
+        data = self.reference()
+        instance = self.odoo_instance(data)
+        for directory in instance["addons"].values():
+            if "base" in directory:
+                directory.remove("base")
+        instance["addons_links"] = [link for link in instance["addons_links"]
+                                    if not link["link"].endswith("/base")]
+        self.Importer._apply(data)
+        odoo = self.container(ODOO)
+        core = odoo.docker_image_id.component_ids.filtered(lambda c: c.role == "core")
+        modules = odoo.odoo_database_ids.module_ids
+        self.assertEqual(modules.filtered(lambda m: m.name == "base").component_id, core)
+        # a module found nowhere (removed from the disk) has no component
+        self.assertFalse(modules.filtered(lambda m: m.name == "old_module").component_id)
+
     # ------------------------------------------------------------------ re-import
     def _all_records(self, root):
         tree = self.Equipment.search([("id", "child_of", root.id)])
