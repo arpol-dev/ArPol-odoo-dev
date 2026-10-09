@@ -42,6 +42,7 @@ class PlanState:
         self.zerok_services = set()
         # which sections ran fine: only their objects may be marked missing
         self.platforms_ok = self.docker_ok = self.pve_guests_ok = self.cloudron_apps_ok = False
+        self.odoo_ok = False
         self.seen_equipment = set()
         self.seen_hosts = set()
         self.cloudron_app_containers = set()
@@ -429,7 +430,9 @@ class DiscoveryImporter(models.AbstractModel):
         if docker is None:
             return
         state.docker_ok = True
-        odoo = tools.section(state.data, "odoo") or {}
+        odoo = tools.section(state.data, "odoo")
+        state.odoo_ok = odoo is not None
+        odoo = odoo or {}
         instances = {i.get("container"): i for i in odoo.get("instances") or []}
         for container in docker.get("containers") or []:
             if container.get("name"):
@@ -477,7 +480,9 @@ class DiscoveryImporter(models.AbstractModel):
         lines = [
             f"{link['link']} -> {link.get('target') or '?'}"
             for link in (instance or {}).get("runtime_links") or []
-            if link.get("link") and not re.search(re.escape(link["link"]) + r"(\s|$)", current)
+            if link.get("link") and not re.search(
+                r"(?<![^\s(\[\"'])" + re.escape(link["link"]) + r"(?=[\s.,;:)\]\"']|$)", current
+            )
         ]
         if not lines:
             return None
@@ -675,20 +680,34 @@ class DiscoveryImporter(models.AbstractModel):
             }, label=f"{tools.repository_name(url)} — {path}", parent_key=mount_key)
             components.append((path, key))
         state.container_components[container_key] = components
-        self._plan_vanished_mounts(state, container_key, existing, mounts)
+        self._plan_vanished_mounts(state, container_key, existing, mounts, inspect, instance)
 
-    def _plan_vanished_mounts(self, state, container_key, existing, mounts):
+    def _plan_vanished_mounts(self, state, container_key, existing, mounts, inspect, instance):
         """Mounts gone from the container, and checkouts gone from a mount: deleted (a stale
-        mount component would still override an image component)."""
-        kept = {dest for dest, _key, _record in mounts}
-        for dest, record in existing.items():
-            if dest not in kept:
-                self._plan_missing_op(state, f"mount:{container_key}:{dest}", record, {},
-                                      parent_key=container_key)
-        for _dest, mount_key, record in mounts:
+        mount component would still override an image component). Only when the list that
+        would hold them is known to be complete: the container's Mounts (present, even empty),
+        and the checkouts of a mount whose source the script could read (mount_repos_status ok)
+        in the Odoo instance of the container."""
+        if "Mounts" in inspect:
+            kept = {dest for dest, _key, _record in mounts}
+            for dest, record in existing.items():
+                if dest not in kept:
+                    self._plan_missing_op(state, f"mount:{container_key}:{dest}", record, {},
+                                          parent_key=container_key)
+        if not (state.odoo_ok and instance):
+            return
+        read = {
+            status.get("destination") for status in instance.get("mount_repos_status") or []
+            if status.get("status") == "ok"
+        }
+        # listed without being readable (no url): present, kept as is
+        listed = {repo.get("path") for repo in instance.get("mount_repos") or []}
+        for dest, mount_key, record in mounts:
+            if dest not in read:
+                continue
             for component in record.component_ids:
                 key = f"component:{mount_key}:{component.path}"
-                if key not in state.by_key:
+                if key not in state.by_key and component.path not in listed:
                     self._plan_missing_op(state, key, component, {}, parent_key=mount_key)
 
     def _plan_cloudron_apps(self, state):

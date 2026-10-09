@@ -393,6 +393,76 @@ class TestImporterFixes(DiscoveryCase):
         self.assertFalse(mounted.exists())
         self.assertEqual(len(odoo.mount_ids), 2)
 
+    def _mounted(self):
+        return self.container(ODOO).mount_ids.component_ids
+
+    def test_mount_components_kept_when_odoo_unknown(self):
+        """No Odoo data (section failed, or no instance for the container): no checkout listed,
+        nothing deleted."""
+        self.Importer._apply(REFERENCE_RAW)
+        mounted = self._mounted()
+        self.assertTrue(mounted)
+        for odoo_section in ({"status": "error", "message": "boom"},
+                             {"status": "ok", "data": {"instances": []}}):
+            data = self.reference()
+            data["sections"]["odoo"] = odoo_section
+            plan = self.Importer._plan(data)
+            self.assertFalse([op for op in plan if op["action"] == "missing"], odoo_section)
+            self.Importer._apply(data)
+            self.assertTrue(mounted.exists())
+
+    def test_mount_components_kept_when_source_unread(self):
+        """Only the checkouts of a mount whose source was read are deleted when gone."""
+        data = self.reference()
+        inspect = self.docker_container(data, ODOO)["inspect"]
+        inspect["Mounts"].append({"Type": "bind", "Source": "/srv/other", "Destination": "/opt/other",
+                                  "Mode": "rw", "RW": True})
+        instance = self.odoo_instance(data)
+        instance["mount_repos"] += [
+            {"path": "/opt/other/a", "url": "https://h/a.git", "branch": "x", "commit": "1"},
+            {"path": "/opt/other/b", "url": "https://h/b.git", "branch": "x", "commit": "2"},
+        ]
+        instance["mount_repos_status"].append(
+            {"destination": "/opt/other", "status": "ok", "reason": None})
+        self.Importer._apply(data)
+        odoo = self.container(ODOO)
+        components = {c.path: c for c in odoo.mount_ids.component_ids}
+        self.assertEqual(len(components), 3)
+
+        # dev source unreadable; /opt/other read: a gone, b present but unreadable (no url)
+        instance["mount_repos"] = [
+            {"path": "/opt/other/b", "url": None, "branch": None, "commit": None},
+        ]
+        instance["mount_repos_status"] = [
+            {"destination": "/opt/odoo/auto/dev", "status": "skipped", "reason": "root"},
+            {"destination": "/opt/other", "status": "ok", "reason": None},
+        ]
+        plan = {op["key"]: op for op in self.Importer._plan(data)}
+        missing = [key for key, op in plan.items() if op["action"] == "missing"]
+        self.assertEqual(missing, [f"component:mount:container:{MID}:{ODOO}:/opt/other:/opt/other/a"])
+        self.Importer._apply(data)
+        self.assertFalse(components["/opt/other/a"].exists())
+        self.assertTrue(components["/opt/other/b"].exists())
+        self.assertTrue(components["/opt/odoo/auto/dev/ArPol-odoo-dev"].exists())
+
+        # an older file without mount_repos_status: nothing deleted
+        del instance["mount_repos_status"]
+        instance["mount_repos"] = []
+        self.assertFalse([op for op in self.Importer._plan(data) if op["action"] == "missing"])
+
+    def test_mounts_kept_without_mounts_in_inspect(self):
+        self.Importer._apply(REFERENCE_RAW)
+        mounts = self.container(ODOO).mount_ids
+        data = self.reference()
+        del self.docker_container(data, ODOO)["inspect"]["Mounts"]
+        plan = self.Importer._plan(data)
+        self.assertFalse([op for op in plan if op["action"] == "missing"])
+        self.Importer._apply(data)
+        self.assertEqual(self.container(ODOO).mount_ids, mounts)
+        # inspect failed altogether (null): same
+        self.docker_container(data, ODOO)["inspect"] = None
+        self.assertFalse([op for op in self.Importer._plan(data) if op["action"] == "missing"])
+
     def test_key_of_another_company(self):
         company_a = self.env.company
         company_b = self.env["res.company"].create({"name": "Company B"})
@@ -456,6 +526,26 @@ class TestImporterFixes(DiscoveryCase):
         self.Importer._apply(data, matches={f"container:{MID}:{ODOO}": container.id})
         self.assertTrue(container.runtime_changes.endswith(
             ":\n/opt/odoo/auto/addons/ovh -> /opt/odoo/auto/dev/ovh"), container.runtime_changes)
+
+    def test_runtime_changes_link_boundaries_around(self):
+        """Not mentioned inside a longer path; mentioned before punctuation."""
+        container = self.Equipment.create({
+            "name": ODOO, "equipment_kind": "software",
+            "runtime_changes": "See /x/opt/odoo/auto/addons/a (old) and /opt/odoo/auto/addons/b.",
+        })
+        data = self.reference()
+        self.odoo_instance(data)["runtime_links"] = [
+            {"link": "/opt/odoo/auto/addons/a", "target": "/t/a"},
+            {"link": "/opt/odoo/auto/addons/b", "target": "/t/b"},
+        ]
+        self.Importer._apply(data, matches={f"container:{MID}:{ODOO}": container.id})
+        self.assertTrue(container.runtime_changes.endswith(":\n/opt/odoo/auto/addons/a -> /t/a"),
+                        container.runtime_changes)
+        for text in ("(/opt/odoo/auto/addons/a)", "/opt/odoo/auto/addons/a, then",
+                     "/opt/odoo/auto/addons/a; x", "/opt/odoo/auto/addons/a: x"):
+            container.runtime_changes = text
+            self.Importer._apply(data)
+            self.assertEqual(container.runtime_changes.count("/opt/odoo/auto/addons/a"), 1, text)
 
     def test_repository_identity(self):
         from odoo.addons.maintenance_sw_discovery.models.discovery_importer import PlanState
