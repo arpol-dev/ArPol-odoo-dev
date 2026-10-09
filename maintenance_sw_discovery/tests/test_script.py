@@ -359,14 +359,14 @@ class TestDiscoverScript(BaseCase):
             "OPENERP_SERVER=/opt/odoo/auto/odoo.conf",
             "ODOO_VERSION=18.0",
             "PATH=/usr/local/bin:/usr/bin:/bin",
-            "DB_FILTER=^arpol$",
+            "DB_FILTER=***",
         ])
         self.assertEqual(odoo["inspect"]["Args"][-1], "--db_password=***")
         self.assertEqual(odoo["inspect"]["Config"]["Cmd"][-1], "--db_password=***")
         self.assertEqual(odoo["image_inspect"]["Config"]["Env"],
                          ["ODOO_VERSION=18.0", "GEOIP_LICENSE_KEY=***"])
         self.assertEqual(containers[1]["inspect"]["Config"]["Env"],
-                         ["POSTGRES_PASSWORD=***", "PGDATA=/var/lib/postgresql/data"])
+                         ["POSTGRES_PASSWORD=***", "PGDATA=***"])
 
     def test_zerok_odoo_instance(self):
         sections = self.sections("zerok_odoo")
@@ -600,21 +600,22 @@ class TestDiscoverScript(BaseCase):
             'EXTRA="--db_password=*** --workers=2"',
             "--DB_PASSWORD ***\n--db_password ***",
             "--db_password\t***",
+            # after a secret key word (Authorization:, Bearer): masked up to the end of the item
+            "curl -H 'Authorization: ***",
+            "Bearer ***",
+            # -u / --user: user:password masked, a plain user kept
+            "-u", "***",
+            "curl -u *** http://x",
         ])
         self.assertEqual(odoo["Config"]["Cmd"], ["odoo", "--db_password", "***"])
+        # Env: every name, the value only for a short allowlist (still masked), *** otherwise
         self.assertEqual(odoo["Config"]["Env"], [
-            "ADMIN_PASSWORD=***",
-            "DATABASE_URL=postgres://***@db/x",
-            "ODOO_ARGS=--db_password ***",
-            "SMTP_PWD=***",
-            "HTTP_AUTH=***",
-            "GIT_AUTHOR_NAME=Armand",
-            "PWD=/srv",
-            "ODOO_ARGS2=--db_password=***",
-            "GIT_URL=https://***@github.com/a.git",
-            "DSN=***@db:5432/x",
-            "CONTACT=admin@example.com",
-            "IMG=odoo:17.0@sha256:abababababababababababababababababababababababababababababababab",
+            "ADMIN_PASSWORD=***", "DATABASE_URL=***", "ODOO_ARGS=***", "SMTP_PWD=***",
+            "HTTP_AUTH=***", "GIT_AUTHOR_NAME=***", "PWD=***", "ODOO_ARGS2=***", "GIT_URL=***",
+            "DSN=***", "CONTACT=***", "IMG=***",
+            "HOST=***@db", "USER=leakuser", "TZ=Europe/Paris", "PATH=/usr/local/bin:/usr/bin",
+            "DB_PW=***", "PGPWD=***", "ODOO_ADMIN_PW=***", "API_SALT=***", "GITHUB_PAT=***",
+            "SLACK_URL=***", "RCLONE_CONFIG=***", "OPTS=***", "CURL_HEADER=***", "NOVALUE",
         ])
         self.assertEqual(redis["Args"], ["redis-server", "--requirepass", "***"])
         # Reduced objects: no Healthcheck, health log, binds, other labels, image history.
@@ -631,6 +632,8 @@ class TestDiscoverScript(BaseCase):
         image = containers[0]["image_inspect"]
         self.assertNotIn("ContainerConfig", image)
         self.assertEqual(image["RepoTags"], ["odoo:17.0"])
+        self.assertEqual(image["Config"]["Env"],
+                         ["ODOO_VERSION=17.0", "PG_VERSION=16.1", "BUILD_TOKEN_FILE=***"])
         self.assertEqual(image["Config"]["Labels"], {"org.opencontainers.image.source": "https://***@h/x"})
         # compose.yml: services only; block and flow lists masked, image digest kept
         services = self.data(sections, "zerok")["services"]

@@ -148,7 +148,7 @@
          "OPENERP_SERVER=/opt/odoo/auto/odoo.conf",
          "ODOO_VERSION=18.0",
          "PATH=/usr/local/bin:/usr/bin:/bin",
-         "DB_FILTER=^arpol$"
+         "DB_FILTER=***"
         ],
         "Cmd": [
          "odoo",
@@ -229,7 +229,7 @@
         "Hostname": "b2c3d4e5f6a7",
         "Env": [
          "POSTGRES_PASSWORD=***",
-         "PGDATA=/var/lib/postgresql/data"
+         "PGDATA=***"
         ],
         "Cmd": [
          "postgres"

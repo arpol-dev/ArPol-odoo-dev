@@ -16,11 +16,15 @@
 # name, charm, image, command, volumes; repositories: name, path, target, remotes, frozen upstreams,
 # merges); docker inspect / image inspect are reduced to the members the import needs (see
 # INSPECT_KEPT, IMAGE_KEPT: no Healthcheck, health log, image history, nor labels other than
-# compose / Cloudron / OCI identification). Every value kept is then masked on its own (one argv
-# item, one Env string, one URL; MASK_AWK): NAME=value (also quoted, at any = of a word) with NAME
-# containing PASS, SECRET, TOKEN, KEY, CREDENTIAL, PRIVATE, AUTH (not AUTHOR) or _PWD; the word or
-# list item after such an option or after -w, -a, --pass, --requirepass; -p<value>; the user info
-# of URLs (up to the last @; a plain "git" user and image digests kept) and user:password@host.
+# compose / Cloudron / OCI identification). Env of containers and images: every name is kept, the
+# value only for a short allowlist (ENV_KEPT: versions, Odoo configuration path, Postgres host /
+# port / user / database, HOST, PORT, USER, LANG, TZ, PATH), NAME=*** otherwise. Every value kept
+# is then masked on its own (one argv item, one Env string, one URL; MASK_AWK): NAME=value (also
+# quoted, at any = of a word) with NAME containing PASS, SECRET, TOKEN, KEY, CREDENTIAL, PRIVATE,
+# AUTH (not AUTHOR) or _PWD; the word or list item after such an option or after -w, -a, --pass,
+# --requirepass; the rest of the item after a secret key word (Authorization:, DB_PASSWORD:,
+# Bearer); user:password after -u / --user; -p<value>; the user info of URLs (up to the last @; a
+# plain "git" user and image digests kept) and user:password@host.
 # Heuristic limits: a secret passed as a free word (positional argument, other short options
 # such as -P x), a URL whose password contains a blank or a quote, a non-URL value under a
 # repos.yaml remote, or a secret inside an upstream URL (frozen "# <remote>: <url>" comments,
@@ -384,7 +388,10 @@ collect_proxmox() {
 # \" \\ \n... escapes); masking never cuts an escape sequence.
 # Secret-like name: contains PASS, SECRET, TOKEN, KEY, CREDENTIAL, PRIVATE, AUTH (not AUTHOR) or
 # _PWD, case-insensitive. Heuristic limits: see the script header.
-MASK_AWK='BEGIN { for (_i = 1; _i < 32; _i++) { _c = sprintf("%c", _i); CTL = CTL _c; ORD[_c] = _i } }
+# Env (Config/Env of containers and images): every name is kept, the value only for the names of
+# ENV_KEPT (what the import and this script read, plus harmless ones), masked like any value.
+ENV_KEPT="PG_MAJOR|PG_VERSION|ODOO_VERSION|ODOO_RC|OPENERP_SERVER|PGHOST|PGPORT|PGUSER|PGDATABASE|HOST|PORT|USER|LANG|TZ|PATH"
+MASK_AWK='BEGIN { ENV_KEPT = "'"$ENV_KEPT"'"; for (_i = 1; _i < 32; _i++) { _c = sprintf("%c", _i); CTL = CTL _c; ORD[_c] = _i } }
 function jstr(s,   o, i, n, c) {  # JSON string literal of raw text s
   o = ""; n = length(s)
   for (i = 1; i <= n; i++) {
@@ -401,6 +408,10 @@ function jstr(s,   o, i, n, c) {  # JSON string literal of raw text s
 function secret_name(n,   u) {
   u = toupper(n); gsub(/AUTHOR_/, "_", u); sub(/AUTHOR$/, "", u)
   return u ~ /PASS|SECRET|TOKEN|KEY|CREDENTIAL|PRIVATE|AUTH|_PWD/
+}
+function user_flag(t) { return t == "-u" || t == "--user" }  # next word: user, or user:password
+function secret_word(t) {  # key word after which the rest of the item is a secret
+  return tolower(t) == "bearer" || (t ~ /^[A-Za-z0-9_.-]+:$/ && secret_name(substr(t, 1, length(t) - 1)))
 }
 function is_flag(t) {  # option whose next word is a secret
   if (t == "-w" || t == "-a" || t == "--requirepass" || t == "--pass") return 1
@@ -489,23 +500,31 @@ function mask_userinfo(t,   a, k, st, ui) {  # user:password@host without scheme
   if (ui ~ /^[A-Za-z0-9_.%+-]+:/) return substr(t, 1, st - 1) "***" substr(t, a)
   return t
 }
-function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, nxt) {
+function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, nxt, nxu) {
   # NAME=value / NAME=<quote>v<quote> (single, double, \" quotes) with a secret-like NAME at any
   # "=" of a word (ODOO_ARGS=--db_password=x); the word after a secret option (--db_password x,
-  # -a x, ODOO_ARGS=--db_password x) or after a secret key word (DB_PASSWORD: x); -p<value>;
-  # user:password@host
-  out = ""; n = length(s); i = 1; nxt = 0
+  # -a x, ODOO_ARGS=--db_password x); everything after a secret key word (Authorization: x y,
+  # DB_PASSWORD: x, Bearer x); -p<value>; user:password after -u / --user; user:password@host
+  out = ""; n = length(s); i = 1; nxt = 0; nxu = 0
   while (i <= n) {
     if ((k = sep_len(s, i, json)) > 0) { out = out substr(s, i, k); i += k; continue }
     j = word_end(s, i, n, json); tok = substr(s, i, j - i); bare = unquote(tok)
+    if (nxu) {
+      nxu = 0
+      if (index(bare, ":")) { out = out "***" tail_q(tok, out); i = j; continue }
+    }
     if (nxt) {
       nxt = 0; q = quote_at(s, i)
       if (q != "") { out = out q "***" q; i = qend(s, i + length(q), q); continue }
       out = out "***" tail_q(tok, out); i = j; continue
     }
     if (is_flag(bare)) { out = out tok; nxt = 1; i = j; continue }
-    if (bare ~ /^[A-Za-z0-9_.-]+:$/ && secret_name(substr(bare, 1, length(bare) - 1))) {
-      out = out tok; nxt = 1; i = j; continue
+    if (user_flag(bare)) { out = out tok; nxu = 1; i = j; continue }
+    if (secret_word(bare)) {
+      out = out tok
+      while (j <= n && (k = sep_len(s, j, json)) > 0) { out = out substr(s, j, k); j += k }
+      if (j <= n) out = out "***"
+      return out
     }
     if (bare ~ /^-p[^-=]/) {
       out = out substr(tok, 1, index(tok, "-p") + 1); k = value_end(s, i, n, json)
@@ -546,15 +565,22 @@ function mask_url(s,   out, k, r, e, m, a, c, h) {
   }
   return out s
 }
+function env_item(s, json,   e, n) {  # NAME=value of an Env list: the value only for ENV_KEPT
+  e = index(s, "="); if (!e) return s
+  n = substr(s, 1, e - 1)
+  if (n ~ ("^(" ENV_KEPT ")$")) return n "=" mask_url(mask_text(substr(s, e + 1), json))
+  return n "=***"
+}
 function mask_str(s, prev, path) {  # a whole JSON string; prev = previous string of the list
   if (path ~ /^(Id|Image|Config\/Image|RepoTags\/#|RepoDigests\/#)$/) return s   # image refs, ids
-  if (is_flag(prev)) return "***"
+  if (path == "Config/Env/#") return env_item(s, 1)
+  if (is_flag(prev) || (user_flag(prev) && index(s, ":"))) return "***"
   if (whole_secret(s)) return substr(s, 1, index(s, "=")) "***"
   return mask_url(mask_text(s, 1))
 }
 function mask_arg(s, prev) {  # one raw value (argv item, URL, "remote ref"...); prev = the
                               # previous item of its list
-  if (is_flag(unquote(prev))) return "***"
+  if (is_flag(unquote(prev)) || (user_flag(unquote(prev)) && index(s, ":"))) return "***"
   if (whole_secret(s)) return substr(s, 1, index(s, "=")) "***"
   return mask_url(mask_text(s, 0))
 }'

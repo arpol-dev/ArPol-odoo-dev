@@ -25,7 +25,12 @@
             "redis-cli -a LEAK13 ping",
             "EXTRA=\"--db_password=LEAK34 --workers=2\"",
             "--DB_PASSWORD LEAK38\n--db_password LEAK39",
-            "--db_password\tLEAK40"
+            "--db_password\tLEAK40",
+            "curl -H 'Authorization: Bearer abc.LEAK94' http://x",
+            "Bearer LEAK95.x",
+            "-u",
+            "admin:LEAK96",
+            "curl -u admin:LEAK97 http://x"
         ],
         "State": {
             "Status": "running",
@@ -75,7 +80,21 @@
                 "GIT_URL=https://LEAK36@github.com/a.git",
                 "DSN=u:LEAK42@db:5432/x",
                 "CONTACT=admin@example.com",
-                "IMG=odoo:17.0@sha256:abababababababababababababababababababababababababababababababab"
+                "IMG=odoo:17.0@sha256:abababababababababababababababababababababababababababababababab",
+                "HOST=u:LEAK84@db",
+                "USER=leakuser",
+                "TZ=Europe/Paris",
+                "PATH=/usr/local/bin:/usr/bin",
+                "DB_PW=LEAK85",
+                "PGPWD=LEAK86",
+                "ODOO_ADMIN_PW=LEAK87",
+                "API_SALT=LEAK88",
+                "GITHUB_PAT=ghp_LEAK89",
+                "SLACK_URL=https://hooks.slack.com/services/T0/B0/LEAK90",
+                "RCLONE_CONFIG=[s3]\nsecret_access_key = LEAK91",
+                "OPTS=-u admin:LEAK92",
+                "CURL_HEADER=Authorization: Bearer abc.LEAK93",
+                "NOVALUE"
             ],
             "Cmd": [
                 "odoo",
