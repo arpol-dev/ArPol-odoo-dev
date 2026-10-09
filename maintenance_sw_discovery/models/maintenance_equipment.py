@@ -17,6 +17,12 @@ class MaintenanceEquipment(models.Model):
         help="Identity of the equipment in the discovery files (e.g. machine:<machine-id>, "
         "container:<machine-id>:<name>): a new discovery updates it instead of creating another.",
     )
+    discovery_hostname = fields.Char(
+        readonly=True, copy=False,
+        help="Host name of the server at its last discovery (operating system of a discovered "
+        "tree): a file with the same identity but another host name (e.g. a cloned virtual "
+        "machine sharing its machine-id) is refused unless confirmed as the same server.",
+    )
     last_discovery = fields.Datetime(
         readonly=True, copy=False, help="Collection time of the last discovery that saw it."
     )

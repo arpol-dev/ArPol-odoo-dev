@@ -108,6 +108,27 @@ class TestWizard(DiscoveryCase):
         second.action_refresh()
         self.assertEqual(set(second.line_ids.mapped("action")), {"unchanged"})
 
+    def test_hostname_conflict(self):
+        """A file of another host name under a known key: no preview, apply refused, until
+        the user confirms it is the same server, renamed."""
+        root = self.Importer._apply(REFERENCE_RAW)
+        data = self.reference()
+        data["sections"]["machine"]["data"]["hostname"] = "clone"
+        wizard = self.wizard(json.dumps(data).encode())
+        wizard.action_analyse()
+        self.assertEqual(wizard.state, "preview")
+        self.assertEqual(wizard.hostname_conflict, "arpol")
+        self.assertFalse(wizard.line_ids)
+        with self.assertRaisesRegex(UserError, "clone"):
+            wizard.action_apply()
+        wizard.same_server = True
+        wizard.action_refresh()
+        self.assertTrue(wizard.line_ids)
+        self.assertEqual(self.line(wizard, ROOT_KEY).action, "update")
+        wizard.action_apply()
+        self.assertEqual(wizard.root_equipment_id, root)
+        self.assertEqual(root.discovery_hostname, "clone")
+
     def test_match_attaches_existing_equipment(self):
         wizard = self.wizard()
         wizard.action_analyse()
@@ -294,7 +315,8 @@ class TestWizard(DiscoveryCase):
 
     def test_equipment_discovery_fields_in_form(self):
         view = self.env["maintenance.equipment"].get_view(view_type="form")
-        for name in ("discovery_key", "last_discovery", "missing_since_discovery"):
+        for name in ("discovery_key", "discovery_hostname", "last_discovery",
+                     "missing_since_discovery"):
             self.assertIn(f'name="{name}"', view["arch"])
 
 

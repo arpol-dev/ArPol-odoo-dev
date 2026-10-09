@@ -8,6 +8,7 @@
             <xpath expr="//page[@name='software']" position="inside">
                 <group string="Discovery" name="discovery">
                     <field name="discovery_key" readonly="1"/>
+                    <field name="discovery_hostname" readonly="1" invisible="not discovery_hostname"/>
                     <field name="last_discovery" readonly="1"/>
                     <field name="missing_since_discovery" readonly="1"/>
                 </group>

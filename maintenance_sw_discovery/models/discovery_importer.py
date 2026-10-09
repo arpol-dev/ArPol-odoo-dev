@@ -165,6 +165,7 @@ class DiscoveryImporter(models.AbstractModel):
             matches,
         )
         self._check_matches(state)
+        self._check_hostname(state)
         self._plan_os(state)
         self._plan_platforms(state)
         self._plan_containers(state)
@@ -188,6 +189,34 @@ class DiscoveryImporter(models.AbstractModel):
                     "for one of them only.",
                     record=record.display_name, keys=", ".join(sorted(keys)),
                 ))
+
+    @api.model
+    def _hostname_conflict(self, data):
+        """(root, host name recorded on it) when the root found by the key of the discovery
+        was discovered under another host name, else (empty, False)."""
+        _mid, hostname, root_key = tools.machine_ids(data)
+        root = self.env["maintenance.equipment"].sudo().with_context(active_test=False).search(
+            [("discovery_key", "=", root_key)], limit=1
+        )
+        known = root.discovery_hostname
+        if known and known.lower() != hostname.lower():
+            return root, known
+        return root.browse(), False
+
+    def _check_hostname(self, state):
+        """Another server with the same identity (cloned VM sharing a machine-id): its tree
+        would be updated and its containers archived. Refused unless the root is explicitly
+        attached (matches: the same server, renamed)."""
+        root, known = self._hostname_conflict(state.data)
+        if known and state.matches.get(state.root_key) != root.id:
+            raise UserError(self.env._(
+                "This file comes from server %(new)s, but its identity (%(key)s) was already "
+                "discovered on server %(old)s: two servers sharing a machine-id (a cloned "
+                "virtual machine) would be merged, and the containers of %(old)s archived. "
+                "If %(new)s is %(old)s renamed, confirm it in the import wizard (Same Server, "
+                "Renamed).",
+                new=state.hostname, old=known, key=state.root_key,
+            ))
 
     def _plan_op(self, state, key, model, record, values, create_values=None, label=None,
                  parent_key=None):
@@ -356,7 +385,10 @@ class DiscoveryImporter(models.AbstractModel):
         """The root: the operating system, attached to the chosen host and customer."""
         os_data = tools.section(state.data, "os") or {}
         product = tools.OS_PRODUCTS.get((os_data.get("id") or "").lower())
-        values = {"install_type": "os", "deployment_method_id": self._method("manual")}
+        values = {
+            "install_type": "os", "deployment_method_id": self._method("manual"),
+            "discovery_hostname": state.hostname,
+        }
         version = self._plan_version(state, product, os_data.get("version_id"))
         if version:
             values["software_version_id"] = version

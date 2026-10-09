@@ -26,6 +26,15 @@ class DiscoveryImportWizard(models.TransientModel):
     host_id = fields.Many2one("maintenance.host", string="Physical Host")
     customer_id = fields.Many2one("res.partner", string="Customer")
     line_ids = fields.One2many("maintenance.discovery.import.line", "wizard_id", string="Lines")
+    hostname_conflict = fields.Char(
+        readonly=True,
+        help="Host name under which the identity of this file was already discovered.",
+    )
+    same_server = fields.Boolean(
+        string="Same Server, Renamed",
+        help="The file comes from the server already discovered under another host name, "
+        "renamed since: update its tree.",
+    )
     root_equipment_id = fields.Many2one("maintenance.equipment", string="Operating System",
                                         readonly=True)
     summary = fields.Char(compute="_compute_summary")
@@ -63,6 +72,14 @@ class DiscoveryImportWizard(models.TransientModel):
             line._check_match()
             matches[line.key] = line.match_id.id
         return matches
+
+    def _with_same_server(self, data, matches):
+        """matches, with the known root attached when the user confirmed a renamed server;
+        and the host name it was known under, if another one."""
+        root, known = self.env["maintenance.discovery.importer"]._hostname_conflict(data)
+        if known and self.same_server:
+            matches = dict(matches, **{tools.machine_ids(data)[2]: root.id})
+        return matches, known
 
     def _plan(self, raw, matches):
         return self.env["maintenance.discovery.importer"]._plan(
@@ -115,8 +132,14 @@ class DiscoveryImportWizard(models.TransientModel):
                 self.host_id = suggestion["host_id"]
             matches = dict(suggestion["matches"], **matches)
         mid, _hostname, root_key = tools.machine_ids(data)
-        ops = self._plan(data, matches)
+        matches, known = self._with_same_server(data, matches)
+        self.hostname_conflict = known or False
         self.line_ids.unlink()
+        if known and not self.same_server:
+            # nothing to preview before the user tells whether it is the same server
+            self.state = "preview"
+            return
+        ops = self._plan(data, matches)
         self._fill_lines(ops, root_key, mid)
         self.state = "preview"
 
@@ -152,9 +175,11 @@ class DiscoveryImportWizard(models.TransientModel):
         """Import the file again from its plan: the preview is not trusted."""
         self._check_manager()
         self.ensure_one()
-        matches = self._matches()
-        root = self.env["maintenance.discovery.importer"]._apply(
-            self._raw(), host=self.host_id, customer=self.customer_id, matches=matches,
+        raw = self._raw()
+        Importer = self.env["maintenance.discovery.importer"]
+        matches, _known = self._with_same_server(Importer._parse(raw), self._matches())
+        root = Importer._apply(
+            raw, host=self.host_id, customer=self.customer_id, matches=matches,
             attachment_name=self.filename or None,
         )
         self.write({"root_equipment_id": root.id, "state": "done"})

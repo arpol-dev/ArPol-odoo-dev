@@ -16,6 +16,14 @@
                     <field name="filename" invisible="1"/>
                 </group>
                 <div invisible="state != 'preview'">
+                    <div class="alert alert-warning" role="alert" invisible="not hostname_conflict">
+                        This file has the identity of a server already discovered under the host
+                        name <field name="hostname_conflict" class="oe_inline fw-bold"/>, not the
+                        one in the file: two servers sharing a machine-id (a cloned virtual
+                        machine) would be merged. Only if it is that server, renamed since,
+                        tick the box below and refresh the preview.
+                        <group><field name="same_server"/></group>
+                    </div>
                     <group>
                         <group>
                             <field name="host_id"/>

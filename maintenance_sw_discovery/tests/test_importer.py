@@ -739,6 +739,30 @@ class TestImporterFixes(DiscoveryCase):
         self.assertEqual(sorted(odoo.mount_ids.mapped("destination")),
                          ["/opt/odoo/auto/dev", "/srv/manual"])
 
+    def test_hostname_guard(self):
+        """Same key (cloned VM sharing a machine-id), another host name: refused, naming both
+        host names, unless the root is explicitly attached (same server, renamed)."""
+        root = self.Importer._apply(REFERENCE_RAW)
+        self.assertEqual(root.discovery_hostname, "arpol")
+        odoo = self.container(ODOO)
+        data = self.reference()
+        data["sections"]["machine"]["data"]["hostname"] = "clone"
+        for call in (self.Importer._plan, self.Importer._apply):
+            with self.assertRaisesRegex(UserError, r"(?s)clone.*arpol"):
+                call(data)
+        self.assertTrue(odoo.active)
+        self.assertEqual(root.discovery_hostname, "arpol")
+        # the host name case is not a difference
+        data["sections"]["machine"]["data"]["hostname"] = "ARPOL"
+        self.assertTrue(self.Importer._plan(data))
+        # explicitly the same server, renamed
+        data["sections"]["machine"]["data"]["hostname"] = "clone"
+        plan = {op["key"]: op for op in self.Importer._plan(data, matches={ROOT_KEY: root.id})}
+        self.assertEqual(plan[ROOT_KEY]["action"], "update")
+        self.assertEqual(self.Importer._apply(data, matches={ROOT_KEY: root.id}), root)
+        self.assertEqual(root.discovery_hostname, "clone")
+        self.assertTrue(self.Importer._plan(data))
+
     def test_creation_only_fields_kept(self):
         """Deployment method, install type and kind are set at creation, then left to the user."""
         self.Importer._apply(REFERENCE_RAW)
