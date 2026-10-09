@@ -1,8 +1,10 @@
 import json
+import signal
 from datetime import datetime
 
 from odoo.exceptions import UserError
 
+from ..models.discovery_importer import PlanState
 from .common import MID, REFERENCE, REFERENCE_RAW, DiscoveryCase
 from .test_script import run_scenario
 
@@ -644,6 +646,79 @@ class TestImporterFixes(DiscoveryCase):
         Repository.search([]).write({"upstream_id": False})
         self.Importer._apply(self._shared_remote_data(swap=True))
         self.assertEqual(mirror.upstream_id, chosen)
+
+    # ------------------------------------------------------------------ final review fixes
+    def _bounded(self, seconds=30):
+        """Turn an endless loop into a failure."""
+        def timeout(_signum, _frame):
+            raise AssertionError("endless loop")
+        previous = signal.signal(signal.SIGALRM, timeout)
+        signal.alarm(seconds)
+        self.addCleanup(signal.signal, signal.SIGALRM, previous)
+        self.addCleanup(signal.alarm, 0)
+
+    def _cycle_data(self):
+        data = self.reference()
+        items = self.odoo_instance(data)["repos_spec"]["items"]
+        for name, other in (("cyc-a", "cyc-b"), ("cyc-b", "cyc-a")):
+            items.append({
+                "name": name, "path": f"/opt/odoo/custom/src/{name}",
+                "target": {"remote": "origin", "ref": "18.0"},
+                "remotes": {"origin": f"https://git.example.com/{name}.git"},
+                "upstreams": {"origin": f"https://git.example.com/{other}.git"},
+                "merges": ["origin 18.0"],
+            })
+        return data
+
+    def test_upstream_cycle(self):
+        """Two new repositories each the upstream of the other: one link kept, no endless
+        loop, no cycle error, the same plan at the next import."""
+        self._bounded()
+        self.Importer._apply(self._cycle_data())
+        Repository = self.env["git.repository"]
+        a = Repository.search([("url", "=", "https://git.example.com/cyc-a.git")])
+        b = Repository.search([("url", "=", "https://git.example.com/cyc-b.git")])
+        self.assertEqual(a.upstream_id, b)
+        self.assertFalse(b.upstream_id)
+        plan = self.Importer._plan(self._cycle_data())
+        self.assertEqual({op["action"] for op in plan}, {"unchanged"},
+                         [(op["key"], op["changes"]) for op in plan if op["action"] != "unchanged"])
+
+    def test_plan_order_cycle(self):
+        """_plan_order ends on a cycle of references: the reference closing it is dropped."""
+        self._bounded()
+        state = PlanState(self.reference(), None, None, None)
+        state.ops = [
+            {"key": "a", "values": {"upstream_id": {"ref": "b"}}},
+            {"key": "b", "values": {"upstream_id": {"ref": "a"}}},
+            {"key": "c", "values": {"upstream_id": {"ref": "b"}}},
+        ]
+        state.by_key = {op["key"]: op for op in state.ops}
+        self.Importer._plan_order(state)
+        position = {op["key"]: index for index, op in enumerate(state.ops)}
+        self.assertEqual(len(state.ops), 3)
+        refs = [(op["key"], value["ref"]) for op in state.ops for value in op["values"].values()]
+        self.assertEqual(len(refs), 2)
+        for key, target in refs:
+            self.assertLess(position[target], position[key])
+
+    def test_creation_only_fields_kept(self):
+        """Deployment method, install type and kind are set at creation, then left to the user."""
+        self.Importer._apply(REFERENCE_RAW)
+        stack = self.by_key(STACK_KEY)
+        odoo = self.container(ODOO)
+        manual = self.env.ref("maintenance_sw_base.deployment_method_manual")
+        stack.deployment_method_id = manual
+        odoo.install_type = "package"
+        odoo.equipment_kind = "hardware"
+        plan = {op["key"]: op for op in self.Importer._plan(self.reference())}
+        self.assertEqual(plan[STACK_KEY]["action"], "unchanged", plan[STACK_KEY]["changes"])
+        self.assertEqual(plan[f"container:{MID}:{ODOO}"]["action"], "unchanged",
+                         plan[f"container:{MID}:{ODOO}"]["changes"])
+        self.Importer._apply(REFERENCE_RAW)
+        self.assertEqual(stack.deployment_method_id, manual)
+        self.assertEqual(odoo.install_type, "package")
+        self.assertEqual(odoo.equipment_kind, "hardware")
 
 
 class TestImporterScenarios(DiscoveryCase):

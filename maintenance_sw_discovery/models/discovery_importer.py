@@ -13,6 +13,8 @@ SCHEMA_VERSION = 1
 MODULE_STATES = ("installed", "to_upgrade", "to_remove")
 # models without active field: what vanished from the server is deleted, not archived
 DELETED_WHEN_MISSING = ("docker.mount", "docker.component")
+# set when the equipment is created (or while empty), then left to the user
+CREATION_ONLY = ("deployment_method_id", "install_type", "equipment_kind")
 INHERITED_FLAGS = {"physical_host_id": "physical_host_forced", "customer_id": "customer_forced"}
 METHODS = {
     "manual": "maintenance_sw_base.deployment_method_manual",
@@ -329,13 +331,19 @@ class DiscoveryImporter(models.AbstractModel):
         return record
 
     def _plan_equipment(self, state, key, values, name, parent_key=None, record=None):
-        """An equipment of the tree: its name and parent are only set when it is created."""
+        """An equipment of the tree: its name and parent are only set when it is created, its
+        kind, install type and deployment method then or while empty."""
         if record is None:
             record = self._find_equipment(state, key)
         values = dict(
             values, discovery_key=key, equipment_kind="software", active=True,
             missing_since_discovery=False,
         )
+        if record:
+            values = {
+                fname: value for fname, value in values.items()
+                if fname not in CREATION_ONLY or not record[fname]
+            }
         create_values = {"name": name}
         if parent_key:
             create_values["parent_id"] = ref(parent_key)
@@ -625,16 +633,22 @@ class DiscoveryImporter(models.AbstractModel):
     def _plan_upstreams(self, state):
         """The upstream of each repository seen with one. Several spellings in one discovery:
         the current upstream when it is one of them, else the first in URL order: the same
-        file always plans the same value, never a change back and forth."""
+        file always plans the same value, never a change back and forth. An upstream that
+        would close a cycle (A upstream of B, B of A) is not planned: the first link planned
+        (in the order of the file) is kept, and found again at the next import."""
+        planned = {}
         for key, upstreams in state.repo_upstreams.items():
             identities = {tools.url_identity(url): url for url in upstreams}
             op = state.by_key[key]
             record = self.env["git.repository"].browse(op["record_id"] or ())
             if record.upstream_id and tools.url_identity(record.upstream_id.url) in identities:
                 # kept as is; listed all the same (the preview shows every repository seen)
-                self._plan_repository(state, record.upstream_id.url)
+                planned[key] = self._plan_repository(state, record.upstream_id.url)
                 continue
             upstream_key = self._plan_repository(state, identities[min(identities)])
+            if self._upstream_reaches(state, planned, upstream_key, key):
+                continue
+            planned[key] = upstream_key
             values = {"upstream_id": ref(upstream_key)}
             if op["action"] == "create":
                 op["values"].update(values)
@@ -645,24 +659,57 @@ class DiscoveryImporter(models.AbstractModel):
                 op["changes"] += changes
                 op["action"] = "update"
 
+    def _upstream_reaches(self, state, planned, start_key, target_key):
+        """The upstream chain from repository start_key (planned upstreams, else the recorded
+        ones) reaches target_key."""
+        key, record, seen = start_key, None, set()
+        while key not in seen:
+            if key == target_key:
+                return True
+            seen.add(key)
+            if key in planned:
+                key, record = planned[key], None
+                continue
+            if record is None:
+                op = state.by_key.get(key)
+                record = self.env["git.repository"].browse(op and op["record_id"] or ())
+            record = record.upstream_id
+            if not record:
+                return False
+            key = f"repo:{tools.url_identity(record.url)}"
+        return False
+
     def _plan_order(self, state):
         """Every operation after the ones it refers to (a record is created before it is
-        pointed to): an operation planned late is moved up, before its first referrer."""
-        moved = True
-        while moved:
-            moved = False
-            position = {op["key"]: index for index, op in enumerate(state.ops)}
-            for index, op in enumerate(state.ops):
-                late = [
-                    value["ref"] for value in op["values"].values()
-                    if isinstance(value, dict) and position[value["ref"]] > index
-                ]
-                if late:
-                    target = state.by_key[late[0]]
-                    state.ops.remove(target)
-                    state.ops.insert(index, target)
-                    moved = True
+        pointed to), otherwise in the planned order (depth-first, each operation visited
+        once: it always ends). A reference closing a cycle cannot be honoured: dropped."""
+        ordered, done, visiting = [], set(), set()
+
+        def visit(op):
+            stack = [(op, iter(list(op["values"].items())))]
+            visiting.add(op["key"])
+            while stack:
+                current, refs = stack[-1]
+                for fname, value in refs:
+                    if not isinstance(value, dict) or value["ref"] in done:
+                        continue
+                    if value["ref"] in visiting:
+                        del current["values"][fname]
+                        continue
+                    target = state.by_key[value["ref"]]
+                    visiting.add(target["key"])
+                    stack.append((target, iter(list(target["values"].items()))))
                     break
+                else:
+                    stack.pop()
+                    visiting.discard(current["key"])
+                    done.add(current["key"])
+                    ordered.append(current)
+
+        for op in list(state.ops):
+            if op["key"] not in done:
+                visit(op)
+        state.ops[:] = ordered
 
     def _plan_mounts(self, state, container_key, container_record, inspect, instance, image_key):
         """docker.mount by (container, destination), and the git checkouts they bring."""
