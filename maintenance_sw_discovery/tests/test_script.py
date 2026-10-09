@@ -725,7 +725,11 @@ class TestDiscoverScript(BaseCase):
             "origin": "https://***@git.example.com/x.git", "other": "postgres://***@h",
         })
         self.assertEqual(odoo["config"]["db_host"], "wronghost")  # odoo.conf as is
+        # a database psql could not read is listed in error (never left out: the import would
+        # take it for gone)
         self.assertEqual(odoo["databases"], {"status": "ok", "items": [
+            {"name": "brokendb", "status": "error"},
+            {"name": "flakydb", "status": "error"},
             {"name": "leakdb", "modules": [
                 {"name": "base", "version": "17.0.1.3", "state": "installed"}]},
         ]})

@@ -1234,9 +1234,14 @@ odoo_databases() {  # odoo_databases ODOO_ID DB_HOST USER -> {"status", ...} obj
   fi
   while IFS= read -r db; do
     [ -n "$db" ] || continue
-    has="$(dk exec "$pg" psql -X -w -At -U "$user" -d "$db" -c "$q_has")" || continue
+    # a database psql cannot read is listed in error: left out, it would be taken for gone
+    if ! has="$(dk exec "$pg" psql -X -w -At -U "$user" -d "$db" -c "$q_has")"; then
+      items+="$sep{\"name\": $(json_str "$db"), \"status\": \"error\"}"; sep=", "; continue
+    fi
     [ "$(trim "$has")" = t ] || continue
-    out="$(dk exec "$pg" psql -X -w -At -U "$user" -d "$db" -c "$q_mods")" || continue
+    if ! out="$(dk exec "$pg" psql -X -w -At -U "$user" -d "$db" -c "$q_mods")"; then
+      items+="$sep{\"name\": $(json_str "$db"), \"status\": \"error\"}"; sep=", "; continue
+    fi
     mods="" msep=""
     while IFS= read -r line; do
       [ -n "$line" ] || continue

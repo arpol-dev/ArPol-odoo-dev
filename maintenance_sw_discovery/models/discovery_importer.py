@@ -782,6 +782,9 @@ class DiscoveryImporter(models.AbstractModel):
                 if not name:
                     continue
                 seen.add(name)
+                if database.get("status") == "error":
+                    # not read (psql failed): neither created nor archived, modules untouched
+                    continue
                 db_key = f"db:{key}:{name}"
                 record = existing.get(name, Database)
                 self._plan_op(state, db_key, "maintenance.odoo.database", record,

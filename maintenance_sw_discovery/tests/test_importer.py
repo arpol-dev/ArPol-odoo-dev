@@ -463,6 +463,25 @@ class TestImporterFixes(DiscoveryCase):
         self.docker_container(data, ODOO)["inspect"] = None
         self.assertFalse([op for op in self.Importer._plan(data) if op["action"] == "missing"])
 
+    def test_database_in_error_kept(self):
+        """A database psql could not read (status error) is neither archived nor created."""
+        self.Importer._apply(REFERENCE_RAW)
+        odoo = self.container(ODOO)
+        arpol_test = self.Database.search([("equipment_id", "=", odoo.id), ("name", "=", "arpol_test")])
+        modules = arpol_test.module_ids
+        self.assertTrue(modules)
+        data = self.reference()
+        items = self.odoo_instance(data)["databases"]["items"]
+        items[1] = {"name": "arpol_test", "status": "error"}
+        items.append({"name": "ghost", "status": "error"})
+        plan = self.Importer._plan(data)
+        self.assertEqual({op["action"] for op in plan}, {"unchanged"},
+                         [op for op in plan if op["action"] != "unchanged"])
+        self.Importer._apply(data)
+        self.assertTrue(arpol_test.active)
+        self.assertEqual(set(modules.mapped("active")), {True})
+        self.assertFalse(self.Database.search([("name", "=", "ghost")]))
+
     def test_key_of_another_company(self):
         company_a = self.env.company
         company_b = self.env["res.company"].create({"name": "Company B"})
