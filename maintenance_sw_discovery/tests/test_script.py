@@ -371,9 +371,11 @@ class TestDiscoverScript(BaseCase):
     def test_zerok_odoo_instance(self):
         sections = self.sections("zerok_odoo")
         instances = self.data(sections, "odoo")["instances"]
+        # the frontend mentions odoo in its arguments (--upstream http://odoo:8069): no Odoo
         self.assertEqual(len(instances), 1)
         odoo = instances[0]
         self.assertEqual(odoo["container"], "myc_odoo-v18_1")
+        # read in release.py of the server sources, never from `odoo --version`
         self.assertEqual(odoo["version"], "18.0")
         # From the command line (spaces removed), not from odoo.conf.
         self.assertEqual(odoo["addons_path"], ["/opt/odoo/auto/dev/ArPol-odoo-dev",
@@ -456,7 +458,7 @@ class TestDiscoverScript(BaseCase):
         instances = self.data(sections, "odoo")["instances"]
         self.assertEqual([i["container"] for i in instances], ["odoo-web"])
         odoo = instances[0]
-        self.assertEqual(odoo["version"], "18.0")  # odoo --version fails: ODOO_VERSION
+        self.assertEqual(odoo["version"], "18.0")  # no release.py found: ODOO_VERSION
         self.assertEqual(odoo["addons_path"], [
             "/mnt/extra-addons/oca-web", "/mnt/extra-addons/custom",
             "/usr/lib/python3/dist-packages/odoo/addons",
@@ -714,7 +716,8 @@ class TestDiscoverScript(BaseCase):
         """-c, --db_host and -r of the command line win over the defaults and odoo.conf."""
         sections = self.sections("leaky")
         odoo = self.data(sections, "odoo")["instances"][0]
-        self.assertEqual(odoo["version"], "17.0")
+        # read in release.py (saas~17.2), never from `odoo --version` (no Odoo code is run)
+        self.assertEqual(odoo["version"], "17.2")
         self.assertEqual(odoo["addons_path"], ["/mnt/a", "/mnt/b"])  # deduplicated
         self.assertEqual(odoo["addons"], {"/mnt/a": ["mod_a"], "/mnt/b": ["mod_b"]})
         self.assertEqual(odoo["repos"][0]["url"], "https://***@git.example.com/r.git")

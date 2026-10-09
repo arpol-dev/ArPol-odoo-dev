@@ -2,7 +2,10 @@
     {
         "Id": "c3d4e5f6a7b80000000000000000000000000000000000000000000000000003",
         "Path": "httpd-foreground",
-        "Args": [],
+        "Args": [
+            "--upstream",
+            "http://odoo:8069"
+        ],
         "State": {
             "Status": "running",
             "Running": true
@@ -14,7 +17,9 @@
             "Hostname": "c3d4e5f6a7b8",
             "Env": null,
             "Cmd": [
-                "httpd-foreground"
+                "httpd-foreground",
+                "--upstream",
+                "http://odoo:8069"
             ],
             "Image": "docker.0k.io/apache:2.4",
             "Entrypoint": null,

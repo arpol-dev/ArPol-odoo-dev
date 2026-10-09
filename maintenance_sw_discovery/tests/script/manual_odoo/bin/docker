@@ -23,7 +23,7 @@ esac
 shift; c="$1"; shift
 if [ "$c" = $ODOO ]; then
   case "$*" in
-    "odoo --version") echo "odoo: unexpected error" >&2; exit 1 ;;   # version from ODOO_VERSION
+    "odoo --version") echo "Odoo Server 99.0" ;;   # never called: it would run Odoo code
     "cat /opt/odoo/custom/src/repos.yaml")
       echo "cat: /opt/odoo/custom/src/repos.yaml: No such file or directory" >&2; exit 1 ;;
     *)
@@ -33,6 +33,7 @@ if [ "$c" = $ODOO ]; then
         discover-conf)
           [ "$1" = /etc/odoo/odoo.conf ] || fail exec "$c" conf "$@"
           cat "$D/odoo.conf" ;;
+        discover-version) exit 1 ;;   # no release.py found: version from ODOO_VERSION
         discover-addons)
           for d in "$@"; do
             case "$d" in

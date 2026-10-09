@@ -1083,6 +1083,8 @@ collect_docker() {
 
 # ----------------------------------------------------------------------------- odoo
 # Shell snippets run in the Odoo container (`sh -c SNIPPET TAG ARGS...`; read only).
+# release.py of the Odoo sources: its version_info line, read (no Python, no Odoo code is run)
+VERSION_SH='for f in "$@" /opt/odoo/custom/src/odoo/odoo/release.py /usr/lib/python3/dist-packages/odoo/release.py /opt/odoo/odoo/release.py /odoo/odoo/release.py /usr/local/lib/python3*/*-packages/odoo/release.py; do [ -f "$f" ] && [ -r "$f" ] || continue; grep -m 1 -E "^version_info[[:space:]]*=" "$f" && exit 0; done; exit 1'
 CONF_SH='for f in "$@"; do [ -r "$f" ] || continue; grep -E "^[[:space:]]*(addons_path|db_host|db_port|db_name|db_user|dbfilter|data_dir)[[:space:]]*=" "$f"; exit 0; done; exit 1'
 ADDONS_SH='for d in "$@"; do for m in "$d"/*/__manifest__.py; do [ -f "$m" ] || continue; m="${m%/__manifest__.py}"; printf "%s\t%s\n" "$d" "${m##*/}"; done; done'
 REPOS_SH='for d in /opt/odoo/custom/src/* "$@"; do [ -e "$d/.git" ] || continue; if command -v git >/dev/null 2>&1 && c=$(git -c safe.directory="*" -C "$d" rev-parse HEAD 2>/dev/null); then u=$(git -c safe.directory="*" -C "$d" config --get remote.origin.url 2>/dev/null); b=$(git -c safe.directory="*" -C "$d" rev-parse --abbrev-ref HEAD 2>/dev/null); printf "ok\t%s\t%s\t%s\t%s\n" "$d" "$u" "$b" "$c"; else printf "na\t%s\n" "$d"; fi; done'
@@ -1091,11 +1093,23 @@ LINKS_SH='cd /opt/odoo/auto/addons 2>/dev/null || exit 0; for l in *; do [ -L "$
 # Exit 2 when the source does not exist; a file holds no checkout (exit 0, nothing listed).
 GITDIRS_SH='[ -e "$1" ] || exit 2; [ -d "$1" ] || exit 0; if [ -e "$1/.git" ]; then echo .; exit 0; fi; for d in "$1"/*/; do [ -e "$d.git" ] || continue; d="${d%/}"; echo "${d##*/}"; done; exit 0'
 
-is_odoo() {  # FLAT: image name or command line mentions odoo
+is_odoo() {  # FLAT: the image name (last part of its repository), or the program run (Path,
+            # Entrypoint[0], Cmd[0], base name) mentions odoo; not any argument (a proxy with
+            # --upstream odoo:8069 is no Odoo)
   printf '%s\n' "$1" | LC_ALL=C awk -F'\t' '
-    ($1 == ".Config.Image" || $1 == ".Path" || $1 ~ /^\.(Args|Config\.Cmd|Config\.Entrypoint)\[/) \
-      && tolower($3) ~ /odoo/ { found = 1 }
+    $1 == ".Config.Image" { v = $3; sub(/@.*/, "", v); sub(/.*\//, "", v); sub(/:.*/, "", v) }
+    $1 == ".Path" || $1 == ".Config.Entrypoint[0]" || $1 == ".Config.Cmd[0]" { v = $3; sub(/.*\//, "", v) }
+    $1 == ".Config.Image" || $1 == ".Path" || $1 == ".Config.Entrypoint[0]" || $1 == ".Config.Cmd[0]" {
+      if (tolower(v) ~ /odoo/) found = 1
+    }
     END { exit !found }'
+}
+release_version() {  # release_version "version_info = (18, 0, ...)" -> 18.0 (saas~17, 2 -> 17.2)
+  local t="${1#*(}" major minor
+  t="${t//[[:space:]\'\"]/}"
+  major="${t%%,*}"; t="${t#*,}"; minor="${t%%,*}"
+  major="${major##*~}"
+  [[ $major =~ ^[0-9]+$ && $minor =~ ^[0-9]+$ ]] && printf '%s.%s' "$major" "$minor"
 }
 env_get() {  # env_get FLAT NAME -> value of NAME in Config.Env
   jlist "$1" .Config.Env | awk -v k="$2=" 'index($0, k) == 1 { print substr($0, length(k) + 1); exit }'
@@ -1241,16 +1255,9 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
   local binds addons="" asep="" yaml spec repos="" rsep="" seen=" " st rest u b c hp rel
   local mrepos="" msep="" src dst links="" lsep="" config="" csep="" host user plist=""
   local alinks="" alsep="" mstatus="" mssep="" gdirs grc gst greason
-  local -a paths=() confs=()
+  local -a paths=() confs=() releases=()
   local -A mods=()
   name="$(jget "$flat" .Name)"; name="${name#/}"
-  # version
-  ver="$(dk exec "$id" odoo --version)"
-  if [[ $ver =~ ([0-9]+\.[0-9]+) ]]; then ver="${BASH_REMATCH[1]}"
-  else
-    ver="$(env_get "$flat" ODOO_VERSION)"
-    [[ $ver =~ ^([0-9]+\.[0-9]+) ]] && ver="${BASH_REMATCH[1]}"
-  fi
   # command line options (they win over odoo.conf)
   while IFS= read -r arg; do
     if [ -n "$next" ]; then printf -v "$next" '%s' "$arg"; next=""; continue; fi
@@ -1280,6 +1287,14 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
     seen+="$path "; paths+=("$path")
   done <<<"$cmd_path,"
   seen=" "
+  # version: release.py (next to an addons_path directory .../odoo/addons, in the server sources
+  # of the usual layouts), else ODOO_VERSION; `odoo --version` is never run (Odoo code)
+  for d in "${paths[@]}"; do releases+=("${d%/}/../release.py" "${d%/}/../odoo/release.py"); done
+  ver="$(release_version "$(dk exec "$id" sh -c "$VERSION_SH" discover-version "${releases[@]}")")"
+  if [ -z "$ver" ]; then
+    ver="$(env_get "$flat" ODOO_VERSION)"
+    [[ $ver =~ ^([0-9]+\.[0-9]+) ]] && ver="${BASH_REMATCH[1]}"
+  fi
   # modules per addons_path directory
   while IFS=$'\t' read -r d m; do
     [ -n "$m" ] && mods[$d]+="$m"$'\n'
