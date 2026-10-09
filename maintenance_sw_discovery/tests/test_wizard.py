@@ -37,6 +37,10 @@ class TestWizard(DiscoveryCase):
     def test_analyse_lists_creations(self):
         wizard = self.wizard()
         self.assertEqual(wizard.state, "upload")
+        action = wizard.action_analyse()
+        # the reopened dialog keeps its title
+        self.assertEqual(action["name"], "Import Discovery")
+        self.assertEqual(wizard.action_back()["name"], "Import Discovery")
         wizard.action_analyse()
         self.assertEqual(wizard.state, "preview")
         self.assertFalse(wizard.host_id)

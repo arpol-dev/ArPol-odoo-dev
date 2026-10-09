@@ -122,8 +122,8 @@ class DiscoveryImportWizard(models.TransientModel):
 
     def _reopen(self):
         return {
-            "type": "ir.actions.act_window", "res_model": self._name, "res_id": self.id,
-            "view_mode": "form", "target": "new",
+            "type": "ir.actions.act_window", "name": self.env._("Import Discovery"),
+            "res_model": self._name, "res_id": self.id, "view_mode": "form", "target": "new",
         }
 
     # ------------------------------------------------------------------ buttons

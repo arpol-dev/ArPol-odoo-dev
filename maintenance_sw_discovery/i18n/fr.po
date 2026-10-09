@@ -214,6 +214,7 @@ msgstr "Identité du support dans les fichiers de découverte (pve-guest:<machin
 #. module: maintenance_sw_discovery
 #: model:ir.actions.act_window,name:maintenance_sw_discovery.discovery_import_wizard_action
 #: model:ir.ui.menu,name:maintenance_sw_discovery.menu_discovery_import
+#: code:addons/maintenance_sw_discovery/wizards/discovery_import_wizard.py:0
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
 msgid "Import Discovery"
 msgstr "Importer une découverte"
