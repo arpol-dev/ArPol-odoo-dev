@@ -127,3 +127,14 @@ def machine_ids(data):
 def clean_url(url):
     """URL without the credentials the script masked: https://***@host/x -> https://host/x."""
     return re.sub(r"://\*\*\*@", "://", (url or "").strip())
+
+
+def url_identity(url):
+    """What tells two repository URLs apart: not the case of the host or the path (GitHub,
+    GitLab... ignore it), nor a trailing slash."""
+    return clean_url(url).rstrip("/").lower()
+
+
+def like_escape(text):
+    """`text` taken literally in a LIKE pattern."""
+    return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")

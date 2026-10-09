@@ -50,6 +50,7 @@ class PlanState:
         self.core_components = {}  # image key -> component key of the Odoo server
         self.container_components = {}  # container key -> [(path, component key)]
         self.container_images = {}  # container key -> image key
+        self.repo_upstreams = {}  # repository key -> upstream URLs seen, in order
 
 
 class DiscoveryImporter(models.AbstractModel):
@@ -168,6 +169,8 @@ class DiscoveryImporter(models.AbstractModel):
         self._plan_cloudron_apps(state)
         self._plan_odoo(state)
         self._plan_missing(state)
+        self._plan_upstreams(state)
+        self._plan_order(state)
         return state.ops
 
     def _check_matches(self, state):
@@ -596,43 +599,70 @@ class DiscoveryImporter(models.AbstractModel):
 
     def _plan_repository(self, state, url, upstream=None):
         """git.repository by URL, without the masked credentials (the script writes
-        https://***@host/...): the credential-free URL is the identity."""
+        https://***@host/...) and whatever the case: the credential-free URL is the identity.
+        The upstream is only noted here: a repository listed several times (several Odoo
+        instances) may come with upstreams spelled differently, settled by _plan_upstreams."""
         url = tools.clean_url(url)
-        upstream = tools.clean_url(upstream) if upstream else None
-        upstream_key = None
-        if upstream and upstream != url:
-            upstream_key = self._plan_repository(state, upstream)
-        key = f"repo:{url}"
-        values = {"upstream_id": ref(upstream_key)} if upstream_key else {}
-        if key in state.by_key:
-            if upstream_key:
-                self._plan_late_upstream(state, state.by_key[key], upstream_key, values)
-            return key
-        record = self.env["git.repository"].search([("url", "=", url)], limit=1)
-        name = tools.repository_name(url)
-        self._plan_op(state, key, "git.repository", record, values,
-                      {"name": name, "url": url}, label=name)
+        key = f"repo:{tools.url_identity(url)}"
+        if upstream:
+            upstream = tools.clean_url(upstream)
+            if tools.url_identity(upstream) != tools.url_identity(url):
+                state.repo_upstreams.setdefault(key, []).append(upstream)
+        if key not in state.by_key:
+            record = self._find_repository(url)
+            name = tools.repository_name(url)
+            self._plan_op(state, key, "git.repository", record, {},
+                          {"name": name, "url": url}, label=name)
         return key
 
-    def _plan_late_upstream(self, state, op, upstream_key, values):
-        """A repository planned without upstream, then seen with one: keep the upstream, its
-        operation placed before the repository's (it is created first)."""
-        if "upstream_id" in op["values"]:
-            return
-        if op["action"] == "create":
-            op["values"]["upstream_id"] = values["upstream_id"]
-        else:
-            record = self.env["git.repository"].browse(op["record_id"])
+    def _find_repository(self, url):
+        identity = tools.url_identity(url)
+        candidates = self.env["git.repository"].search(
+            [("url", "=ilike", tools.like_escape(url.rstrip("/")) + "%")], order="id"
+        )
+        return candidates.filtered(lambda r: tools.url_identity(r.url) == identity)[:1]
+
+    def _plan_upstreams(self, state):
+        """The upstream of each repository seen with one. Several spellings in one discovery:
+        the current upstream when it is one of them, else the first in URL order: the same
+        file always plans the same value, never a change back and forth."""
+        for key, upstreams in state.repo_upstreams.items():
+            identities = {tools.url_identity(url): url for url in upstreams}
+            op = state.by_key[key]
+            record = self.env["git.repository"].browse(op["record_id"] or ())
+            if record.upstream_id and tools.url_identity(record.upstream_id.url) in identities:
+                # kept as is; listed all the same (the preview shows every repository seen)
+                self._plan_repository(state, record.upstream_id.url)
+                continue
+            upstream_key = self._plan_repository(state, identities[min(identities)])
+            values = {"upstream_id": ref(upstream_key)}
+            if op["action"] == "create":
+                op["values"].update(values)
+                continue
             changes, to_write = self._plan_diff(state, record, values)
-            if not to_write:
-                return
-            op["values"].update(to_write)
-            op["changes"] += changes
-            op["action"] = "update"
-        upstream_op = state.by_key[upstream_key]
-        if state.ops.index(upstream_op) > state.ops.index(op):
-            state.ops.remove(upstream_op)
-            state.ops.insert(state.ops.index(op), upstream_op)
+            if to_write:
+                op["values"].update(to_write)
+                op["changes"] += changes
+                op["action"] = "update"
+
+    def _plan_order(self, state):
+        """Every operation after the ones it refers to (a record is created before it is
+        pointed to): an operation planned late is moved up, before its first referrer."""
+        moved = True
+        while moved:
+            moved = False
+            position = {op["key"]: index for index, op in enumerate(state.ops)}
+            for index, op in enumerate(state.ops):
+                late = [
+                    value["ref"] for value in op["values"].values()
+                    if isinstance(value, dict) and position[value["ref"]] > index
+                ]
+                if late:
+                    target = state.by_key[late[0]]
+                    state.ops.remove(target)
+                    state.ops.insert(index, target)
+                    moved = True
+                    break
 
     def _plan_mounts(self, state, container_key, container_record, inspect, instance, image_key):
         """docker.mount by (container, destination), and the git checkouts they bring."""

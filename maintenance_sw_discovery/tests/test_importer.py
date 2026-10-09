@@ -556,18 +556,75 @@ class TestImporterFixes(DiscoveryCase):
         self.assertEqual(key, "repo:https://git.example.com/arpol/mirror.git")
         upstream = "https://github.com/arpol/upstream.git"
         self.assertEqual(self.Importer._plan_repository(state, url, upstream), key)
+        self.Importer._plan_upstreams(state)
+        self.Importer._plan_order(state)
         keys = [op["key"] for op in state.ops]
         self.assertLess(keys.index(f"repo:{upstream}"), keys.index(key))
         self.assertEqual(state.by_key[key]["values"]["upstream_id"], {"ref": f"repo:{upstream}"})
-        # an existing repository gets the upstream as an update
-        self.env["git.repository"].create({"name": "x", "url": "https://h/x.git"})
+        # an existing repository gets the upstream as an update; its URL matches whatever
+        # the case of the host and path
+        self.env["git.repository"].create({"name": "x", "url": "https://H/X_y.git"})
+        self.env["git.repository"].create({"name": "z", "url": "https://h/xzy.git"})
         state = PlanState(self.reference(), self.env["maintenance.host"],
                           self.env["res.partner"], {})
-        self.Importer._plan_repository(state, "https://h/x.git")
-        self.Importer._plan_repository(state, "https://h/x.git", upstream)
-        op = state.by_key["repo:https://h/x.git"]
+        self.Importer._plan_repository(state, "https://h/x_y.git")
+        self.Importer._plan_repository(state, "https://h/x_Y.git", upstream)
+        self.Importer._plan_upstreams(state)
+        op = state.by_key["repo:https://h/x_y.git"]
+        self.assertEqual(op["record_id"],
+                         self.env["git.repository"].search([("url", "=", "https://H/X_y.git")]).id)
         self.assertEqual(op["action"], "update")
         self.assertTrue(op["changes"])
+
+    def _shared_remote_data(self, swap=False):
+        """Two Odoo containers (two images) listing the same remotes with upstreams spelled
+        differently: case only for OCB, another host for ArPol-odoo-dev."""
+        data = self.reference()
+        containers = data["sections"]["docker"]["data"]["containers"]
+        first = self.docker_container(data, ODOO)
+        second = json.loads(json.dumps(first))
+        second["name"] = "myc_odoo2"
+        second["image_inspect"]["RepoDigests"] = [f"docker.0k.io/mirror/odoo@{NEW_DIGEST}"]
+        containers.append(second)
+        instances = data["sections"]["odoo"]["data"]["instances"]
+        other = json.loads(json.dumps(instances[0]))
+        other["container"] = "myc_odoo2"
+        instances.append(other)
+        for instance, ocb, arpol in (
+            (instances[0], "https://github.com/OCA/OCB.git",
+             "https://github.com/arpol/ArPol-odoo-dev.git"),
+            (other, "https://github.com/oca/OCB.git",
+             "https://git.example.org/Arpol/ArPol-odoo-dev.git"),
+        ):
+            items = {item["name"]: item for item in instance["repos_spec"]["items"]}
+            items["odoo"]["remotes"]["origin"] = "https://git.0k.io/mirror/OCB.git"
+            items["odoo"]["upstreams"] = {"origin": ocb}
+            items["ArPol-odoo-dev"]["upstreams"] = {"origin": arpol}
+        if swap:
+            containers.reverse()
+            instances.reverse()
+        return data
+
+    def test_conflicting_upstreams_stable(self):
+        self.Importer._apply(self._shared_remote_data())
+        Repository = self.env["git.repository"]
+        ocb = Repository.search([("url", "=", "https://git.0k.io/mirror/OCB.git")])
+        self.assertEqual(len(Repository.search([("url", "=ilike", "https://github.com/oca/ocb.git")])), 1)
+        self.assertEqual(ocb.upstream_id.url.lower(), "https://github.com/oca/ocb.git")
+        mirror = Repository.search([("url", "=", "https://git.0k.io/mirror/arpol/ArPol-odoo-dev.git")])
+        chosen = mirror.upstream_id
+        self.assertTrue(chosen)
+        first_keys = {op["key"] for op in self.Importer._plan(self._shared_remote_data())}
+        self.assertIn(f"repo:{chosen.url.lower()}", first_keys)
+        for swap in (False, True, False):
+            plan = self.Importer._plan(self._shared_remote_data(swap=swap))
+            self.assertEqual({op["key"] for op in plan}, first_keys)
+            self.assertEqual({op["action"] for op in plan}, {"unchanged"},
+                             [(op["key"], op["changes"]) for op in plan if op["action"] != "unchanged"])
+        # the first in a stable order, whatever the order of the instances
+        Repository.search([]).write({"upstream_id": False})
+        self.Importer._apply(self._shared_remote_data(swap=True))
+        self.assertEqual(mirror.upstream_id, chosen)
 
 
 class TestImporterScenarios(DiscoveryCase):
