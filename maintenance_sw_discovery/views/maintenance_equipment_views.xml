@@ -10,6 +10,11 @@
                     <field name="discovery_key" readonly="1"/>
                     <field name="discovery_hostname" readonly="1" invisible="not discovery_hostname"/>
                     <field name="last_discovery" readonly="1"/>
+                    <field name="discovery_file_name" invisible="1"
+                           groups="maintenance.group_equipment_manager"/>
+                    <field name="discovery_file" filename="discovery_file_name" readonly="1"
+                           invisible="not discovery_file"
+                           groups="maintenance.group_equipment_manager"/>
                     <field name="missing_since_discovery" readonly="1"/>
                 </group>
             </xpath>

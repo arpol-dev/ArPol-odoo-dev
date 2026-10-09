@@ -986,13 +986,23 @@ class DiscoveryImporter(models.AbstractModel):
         if isinstance(raw, str):
             raw = raw.encode()
         date = (data.get("collected_at") or "")[:10] or fields.Date.today().isoformat()
-        self.env["ir.attachment"].create({
+        # the attachment of the manager-only field discovery_file (protected by the field's
+        # groups), replaced; written directly: an import that changes nothing leaves the root
+        # untouched
+        Attachment = self.env["ir.attachment"]
+        Attachment.search([
+            ("res_model", "=", root._name), ("res_id", "=", root.id),
+            ("res_field", "=", "discovery_file"),
+        ]).unlink()
+        Attachment.create({
             "name": attachment_name or f"discovery-{hostname}-{date}.json",
             "raw": raw,
             "mimetype": "application/json",
-            "res_model": "maintenance.equipment",
+            "res_model": root._name,
             "res_id": root.id,
+            "res_field": "discovery_file",
         })
+        root.invalidate_recordset(["discovery_file", "discovery_file_name"])
         return root
 
     def _apply_op(self, op, ids):

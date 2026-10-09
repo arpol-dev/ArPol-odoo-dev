@@ -1,8 +1,9 @@
+import base64
 import json
 import signal
 from datetime import datetime
 
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 
 from ..models.discovery_importer import PlanState
 from .common import MID, REFERENCE, REFERENCE_RAW, DiscoveryCase
@@ -152,14 +153,20 @@ class TestImporter(DiscoveryCase):
         # linked to a directory that is no git checkout
         self.assertFalse(test_modules["ovh_api"].component_id)
 
-        # the discovery file is attached to the root
+        # the discovery file is kept on the root (manager-only field)
+        date = REFERENCE["collected_at"][:10]
+        self.assertEqual(root.discovery_file_name, f"discovery-arpol-{date}.json")
+        self.assertEqual(json.loads(base64.b64decode(root.discovery_file))["schema_version"], 1)
         attachment = self.env["ir.attachment"].search([
             ("res_model", "=", "maintenance.equipment"), ("res_id", "=", root.id),
+            ("res_field", "=", "discovery_file"),
         ])
         self.assertEqual(len(attachment), 1)
-        date = REFERENCE["collected_at"][:10]
-        self.assertEqual(attachment.name, f"discovery-arpol-{date}.json")
-        self.assertEqual(json.loads(attachment.raw)["schema_version"], 1)
+        self.assertEqual(attachment.raw, REFERENCE_RAW)
+        # no plain attachment (readable by every user who can read the equipment)
+        self.assertFalse(self.env["ir.attachment"].search([
+            ("res_model", "=", "maintenance.equipment"), ("res_id", "=", root.id),
+        ]))
 
     def test_base_module_from_the_server_directory(self):
         """base is in the server's own odoo/addons, never in the addons_path: core component."""
@@ -210,10 +217,12 @@ class TestImporter(DiscoveryCase):
         self.env.invalidate_all()
         for recordset in records:
             self.assertEqual(set(recordset.mapped("write_date")), {old}, recordset)
-        # one attachment per import
+        # the file of the last import, the root untouched (write_date checked above)
         self.assertEqual(self.env["ir.attachment"].search_count([
             ("res_model", "=", "maintenance.equipment"), ("res_id", "=", root.id),
-        ]), 2)
+            ("res_field", "=", "discovery_file"),
+        ]), 1)
+        self.assertEqual(base64.b64decode(root.discovery_file), REFERENCE_RAW)
 
     def test_modified_import(self):
         root = self.Importer._apply(REFERENCE_RAW)
@@ -762,6 +771,42 @@ class TestImporterFixes(DiscoveryCase):
         self.assertEqual(self.Importer._apply(data, matches={ROOT_KEY: root.id}), root)
         self.assertEqual(root.discovery_hostname, "clone")
         self.assertTrue(self.Importer._plan(data))
+
+    def test_discovery_file_managers_only(self):
+        """The discovery file is readable by equipment managers only."""
+        root = self.Importer._apply(REFERENCE_RAW, attachment_name="arpol.json")
+        plain = self.env["res.users"].create({
+            "name": "Plain", "login": "discovery-plain",
+            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+        })
+        manager = self.env["res.users"].create({
+            "name": "Manager", "login": "discovery-manager-file",
+            "groups_id": [(6, 0, [
+                self.env.ref("base.group_user").id,
+                self.env.ref("maintenance.group_equipment_manager").id,
+            ])],
+        })
+        # a follower reads the equipment (core rule for plain users), not its discovery file
+        root.message_subscribe(partner_ids=plain.partner_id.ids)
+        Attachment = self.env["ir.attachment"]
+        attachment = Attachment.search([("res_model", "=", "maintenance.equipment"),
+                                        ("res_id", "=", root.id),
+                                        ("res_field", "=", "discovery_file")])
+        self.assertEqual(attachment.name, "arpol.json")
+        self.assertEqual(root.with_user(plain).read(["name"])[0]["name"], root.name)
+        with self.assertRaises(AccessError):
+            root.with_user(plain).read(["discovery_file"])
+        with self.assertRaises(AccessError):
+            attachment.with_user(plain).read(["raw"])
+        self.assertFalse(Attachment.with_user(plain).search([
+            ("res_model", "=", "maintenance.equipment"), ("res_id", "=", root.id),
+            ("res_field", "!=", False),
+        ]))
+        self.assertFalse(Attachment.with_user(plain).search([("id", "=", attachment.id)]))
+        as_manager = root.with_user(manager)
+        self.assertEqual(base64.b64decode(as_manager.discovery_file), REFERENCE_RAW)
+        self.assertEqual(as_manager.discovery_file_name, "arpol.json")
+        self.assertEqual(attachment.with_user(manager).raw, REFERENCE_RAW)
 
     def test_creation_only_fields_kept(self):
         """Deployment method, install type and kind are set at creation, then left to the user."""
