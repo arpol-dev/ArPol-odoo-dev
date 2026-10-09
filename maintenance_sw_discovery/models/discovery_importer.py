@@ -727,7 +727,7 @@ class DiscoveryImporter(models.AbstractModel):
             key = f"mount:{container_key}:{dest}"
             record = existing.get(dest, Mount)
             self._plan_op(state, key, "docker.mount", record, {
-                "mount_type": mount_type, "source": source,
+                "discovered": True, "mount_type": mount_type, "source": source,
                 "mode": "rw" if mount.get("RW", True) else "ro",
                 "usage": tools.mount_usage(dest, [r["path"] for r in mount_repos], addons_path),
             }, {"equipment_id": ref(container_key), "destination": dest},
@@ -748,7 +748,7 @@ class DiscoveryImporter(models.AbstractModel):
             key = f"component:{mount_key}:{path}"
             record = mount_record.component_ids.filtered(lambda c: c.path == path)[:1]
             self._plan_op(state, key, "docker.component", record, {
-                "repository_id": ref(self._plan_repository(state, url)),
+                "discovered": True, "repository_id": ref(self._plan_repository(state, url)),
                 "ref": repo.get("branch") or False, "commit": repo.get("commit") or False,
                 "overrides_id": ref(overrides) if overrides else False,
             }, {
@@ -759,18 +759,27 @@ class DiscoveryImporter(models.AbstractModel):
         state.container_components[container_key] = components
         self._plan_vanished_mounts(state, container_key, existing, mounts, inspect, instance)
 
+    def _plan_vanished(self, state, key, record, parent_key):
+        """A mount or component absent from the discovery: deleted when a discovery made it
+        (discovered), else entered by hand: kept, listed as unchanged."""
+        if record.discovered:
+            self._plan_missing_op(state, key, record, {}, parent_key=parent_key)
+            return
+        op = self._plan_op(state, key, record._name, record, {}, parent_key=parent_key)
+        op["changes"] = [self.env._("Entered by hand, absent from the discovery: kept")]
+
     def _plan_vanished_mounts(self, state, container_key, existing, mounts, inspect, instance):
         """Mounts gone from the container, and checkouts gone from a mount: deleted (a stale
-        mount component would still override an image component). Only when the list that
-        would hold them is known to be complete: the container's Mounts (present, even empty),
-        and the checkouts of a mount whose source the script could read (mount_repos_status ok)
-        in the Odoo instance of the container."""
+        mount component would still override an image component) when a discovery made them.
+        Only when the list that would hold them is known to be complete: the container's
+        Mounts (present, even empty), and the checkouts of a mount whose source the script
+        could read (mount_repos_status ok) in the Odoo instance of the container."""
         if "Mounts" in inspect:
             kept = {dest for dest, _key, _record in mounts}
             for dest, record in existing.items():
                 if dest not in kept:
-                    self._plan_missing_op(state, f"mount:{container_key}:{dest}", record, {},
-                                          parent_key=container_key)
+                    self._plan_vanished(state, f"mount:{container_key}:{dest}", record,
+                                        container_key)
         if not (state.odoo_ok and instance):
             return
         read = {
@@ -785,7 +794,7 @@ class DiscoveryImporter(models.AbstractModel):
             for component in record.component_ids:
                 key = f"component:{mount_key}:{component.path}"
                 if key not in state.by_key and component.path not in listed:
-                    self._plan_missing_op(state, key, component, {}, parent_key=mount_key)
+                    self._plan_vanished(state, key, component, mount_key)
 
     def _plan_cloudron_apps(self, state):
         """Cloudron applications without a visible container: one software equipment each."""

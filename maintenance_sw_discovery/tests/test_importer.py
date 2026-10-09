@@ -702,6 +702,43 @@ class TestImporterFixes(DiscoveryCase):
         for key, target in refs:
             self.assertLess(position[target], position[key])
 
+    def test_hand_made_mount_and_component_kept(self):
+        """Only what a discovery created or updated is deleted when absent: a mount or a
+        component entered by hand is kept, and shown as unchanged in the plan."""
+        self.Importer._apply(REFERENCE_RAW)
+        odoo = self.container(ODOO)
+        dev_mount = odoo.mount_ids.filtered(lambda m: m.destination == "/opt/odoo/auto/dev")
+        self.assertTrue(dev_mount.discovered)
+        self.assertTrue(dev_mount.component_ids.discovered)
+        manual_mount = self.env["docker.mount"].create({
+            "equipment_id": odoo.id, "source": "/srv/manual", "destination": "/srv/manual",
+        })
+        repository = self.env["git.repository"].create({
+            "name": "hand/made", "url": "https://git.example.com/hand/made.git",
+        })
+        manual_component = self.Component.create({
+            "mount_id": dev_mount.id, "repository_id": repository.id,
+            "path": "/opt/odoo/auto/dev/hand-made",
+        })
+        plan = {op["key"]: op for op in self.Importer._plan(self.reference())}
+        self.assertFalse([key for key, op in plan.items() if op["action"] != "unchanged"])
+        mount_key = f"mount:container:{MID}:{ODOO}:/srv/manual"
+        component_key = (f"component:mount:container:{MID}:{ODOO}:/opt/odoo/auto/dev:"
+                         "/opt/odoo/auto/dev/hand-made")
+        self.assertEqual(plan[mount_key]["record_id"], manual_mount.id)
+        self.assertEqual(plan[component_key]["record_id"], manual_component.id)
+        self.assertIn("Entered by hand", plan[mount_key]["changes"][0])
+        self.Importer._apply(REFERENCE_RAW)
+        self.assertTrue(manual_mount.exists())
+        self.assertTrue(manual_component.exists())
+        # a discovered mount gone from the container is still deleted
+        data = self.reference()
+        inspect = self.docker_container(data, ODOO)["inspect"]
+        inspect["Mounts"] = [m for m in inspect["Mounts"] if m["Destination"] != "/var/lib/odoo"]
+        self.Importer._apply(data)
+        self.assertEqual(sorted(odoo.mount_ids.mapped("destination")),
+                         ["/opt/odoo/auto/dev", "/srv/manual"])
+
     def test_creation_only_fields_kept(self):
         """Deployment method, install type and kind are set at creation, then left to the user."""
         self.Importer._apply(REFERENCE_RAW)
