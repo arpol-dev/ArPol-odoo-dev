@@ -33,6 +33,19 @@ msgid "%(record)s is chosen for several discovered objects (%(keys)s): choose it
 msgstr "%(record)s est choisi pour plusieurs objets découverts (%(keys)s) : ne le choisissez que pour l'un d'eux."
 
 #. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid ""
+", not the\n"
+"                        one in the file: two servers sharing a machine-id (a cloned virtual\n"
+"                        machine) would be merged. Only if it is that server, renamed since,\n"
+"                        tick the box below and refresh the preview."
+msgstr ""
+", et non sous\n"
+"                        celui du fichier : deux serveurs partageant un machine-id (une machine\n"
+"                        virtuelle clonée) seraient fusionnés. Seulement s'il s'agit de ce serveur, renommé depuis,\n"
+"                        cochez la case ci-dessous et actualisez l'aperçu."
+
+#. module: maintenance_sw_discovery
 #. odoo-python
 #: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
 msgid "Absent from the discovery: archived"
@@ -123,6 +136,12 @@ msgid "Created on"
 msgstr "Créé le"
 
 #. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_docker_component__discovered
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_docker_mount__discovered
+msgid "Created or updated by a server discovery: deleted when a later discovery no longer finds it. What is entered by hand is never deleted by a discovery."
+msgstr "Créé ou mis à jour par une découverte de serveur : supprimé quand une découverte suivante ne le trouve plus. Ce qui est saisi à la main n'est jamais supprimé par une découverte."
+
+#. module: maintenance_sw_discovery
 #: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__customer_id
 msgid "Customer"
 msgstr "Client"
@@ -133,14 +152,31 @@ msgid "Deleted"
 msgstr "Supprimé"
 
 #. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_docker_component__discovered
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_docker_mount__discovered
+msgid "Discovered"
+msgstr "Découvert"
+
+#. module: maintenance_sw_discovery
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.hr_equipment_view_form
 msgid "Discovery"
 msgstr "Découverte"
 
 #. module: maintenance_sw_discovery
 #: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__discovery_file
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_equipment__discovery_file
 msgid "Discovery File"
 msgstr "Fichier de découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_equipment__discovery_file_name
+msgid "Discovery File Name"
+msgstr "Nom du fichier de découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_equipment__discovery_hostname
+msgid "Discovery Hostname"
+msgstr "Nom d'hôte découvert"
 
 #. module: maintenance_sw_discovery
 #: model:ir.model,name:maintenance_sw_discovery.model_maintenance_discovery_import_line
@@ -171,6 +207,16 @@ msgid "Display Name"
 msgstr "Nom affiché"
 
 #. module: maintenance_sw_discovery
+#: model:ir.model,name:maintenance_sw_discovery.model_docker_component
+msgid "Docker Component"
+msgstr "Composant Docker"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model,name:maintenance_sw_discovery.model_docker_mount
+msgid "Docker Mount"
+msgstr "Montage Docker"
+
+#. module: maintenance_sw_discovery
 #: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_wizard__state__done
 msgid "Done"
 msgstr "Terminé"
@@ -179,6 +225,12 @@ msgstr "Terminé"
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
 msgid "Download the discovery script"
 msgstr "Télécharger le script de découverte"
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
+msgid "Entered by hand, absent from the discovery: kept"
+msgstr "Saisi à la main, absent de la découverte : conservé"
 
 #. module: maintenance_sw_discovery
 #: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__match_id
@@ -194,6 +246,21 @@ msgstr "Fichier"
 #: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__filename
 msgid "Filename"
 msgstr "Nom du fichier"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_equipment__discovery_hostname
+msgid "Host name of the server at its last discovery (operating system of a discovered tree): a file with the same identity but another host name (e.g. a cloned virtual machine sharing its machine-id) is refused unless confirmed as the same server."
+msgstr "Nom d'hôte du serveur à sa dernière découverte (système d'exploitation d'un arbre découvert) : un fichier de même identité mais d'un autre nom d'hôte (par exemple une machine virtuelle clonée partageant son machine-id) est refusé, sauf confirmation qu'il s'agit du même serveur."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__hostname_conflict
+msgid "Host name under which the identity of this file was already discovered."
+msgstr "Nom d'hôte sous lequel l'identité de ce fichier a déjà été découverte."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__hostname_conflict
+msgid "Hostname Conflict"
+msgstr "Conflit de nom d'hôte"
 
 #. module: maintenance_sw_discovery
 #: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__id
@@ -212,12 +279,18 @@ msgid "Identity of the host in the discovery files (pve-guest:<machine-id>:<vmid
 msgstr "Identité du support dans les fichiers de découverte (pve-guest:<machine-id>:<vmid>)."
 
 #. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/wizards/discovery_import_wizard.py:0
 #: model:ir.actions.act_window,name:maintenance_sw_discovery.discovery_import_wizard_action
 #: model:ir.ui.menu,name:maintenance_sw_discovery.menu_discovery_import
-#: code:addons/maintenance_sw_discovery/wizards/discovery_import_wizard.py:0
 #: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
 msgid "Import Discovery"
 msgstr "Importer une découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_equipment__discovery_file
+msgid "JSON file of the last discovery imported on this server (equipment managers only: it describes the server in detail)."
+msgstr "Fichier JSON de la dernière découverte importée de ce serveur (réservé aux gestionnaires d'équipements : il décrit le serveur en détail)."
 
 #. module: maintenance_sw_discovery
 #: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__key
@@ -355,6 +428,11 @@ msgstr ""
 "                        qu'il a produit. Rien n'est écrit avant que vous confirmiez l'aperçu."
 
 #. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__same_server
+msgid "Same Server, Renamed"
+msgstr "Même serveur, renommé"
+
+#. module: maintenance_sw_discovery
 #: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__sequence
 msgid "Sequence"
 msgstr "Séquence"
@@ -390,6 +468,26 @@ msgstr "La découverte a été importée."
 #: code:addons/maintenance_sw_discovery/wizards/discovery_import_wizard.py:0
 msgid "The file cannot be read."
 msgstr "Le fichier ne peut pas être lu."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__same_server
+msgid "The file comes from the server already discovered under another host name, renamed since: update its tree."
+msgstr "Le fichier vient du serveur déjà découvert sous un autre nom d'hôte, renommé depuis : mettre à jour son arbre."
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
+msgid "This file comes from server %(new)s, but its identity (%(key)s) was already discovered on server %(old)s: two servers sharing a machine-id (a cloned virtual machine) would be merged, and the containers of %(old)s archived. If %(new)s is %(old)s renamed, confirm it in the import wizard (Same Server, Renamed)."
+msgstr "Ce fichier vient du serveur %(new)s, mais son identité (%(key)s) a déjà été découverte sur le serveur %(old)s : deux serveurs partageant un machine-id (une machine virtuelle clonée) seraient fusionnés, et les conteneurs de %(old)s archivés. Si %(new)s est %(old)s renommé, confirmez-le dans l'assistant d'import (Même serveur, renommé)."
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid ""
+"This file has the identity of a server already discovered under the host\n"
+"                        name"
+msgstr ""
+"Ce fichier a l'identité d'un serveur déjà découvert sous le nom\n"
+"                        d'hôte"
 
 #. module: maintenance_sw_discovery
 #. odoo-python
