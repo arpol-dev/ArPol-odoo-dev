@@ -42,10 +42,11 @@
                             <field name="label"/>
                             <field name="changes"/>
                             <field name="matchable" column_invisible="1"/>
-                            <field name="match_install_type" column_invisible="1"/>
+                            <field name="match_kind" column_invisible="1"/>
                             <field name="record_ref" column_invisible="1"/>
                             <field name="match_id" readonly="not matchable"
-                                   options="{'no_create': true}"/>
+                                   options="{'no_create': true}"
+                                   domain="[('equipment_kind', '=', 'software'), ('discovery_key', '=', False)] + ([('install_type', '=', 'os')] if match_kind == 'os' else ['|', ('install_type', '=', False), ('install_type', 'in', ['docker_container', 'compose_stack'])])"/>
                             <button name="action_open" type="object" icon="fa-external-link"
                                     title="Open" invisible="not record_ref"/>
                         </list>

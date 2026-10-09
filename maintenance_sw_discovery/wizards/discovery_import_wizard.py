@@ -7,6 +7,7 @@ from odoo.exceptions import AccessError, UserError
 from ..models import discovery_tools as tools
 from ..models.discovery_importer import DELETED_WHEN_MISSING
 
+CONTAINER_INSTALL_TYPES = ("docker_container", "compose_stack")
 ACTION_ORDER = ("create", "update", "unchanged", "missing")
 
 
@@ -97,7 +98,7 @@ class DiscoveryImportWizard(models.TransientModel):
                 "deleted": op["action"] == "missing" and op["model"] in DELETED_WHEN_MISSING,
                 "changes": "\n".join(op["changes"]),
                 "matchable": matchable,
-                "match_install_type": "os" if matchable and is_root else False,
+                "match_kind": ("os" if is_root else "container") if matchable else False,
                 "match_id": match.id or False,
                 "record_ref": f"{op['model']},{op['record_id']}" if op["record_id"] else False,
             })
@@ -190,11 +191,10 @@ class DiscoveryImportLine(models.TransientModel):
     )
     changes = fields.Text(readonly=True)
     matchable = fields.Boolean(readonly=True)
-    match_install_type = fields.Char(readonly=True)
+    match_kind = fields.Selection([("os", "Operating System"), ("container", "Container")],
+                                  readonly=True)
     match_id = fields.Many2one(
         "maintenance.equipment", string="Existing Equipment",
-        domain="[('equipment_kind', '=', 'software'), ('discovery_key', '=', False),"
-               " ('install_type', '=?', match_install_type)]",
         help="Attach this object to an equipment entered by hand instead of creating one.",
     )
     record_ref = fields.Char(readonly=True)
@@ -204,10 +204,13 @@ class DiscoveryImportLine(models.TransientModel):
         equipment = self.match_id
         if (not self.matchable or equipment.equipment_kind != "software"
                 or equipment.discovery_key
-                or (self.match_install_type and equipment.install_type != self.match_install_type)):
+                or (self.match_kind == "os" and equipment.install_type != "os")
+                or (self.match_kind == "container" and equipment.install_type
+                    and equipment.install_type not in CONTAINER_INSTALL_TYPES)):
             raise UserError(self.env._(
                 "%(equipment)s cannot be attached to %(label)s: choose a software equipment "
-                "entered by hand, of the same kind, that no discovery has attached yet.",
+                "entered by hand that no discovery has attached yet (an operating system for "
+                "the system, a container or a stack for a container).",
                 equipment=equipment.display_name, label=self.label or self.key,
             ))
 

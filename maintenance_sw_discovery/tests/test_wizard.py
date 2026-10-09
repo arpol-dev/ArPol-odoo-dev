@@ -150,7 +150,8 @@ class TestWizard(DiscoveryCase):
         })
         for key, bad in (
             (ROOT_KEY, hardware), (ROOT_KEY, other_software), (ROOT_KEY, keyed),
-            (ODOO_KEY, hardware), (ODOO_KEY, keyed),
+            (ODOO_KEY, hardware), (ODOO_KEY, keyed), (ODOO_KEY, other_software),
+            (ODOO_KEY, self.old_os),
         ):
             wizard = self.wizard()
             wizard.action_analyse()
@@ -182,6 +183,36 @@ class TestWizard(DiscoveryCase):
         with self.assertRaisesRegex(UserError, "several discovered objects"):
             wizard.action_refresh()
 
+    def test_container_match_accepts_stack_or_untyped(self):
+        stack = self.Equipment.create({
+            "name": "Old stack", "equipment_kind": "software", "install_type": "compose_stack",
+        })
+        untyped = self.Equipment.create({"name": "Untyped", "equipment_kind": "software"})
+        names = [
+            c["name"] for c in self.reference()["sections"]["docker"]["data"]["containers"]
+        ]
+        wizard = self.wizard()
+        wizard.action_analyse()
+        self.line(wizard, f"container:{MID}:{names[0]}").match_id = stack
+        self.line(wizard, f"container:{MID}:{names[1]}").match_id = untyped
+        wizard.action_apply()
+        self.assertEqual(stack.discovery_key, f"container:{MID}:{names[0]}")
+        self.assertEqual(untyped.discovery_key, f"container:{MID}:{names[1]}")
+
+    def test_missing_filter(self):
+        self.Importer._apply(REFERENCE_RAW)
+        data = self.reference()
+        data["sections"]["docker"]["data"]["containers"] = [
+            c for c in data["sections"]["docker"]["data"]["containers"] if c["name"] != ODOO
+        ]
+        self.Importer._apply(data)
+        view = self.env.ref("maintenance_sw_discovery.hr_equipment_view_search")
+        self.assertIn("missing_since_discovery", view.get_combined_arch())
+        found = self.Equipment.search([("missing_since_discovery", "=", True)])
+        self.assertEqual(found, self.container(ODOO))
+        arch = self.env["maintenance.equipment"].get_view(view_type="search")["arch"]
+        self.assertIn('name="missing_since_discovery"', arch)
+
     def test_form_flow(self):
         form = Form(self.Wizard)
         form.discovery_file = base64.b64encode(REFERENCE_RAW)
@@ -210,13 +241,45 @@ class TestWizard(DiscoveryCase):
         self.assertEqual(existing.action_open()["res_id"], int(existing.record_ref.split(",")[1]))
 
     def test_managers_only(self):
-        user = self.env["res.users"].create({
+        """The ACL keeps plain users out of the wizard; a manager can use it."""
+        plain = self.env["res.users"].create({
             "name": "Plain", "login": "plain-user",
             "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
         })
-        wizard = self.wizard().with_user(user)
+        manager = self.env["res.users"].create({
+            "name": "Manager", "login": "manager-user",
+            "groups_id": [(6, 0, [
+                self.env.ref("base.group_user").id,
+                self.env.ref("maintenance.group_equipment_manager").id,
+            ])],
+        })
+        data = {"discovery_file": base64.b64encode(REFERENCE_RAW), "filename": "a.json"}
         with self.assertRaises(AccessError):
-            wizard.action_analyse()
+            self.Wizard.with_user(plain).create(data)
+        wizard = self.wizard()
+        with self.assertRaises(AccessError):
+            wizard.with_user(plain).read(["state"])
+        as_manager = self.Wizard.with_user(manager).create(data)
+        as_manager.action_analyse()
+        self.assertEqual(as_manager.state, "preview")
+        as_manager.action_apply()
+        self.assertEqual(as_manager.state, "done")
+
+    def test_actions_refuse_non_managers(self):
+        """Second layer. No non-manager can reach the record through the ACL, so the guard is
+        exercised with sudo() kept on the plain user (env.user stays the plain user)."""
+        plain = self.env["res.users"].create({
+            "name": "Plain", "login": "plain-user",
+            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+        })
+        wizard = self.wizard()
+        wizard.action_analyse()
+        as_plain = wizard.with_user(plain).sudo()
+        self.assertFalse(as_plain.env.user.has_group("maintenance.group_equipment_manager"))
+        for action in ("action_analyse", "action_refresh", "action_apply", "action_back"):
+            with self.assertRaises(AccessError, msg=action):
+                getattr(as_plain, action)()
+        self.assertEqual(wizard.state, "preview")
 
     def test_menu_for_managers(self):
         menu = self.env.ref("maintenance_sw_discovery.menu_discovery_import")

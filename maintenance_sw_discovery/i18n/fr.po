@@ -17,8 +17,8 @@ msgstr ""
 #. module: maintenance_sw_discovery
 #. odoo-python
 #: code:addons/maintenance_sw_discovery/wizards/discovery_import_wizard.py:0
-msgid "%(equipment)s cannot be attached to %(label)s: choose a software equipment entered by hand, of the same kind, that no discovery has attached yet."
-msgstr "%(equipment)s ne peut pas être rattaché à %(label)s : choisissez un équipement logiciel saisi à la main, du même type, qu'aucune découverte n'a encore rattaché."
+msgid "%(equipment)s cannot be attached to %(label)s: choose a software equipment entered by hand that no discovery has attached yet (an operating system for the system, a container or a stack for a container)."
+msgstr "%(equipment)s ne peut pas être rattaché à %(label)s : choisissez un équipement logiciel saisi à la main qu'aucune découverte n'a encore rattaché (un système d'exploitation pour le système, un conteneur ou une pile pour un conteneur)."
 
 #. module: maintenance_sw_discovery
 #. odoo-python
@@ -99,6 +99,11 @@ msgstr "Fermer"
 #: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_equipment__last_discovery
 msgid "Collection time of the last discovery that saw it."
 msgstr "Heure de collecte de la dernière découverte qui l'a vu."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_line__match_kind__container
+msgid "Container"
+msgstr "Conteneur"
 
 #. module: maintenance_sw_discovery
 #: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_line__action__create
@@ -246,9 +251,9 @@ msgid "Maintenance Equipment"
 msgstr "Équipement de maintenance"
 
 #. module: maintenance_sw_discovery
-#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__match_install_type
-msgid "Match Install Type"
-msgstr "Type d'installation à rattacher"
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__match_kind
+msgid "Match Kind"
+msgstr "Type de rattachement"
 
 #. module: maintenance_sw_discovery
 #: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__matchable
@@ -314,6 +319,7 @@ msgstr "Ouvrir le système d'exploitation"
 
 #. module: maintenance_sw_discovery
 #: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__root_equipment_id
+#: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_line__match_kind__os
 msgid "Operating System"
 msgstr "Système d'exploitation"
 
