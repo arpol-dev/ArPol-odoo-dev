@@ -1,7 +1,7 @@
 {
  "schema_version": 1,
  "script_version": "1.0.0",
- "collected_at": "2026-10-08T18:21:18Z",
+ "collected_at": "2026-10-09T13:01:12Z",
  "sections": {
   "machine": {
    "status": "ok",
@@ -402,6 +402,13 @@
         "url": "https://github.com/arpol/ArPol-odoo-dev.git",
         "branch": "18.0-maintenance-sw",
         "commit": "4444dddd4444dddd4444dddd4444dddd4444dddd"
+       }
+      ],
+      "mount_repos_status": [
+       {
+        "destination": "/opt/odoo/auto/dev",
+        "status": "ok",
+        "reason": null
        }
       ],
       "addons_links": [

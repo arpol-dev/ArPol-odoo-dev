@@ -3,7 +3,7 @@ from datetime import datetime
 
 from odoo.exceptions import UserError
 
-from .common import MID, REFERENCE_RAW, DiscoveryCase
+from .common import MID, REFERENCE, REFERENCE_RAW, DiscoveryCase
 from .test_script import run_scenario
 
 ODOO = "myc_odoo-v18_1"
@@ -155,7 +155,8 @@ class TestImporter(DiscoveryCase):
             ("res_model", "=", "maintenance.equipment"), ("res_id", "=", root.id),
         ])
         self.assertEqual(len(attachment), 1)
-        self.assertEqual(attachment.name, "discovery-arpol-2026-10-08.json")
+        date = REFERENCE["collected_at"][:10]
+        self.assertEqual(attachment.name, f"discovery-arpol-{date}.json")
         self.assertEqual(json.loads(attachment.raw)["schema_version"], 1)
 
     def test_base_module_from_the_server_directory(self):

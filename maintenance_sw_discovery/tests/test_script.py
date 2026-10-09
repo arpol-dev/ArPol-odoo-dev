@@ -53,16 +53,19 @@ def copy_root(source, target):
                 os.rename(os.path.join(dirpath, entry), os.path.join(dirpath, ".git"))
 
 
-def run_raw(name, extra_env=None, args=(), extra_bin=None, stdin_script=False):
+def run_raw(name, extra_env=None, args=(), extra_bin=None, stdin_script=False, prepare=None):
     """Run the script on scenario `name`; return (CompletedProcess, tmpdir listing).
 
     With `stdin_script`, the script is fed on stdin to `bash -s` (as `ssh host 'bash -s' <
-    discover.sh` does) instead of being run from its file.
+    discover.sh` does) instead of being run from its file. `prepare(root)` may change the
+    copied root before the run (permissions are restored afterwards for the cleanup).
     """
     scenario = os.path.join(SCENARIOS_DIR, name)
     with tempfile.TemporaryDirectory(prefix="discover-test-") as tmp:
         root = os.path.join(tmp, "root")
         copy_root(os.path.join(scenario, "root"), root)
+        if prepare:
+            prepare(root)
         path_dir = os.path.join(tmp, "bin")
         home = os.path.join(tmp, "home")
         tmpdir = os.path.join(tmp, "tmp")
@@ -109,13 +112,18 @@ def run_raw(name, extra_env=None, args=(), extra_bin=None, stdin_script=False):
             (os.listdir(tmpdir) if os.path.isdir(tmpdir) else []) + os.listdir(home)
             + os.listdir(cwd)
         )
+        if prepare:
+            for dirpath, _dirnames, _filenames in os.walk(root):
+                os.chmod(dirpath, 0o755)
+            os.chmod(root, 0o755)
     return proc, leftovers
 
 
-def run_scenario(name, extra_env=None, extra_bin=None, stdin_script=False):
+def run_scenario(name, extra_env=None, extra_bin=None, stdin_script=False, prepare=None):
     """Run the script on scenario `name` and return the parsed JSON output."""
     proc, _leftovers = run_raw(
-        name, extra_env=extra_env, extra_bin=extra_bin, stdin_script=stdin_script
+        name, extra_env=extra_env, extra_bin=extra_bin, stdin_script=stdin_script,
+        prepare=prepare,
     )
     if proc.returncode != 0:
         raise AssertionError(
@@ -402,6 +410,9 @@ class TestDiscoverScript(BaseCase):
             "url": "https://github.com/arpol/ArPol-odoo-dev.git",
             "branch": "18.0-maintenance-sw", "commit": "4444dddd4444dddd4444dddd4444dddd4444dddd",
         }])
+        self.assertEqual(odoo["mount_repos_status"], [
+            {"destination": "/opt/odoo/auto/dev", "status": "ok", "reason": None},
+        ])
         # Every link of /opt/odoo/auto/addons (which repository provides each module) ...
         self.assertEqual(odoo["addons_links"], [
             {"link": "/opt/odoo/auto/addons/base",
@@ -455,6 +466,9 @@ class TestDiscoverScript(BaseCase):
         self.assertIsNone(odoo["repos_spec"])
         self.assertEqual(odoo["runtime_links"], [])
         self.assertEqual(odoo["addons_links"], [])
+        self.assertEqual(odoo["mount_repos_status"], [
+            {"destination": "/mnt/extra-addons", "status": "ok", "reason": None},
+        ])
         oca_web = {"path": "/mnt/extra-addons/oca-web", "url": "https://github.com/OCA/web.git",
                    "branch": "18.0", "commit": "1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa"}
         custom = {"path": "/mnt/extra-addons/custom",
@@ -476,6 +490,31 @@ class TestDiscoverScript(BaseCase):
             {"name": "base", "version": "18.0.1.3", "state": "installed"},
             {"name": "web_responsive", "version": "18.0.1.0.2", "state": "installed"},
         ]}]})
+
+    def test_mount_source_unread(self):
+        """An unreadable or missing mount source is reported as such, not as an empty one."""
+        if os.geteuid() == 0:
+            self.skipTest("root reads any directory")
+
+        def unreadable(root):
+            os.chmod(os.path.join(root, "srv", "addons"), 0)
+
+        odoo = self.data(self.sections("manual_odoo", prepare=unreadable), "odoo")["instances"][0]
+        self.assertEqual(odoo["mount_repos"], [])
+        status = odoo["mount_repos_status"]
+        self.assertEqual([(s["destination"], s["status"]) for s in status],
+                         [("/mnt/extra-addons", "skipped")])
+        self.assertIn("root privileges required", status[0]["reason"])
+
+        def missing(root):
+            shutil.rmtree(os.path.join(root, "srv", "addons"))
+
+        odoo = self.data(self.sections("manual_odoo", prepare=missing), "odoo")["instances"][0]
+        self.assertEqual(odoo["mount_repos"], [])
+        self.assertEqual(odoo["mount_repos_status"], [{
+            "destination": "/mnt/extra-addons", "status": "error",
+            "reason": "mount source not found on the host",
+        }])
 
     # ------------------------------------------------------------------ docker_denied
     def test_docker_denied(self):

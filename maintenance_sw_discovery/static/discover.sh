@@ -1062,7 +1062,8 @@ ADDONS_SH='for d in "$@"; do for m in "$d"/*/__manifest__.py; do [ -f "$m" ] || 
 REPOS_SH='for d in /opt/odoo/custom/src/* "$@"; do [ -e "$d/.git" ] || continue; if command -v git >/dev/null 2>&1 && c=$(git -c safe.directory="*" -C "$d" rev-parse HEAD 2>/dev/null); then u=$(git -c safe.directory="*" -C "$d" config --get remote.origin.url 2>/dev/null); b=$(git -c safe.directory="*" -C "$d" rev-parse --abbrev-ref HEAD 2>/dev/null); printf "ok\t%s\t%s\t%s\t%s\n" "$d" "$u" "$b" "$c"; else printf "na\t%s\n" "$d"; fi; done'
 LINKS_SH='cd /opt/odoo/auto/addons 2>/dev/null || exit 0; for l in *; do [ -L "$l" ] || continue; t=$(readlink -f "$l" 2>/dev/null) || t=$(readlink "$l"); printf "%s\t%s\n" "/opt/odoo/auto/addons/$l" "$t"; done'
 # Run on the host (read only), as is or through priv: git dirs at or right under $1 ("." = $1).
-GITDIRS_SH='if [ -e "$1/.git" ]; then echo .; exit 0; fi; for d in "$1"/*/; do [ -e "$d.git" ] || continue; d="${d%/}"; echo "${d##*/}"; done; exit 0'
+# Exit 2 when the source does not exist; a file holds no checkout (exit 0, nothing listed).
+GITDIRS_SH='[ -e "$1" ] || exit 2; [ -d "$1" ] || exit 0; if [ -e "$1/.git" ]; then echo .; exit 0; fi; for d in "$1"/*/; do [ -e "$d.git" ] || continue; d="${d%/}"; echo "${d##*/}"; done; exit 0'
 
 is_odoo() {  # FLAT: image name or command line mentions odoo
   printf '%s\n' "$1" | LC_ALL=C awk -F'\t' '
@@ -1107,7 +1108,9 @@ host_path() {  # host_path BINDS CONTAINER_PATH -> host path through the longest
   printf '%s%s' "$best_src" "${p:${#best}}"
 }
 host_readable() { [ -d "${ROOT}$1" ] && [ -r "${ROOT}$1" ] && [ -x "${ROOT}$1" ]; }
-host_git_dirs() {  # host_git_dirs DIR -> git dirs at or right under host DIR (relative, "." = DIR)
+host_git_dirs() {  # host_git_dirs DIR -> git dirs at or right under host DIR (relative, "." = DIR);
+                  # exit 2 when DIR does not exist (seen from a readable parent)
+  if [ ! -e "${ROOT}$1" ] && host_readable "$(dirname "$1")"; then return 2; fi
   if host_readable "$1"; then run sh -c "$GITDIRS_SH" discover "${ROOT}$1"
   else priv sh -c "$GITDIRS_SH" discover "${ROOT}$1"; fi
 }
@@ -1211,7 +1214,7 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
   local cmd_path="" cmd_conf="" cmd_host="" cmd_user=""
   local binds addons="" asep="" yaml spec repos="" rsep="" seen=" " st rest u b c hp rel
   local mrepos="" msep="" src dst links="" lsep="" config="" csep="" host user plist=""
-  local alinks="" alsep=""
+  local alinks="" alsep="" mstatus="" mssep="" gdirs grc gst greason
   local -a paths=() confs=()
   local -A mods=()
   name="$(jget "$flat" .Name)"; name="${name#/}"
@@ -1287,15 +1290,24 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
     fi
     rsep=", "
   done < <(dk exec "$id" sh -c "$REPOS_SH" discover-repos "${paths[@]}")
-  # git repositories of the bind mount sources (read on the host)
+  # git repositories of the bind mount sources (read on the host); mount_repos_status tells, per
+  # bind mount, whether its source could be listed (an unread source is no empty one)
   while IFS=$'\t' read -r src dst; do
     [ -n "$src" ] || continue
+    gdirs="$(host_git_dirs "$src")"; grc=$?
+    if [ $grc -eq 0 ]; then gst=ok; greason=""
+    elif priv_denied $grc; then gst=skipped; greason="$(priv_reason $grc)"
+    elif [ $grc -eq 2 ]; then gst=error; greason="mount source not found on the host"
+    else gst=error; greason="cannot list the mount source (exit $grc)"; fi
+    mstatus+="$mssep{\"destination\": $(json_str "$dst"), \"status\": $(json_str "$gst"), \"reason\": $(jnull "$greason")}"
+    mssep=", "
+    [ $grc -eq 0 ] || continue
     while IFS= read -r rel; do
       [ -n "$rel" ] || continue
       if [ "$rel" = . ]; then mrepos+="$msep$(host_repo_json "$dst" "$src")"
       else mrepos+="$msep$(host_repo_json "${dst%/}/$rel" "${src%/}/$rel")"; fi
       msep=", "
-    done < <(host_git_dirs "$src")
+    done <<<"$gdirs"
   done <<<"$binds"
   # links of /opt/odoo/auto/addons: all of them (addons_links: which repository provides each
   # module), and those outside the image sources (runtime_links)
@@ -1321,9 +1333,9 @@ odoo_instance() {  # odoo_instance ID -> instance object of Odoo container ID
   [ -n "$user" ] || user="$(env_get "$flat" PGUSER)"
   [ -n "$user" ] || user=postgres
   for d in "${paths[@]}"; do plist+="${plist:+, }$(json_str "$d")"; done
-  printf '{"container": %s, "version": %s, "addons_path": [%s], "addons": {%s}, "repos_spec": %s, "repos": [%s], "mount_repos": [%s], "addons_links": [%s], "runtime_links": [%s], "config": {%s}, "databases": %s}' \
+  printf '{"container": %s, "version": %s, "addons_path": [%s], "addons": {%s}, "repos_spec": %s, "repos": [%s], "mount_repos": [%s], "mount_repos_status": [%s], "addons_links": [%s], "runtime_links": [%s], "config": {%s}, "databases": %s}' \
     "$(json_str "$name")" "$(jnull "$ver")" "$plist" \
-    "$addons" "$spec" "$repos" "$mrepos" "$alinks" "$links" "$config" \
+    "$addons" "$spec" "$repos" "$mrepos" "$mstatus" "$alinks" "$links" "$config" \
     "$(odoo_databases "$id" "$host" "$user")"
 }
 collect_odoo() {
