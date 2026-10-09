@@ -9,6 +9,11 @@
 # Requires bash >= 4 and coreutils/busybox (sed, awk, grep); iconv, timeout, jq, git, sudo are
 # used when present. Everything runs from main(), called on the last line: with `bash -s` the
 # whole script has been read before anything runs, and stdin is then closed for every command.
+# Timeouts (30 s per command, when `timeout` exists) stop the local client only: a `docker exec`
+# that times out leaves its process (sh, grep, psql...) running in the container until it ends.
+# --sudo: the commands run through `sudo -n` are sh, cat, git and docker (and qm / pct on Proxmox
+# VE). A sudoers entry allowing them without password is effectively full root (sh, docker), even
+# if this script only reads: grant it to a trusted account, or run the script as root.
 #
 # Secrets: odoo.conf only leaves its container as a key whitelist; no YAML text is output:
 # compose.yml and repos.yaml are parsed here (YAML_AWK, a small conservative reader: what it does
@@ -1411,7 +1416,8 @@ Read-only description of this server (machine, OS, Proxmox VE, 0k, Cloudron, Doc
 as JSON on stdout, to import into the Odoo maintenance inventory.
 
   --sudo    run the commands that need root with `sudo -n` (never asks for a password);
-            without it and without root, those sections are skipped
+            without it and without root, those sections are skipped. They are sh, cat,
+            git, docker (qm, pct on Proxmox VE): allowing them in sudoers is root access
   --help    show this help
 
 Nothing is modified on the server; secrets (passwords, tokens, keys) are not output.
