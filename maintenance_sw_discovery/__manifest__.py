@@ -23,7 +23,11 @@ duplicating it; manual entries (name, notes, forced host or customer) are kept.
     "website": "https://arpol.fr",
     "category": "Manufacturing/Maintenance",
     "depends": ["maintenance_sw_odoo"],
-    "data": [],
+    "data": [
+        "security/ir.model.access.csv",
+        "views/discovery_import_wizard_views.xml",
+        "views/maintenance_equipment_views.xml",
+    ],
     "license": "AGPL-3",
     "installable": True,
     "application": False,

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="hr_equipment_view_form" model="ir.ui.view">
+        <field name="name">equipment.form.discovery</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="maintenance_sw_base.hr_equipment_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='software']" position="inside">
+                <group string="Discovery" name="discovery">
+                    <field name="discovery_key" readonly="1"/>
+                    <field name="last_discovery" readonly="1"/>
+                    <field name="missing_since_discovery" readonly="1"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="hr_equipment_view_search" model="ir.ui.view">
+        <field name="name">equipment.search.discovery</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="maintenance.hr_equipment_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='my']" position="before">
+                <filter string="Missing at Last Discovery" name="missing_since_discovery"
+                        domain="[('missing_since_discovery', '=', True)]"/>
+                <separator/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

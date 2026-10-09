@@ -1,0 +1,417 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* maintenance_sw_discovery
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0-20260926\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: Armand Polmard\n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/wizards/discovery_import_wizard.py:0
+msgid "%(equipment)s cannot be attached to %(label)s: choose a software equipment entered by hand, of the same kind, that no discovery has attached yet."
+msgstr "%(equipment)s ne peut pas être rattaché à %(label)s : choisissez un équipement logiciel saisi à la main, du même type, qu'aucune découverte n'a encore rattaché."
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
+msgid "%(record)s (%(key)s) was already discovered, but you cannot modify it: select its company, or ask a user who can."
+msgstr "%(record)s (%(key)s) a déjà été découvert, mais vous ne pouvez pas le modifier : sélectionnez sa société, ou demandez à un utilisateur qui le peut."
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
+msgid "%(record)s is chosen for several discovered objects (%(keys)s): choose it for one of them only."
+msgstr "%(record)s est choisi pour plusieurs objets découverts (%(keys)s) : ne le choisissez que pour l'un d'eux."
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
+msgid "Absent from the discovery: archived"
+msgstr "Absent de la découverte : archivé"
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
+msgid "Absent from the discovery: deleted"
+msgstr "Absent de la découverte : supprimé"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_equipment__missing_since_discovery
+msgid "Absent from the last discovery of its server: archived until it shows up again."
+msgstr "Absent de la dernière découverte de son serveur : archivé jusqu'à sa réapparition."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__action
+msgid "Action"
+msgstr "Action"
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "Analyse"
+msgstr "Analyser"
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "Apply"
+msgstr "Appliquer"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_discovery_import_line__match_id
+msgid "Attach this object to an equipment entered by hand instead of creating one."
+msgstr "Rattacher cet objet à un équipement saisi à la main au lieu d'en créer un."
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "Back"
+msgstr "Retour"
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "Cancel"
+msgstr "Annuler"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__changes
+msgid "Changes"
+msgstr "Changements"
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/wizards/discovery_import_wizard.py:0
+msgid "Choose the discovery file produced by discover.sh."
+msgstr "Choisissez le fichier de découverte produit par discover.sh."
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "Close"
+msgstr "Fermer"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_equipment__last_discovery
+msgid "Collection time of the last discovery that saw it."
+msgstr "Heure de collecte de la dernière découverte qui l'a vu."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_line__action__create
+msgid "Create"
+msgstr "Créer"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__create_uid
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__create_uid
+msgid "Created by"
+msgstr "Créé par"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__create_date
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__create_date
+msgid "Created on"
+msgstr "Créé le"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__customer_id
+msgid "Customer"
+msgstr "Client"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__deleted
+msgid "Deleted"
+msgstr "Supprimé"
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.hr_equipment_view_form
+msgid "Discovery"
+msgstr "Découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__discovery_file
+msgid "Discovery File"
+msgstr "Fichier de découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model,name:maintenance_sw_discovery.model_maintenance_discovery_import_line
+msgid "Discovery Import Line"
+msgstr "Ligne d'import de découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model,name:maintenance_sw_discovery.model_maintenance_discovery_import_wizard
+msgid "Discovery Import Wizard"
+msgstr "Assistant d'import de découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_equipment__discovery_key
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_host__discovery_key
+msgid "Discovery Key"
+msgstr "Clé de découverte"
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
+msgid "Discovery of %s:"
+msgstr "Découverte du %s :"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__display_name
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__display_name
+msgid "Display Name"
+msgstr "Nom affiché"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_wizard__state__done
+msgid "Done"
+msgstr "Terminé"
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "Download the discovery script"
+msgstr "Télécharger le script de découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__match_id
+msgid "Existing Equipment"
+msgstr "Équipement existant"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_wizard__state__upload
+msgid "File"
+msgstr "Fichier"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__filename
+msgid "Filename"
+msgstr "Nom du fichier"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__id
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__id
+msgid "ID"
+msgstr "ID"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_equipment__discovery_key
+msgid "Identity of the equipment in the discovery files (e.g. machine:<machine-id>, container:<machine-id>:<name>): a new discovery updates it instead of creating another."
+msgstr "Identité de l'équipement dans les fichiers de découverte (p. ex. machine:<machine-id>, container:<machine-id>:<nom>) : une nouvelle découverte le met à jour au lieu d'en créer un autre."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_host__discovery_key
+msgid "Identity of the host in the discovery files (pve-guest:<machine-id>:<vmid>)."
+msgstr "Identité du support dans les fichiers de découverte (pve-guest:<machine-id>:<vmid>)."
+
+#. module: maintenance_sw_discovery
+#: model:ir.actions.act_window,name:maintenance_sw_discovery.discovery_import_wizard_action
+#: model:ir.ui.menu,name:maintenance_sw_discovery.menu_discovery_import
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "Import Discovery"
+msgstr "Importer une découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__key
+msgid "Key"
+msgstr "Clé"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_equipment__last_discovery
+msgid "Last Discovery"
+msgstr "Dernière découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__write_uid
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__write_uid
+msgid "Last Updated by"
+msgstr "Dernière modification par"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__write_date
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__write_date
+msgid "Last Updated on"
+msgstr "Dernière modification le"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__line_ids
+msgid "Lines"
+msgstr "Lignes"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model,name:maintenance_sw_discovery.model_maintenance_equipment
+msgid "Maintenance Equipment"
+msgstr "Équipement de maintenance"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__match_install_type
+msgid "Match Install Type"
+msgstr "Type d'installation à rattacher"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__matchable
+msgid "Matchable"
+msgstr "Rattachable"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_line__action__missing
+msgid "Missing"
+msgstr "Absent"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_equipment__missing_since_discovery
+msgid "Missing Since Discovery"
+msgstr "Absent depuis la découverte"
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.hr_equipment_view_search
+msgid "Missing at Last Discovery"
+msgstr "Absent à la dernière découverte"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,help:maintenance_sw_discovery.field_maintenance_discovery_import_line__deleted
+msgid "Missing from the server and without archive: it will be deleted."
+msgstr "Absent du serveur et sans archivage : il sera supprimé."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__model
+msgid "Model"
+msgstr "Modèle"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__label
+msgid "Name"
+msgstr "Nom"
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid ""
+"Nothing is written yet. After changing the physical host, the customer\n"
+"                        or an existing equipment, refresh the preview. The file is read again\n"
+"                        when you apply."
+msgstr ""
+"Rien n'est encore écrit. Après avoir changé le support physique, le client\n"
+"                        ou un équipement existant, actualisez l'aperçu. Le fichier est relu\n"
+"                        à l'application."
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/wizards/discovery_import_wizard.py:0
+msgid "Only equipment managers can import a discovery."
+msgstr "Seuls les gestionnaires d'équipements peuvent importer une découverte."
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "Open"
+msgstr "Ouvrir"
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "Open the Operating System"
+msgstr "Ouvrir le système d'exploitation"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__root_equipment_id
+msgid "Operating System"
+msgstr "Système d'exploitation"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model,name:maintenance_sw_discovery.model_maintenance_host
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__host_id
+msgid "Physical Host"
+msgstr "Support physique"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_wizard__state__preview
+msgid "Preview"
+msgstr "Aperçu"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__record_ref
+msgid "Record Ref"
+msgstr "Référence de l'enregistrement"
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "Refresh Preview"
+msgstr "Actualiser l'aperçu"
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid ""
+"Run the read-only script on the server, then choose the JSON file it\n"
+"                        produced. Nothing is written before you confirm the preview."
+msgstr ""
+"Exécutez le script en lecture seule sur le serveur, puis choisissez le fichier JSON\n"
+"                        qu'il a produit. Rien n'est écrit avant que vous confirmiez l'aperçu."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__sequence
+msgid "Sequence"
+msgstr "Séquence"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model,name:maintenance_sw_discovery.model_maintenance_discovery_importer
+msgid "Server Discovery Importer"
+msgstr "Importeur de découverte de serveur"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__state
+msgid "State"
+msgstr "État"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_wizard__summary
+msgid "Summary"
+msgstr "Résumé"
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
+msgid "The discovery file has no readable machine section: the server cannot be identified."
+msgstr "Le fichier de découverte n'a pas de section machine lisible : le serveur ne peut pas être identifié."
+
+#. module: maintenance_sw_discovery
+#: model_terms:ir.ui.view,arch_db:maintenance_sw_discovery.discovery_import_wizard_view_form
+msgid "The discovery was imported."
+msgstr "La découverte a été importée."
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/wizards/discovery_import_wizard.py:0
+msgid "The file cannot be read."
+msgstr "Le fichier ne peut pas être lu."
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
+msgid "This is not a discovery file: it is not valid JSON (%s)."
+msgstr "Ce n'est pas un fichier de découverte : le JSON n'est pas valide (%s)."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__model_label
+msgid "Type"
+msgstr "Type"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_line__action__unchanged
+msgid "Unchanged"
+msgstr "Inchangé"
+
+#. module: maintenance_sw_discovery
+#. odoo-python
+#: code:addons/maintenance_sw_discovery/models/discovery_importer.py:0
+msgid "Unknown discovery file format (schema version %(version)s, this module reads schema version %(expected)s): run the discover.sh script served by this database."
+msgstr "Format de fichier de découverte inconnu (version de schéma %(version)s, ce module lit la version de schéma %(expected)s) : exécutez le script discover.sh fourni par cette base."
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields.selection,name:maintenance_sw_discovery.selection__maintenance_discovery_import_line__action__update
+msgid "Update"
+msgstr "Mettre à jour"
+
+#. module: maintenance_sw_discovery
+#: model:ir.model.fields,field_description:maintenance_sw_discovery.field_maintenance_discovery_import_line__wizard_id
+msgid "Wizard"
+msgstr "Assistant"

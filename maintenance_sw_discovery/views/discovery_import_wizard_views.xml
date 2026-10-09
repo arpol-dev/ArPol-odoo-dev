@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="discovery_import_wizard_view_form" model="ir.ui.view">
+        <field name="name">maintenance.discovery.import.wizard.form</field>
+        <field name="model">maintenance.discovery.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import Discovery">
+                <field name="state" invisible="1"/>
+                <group invisible="state != 'upload'">
+                    <p colspan="2" class="text-muted">
+                        Run the read-only script on the server, then choose the JSON file it
+                        produced. Nothing is written before you confirm the preview.
+                        <a href="/maintenance_sw_discovery/static/discover.sh" target="_blank">Download the discovery script</a>
+                    </p>
+                    <field name="discovery_file" filename="filename" required="state == 'upload'"/>
+                    <field name="filename" invisible="1"/>
+                </group>
+                <div invisible="state != 'preview'">
+                    <group>
+                        <group>
+                            <field name="host_id"/>
+                            <field name="customer_id"/>
+                        </group>
+                        <group>
+                            <field name="summary"/>
+                        </group>
+                    </group>
+                    <p class="text-muted">
+                        Nothing is written yet. After changing the physical host, the customer
+                        or an existing equipment, refresh the preview. The file is read again
+                        when you apply.
+                    </p>
+                    <field name="line_ids" nolabel="1">
+                        <list create="0" delete="0" editable="bottom"
+                              decoration-success="action == 'create'"
+                              decoration-info="action == 'update'"
+                              decoration-muted="action == 'unchanged'"
+                              decoration-danger="action == 'missing'">
+                            <field name="action" widget="badge" readonly="1"/>
+                            <field name="deleted" widget="boolean_toggle" readonly="1" optional="show"/>
+                            <field name="model_label"/>
+                            <field name="label"/>
+                            <field name="changes"/>
+                            <field name="matchable" column_invisible="1"/>
+                            <field name="match_install_type" column_invisible="1"/>
+                            <field name="record_ref" column_invisible="1"/>
+                            <field name="match_id" readonly="not matchable"
+                                   options="{'no_create': true}"/>
+                            <button name="action_open" type="object" icon="fa-external-link"
+                                    title="Open" invisible="not record_ref"/>
+                        </list>
+                    </field>
+                </div>
+                <div invisible="state != 'done'">
+                    <p>The discovery was imported.</p>
+                    <field name="root_equipment_id"/>
+                </div>
+                <footer>
+                    <button name="action_analyse" type="object" string="Analyse"
+                            class="btn-primary" invisible="state != 'upload'"/>
+                    <button name="action_apply" type="object" string="Apply"
+                            class="btn-primary" invisible="state != 'preview'"/>
+                    <button name="action_refresh" type="object" string="Refresh Preview"
+                            invisible="state != 'preview'"/>
+                    <button name="action_back" type="object" string="Back"
+                            invisible="state != 'preview'"/>
+                    <button name="action_open_root" type="object" string="Open the Operating System"
+                            class="btn-primary" invisible="state != 'done'"/>
+                    <button string="Close" special="cancel" class="btn-secondary"
+                            invisible="state == 'preview'"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"
+                            invisible="state != 'preview'"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="discovery_import_wizard_action" model="ir.actions.act_window">
+        <field name="name">Import Discovery</field>
+        <field name="res_model">maintenance.discovery.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_discovery_import" action="discovery_import_wizard_action"
+              parent="maintenance_sw_base.menu_sw_config" sequence="60"
+              groups="maintenance.group_equipment_manager"/>
+</odoo>
