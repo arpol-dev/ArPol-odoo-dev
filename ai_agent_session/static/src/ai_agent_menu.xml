@@ -27,7 +27,25 @@
                                 <div t-if="session.status !== 'running' and session.conclusion"
                                      class="small text-muted text-truncate" t-esc="session.conclusion"/>
                             </div>
-                            <button t-if="session.status !== 'running'"
+                            <button t-if="session.status === 'needs_attention'"
+                                    class="btn btn-sm btn-link o-mail-ai-agent-reply"
+                                    title="Answer"
+                                    t-on-click="(ev) => this.onReply(session, ev)">
+                                <i class="fa fa-reply"/>
+                            </button>
+                            <button t-if="session.session_url and session.res_id"
+                                    class="btn btn-sm btn-link o-mail-ai-agent-record"
+                                    title="Open record"
+                                    t-on-click="(ev) => this.onOpenRecord(session, ev)">
+                                <i class="fa fa-external-link"/>
+                            </button>
+                            <button t-if="session.status === 'needs_attention'"
+                                    class="btn btn-sm btn-link o-mail-ai-agent-dismiss"
+                                    title="Dismiss and stop the session"
+                                    t-on-click="(ev) => this.onDismiss(session, ev)">
+                                <i class="fa fa-check"/>
+                            </button>
+                            <button t-if="session.status !== 'running' and session.status !== 'needs_attention'"
                                     class="btn btn-sm btn-link o-mail-ai-agent-dismiss"
                                     title="Dismiss"
                                     t-on-click="(ev) => this.onDismiss(session, ev)">

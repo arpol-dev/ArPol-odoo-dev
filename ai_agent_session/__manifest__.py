@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 {
     'name': 'AI Agent Session',
-    'version': '18.0.2.0.0',
+    'version': '18.0.2.1.0',
     'summary': 'Launch a Claude Code agent session from the chatter or a server action, via webhook',
     'description': """
 AI Agent Session
@@ -28,6 +28,7 @@ sessions.
         'security/security.xml',
         'views/res_users_views.xml',
         'views/ai_agent_session_wizard_views.xml',
+        'views/ai_agent_session_reply_views.xml',
         'views/ir_actions_server_views.xml',
     ],
     'assets': {

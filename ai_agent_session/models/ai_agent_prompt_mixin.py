@@ -73,25 +73,22 @@ class AiAgentPromptMixin(models.AbstractModel):
         return '\n'.join(lines)
 
     def _ai_agent_prompt_process_instructions(self):
-        # Session à tour unique (2026-09-01, à la demande d'Armand) : dès que l'agent s'arrête de
-        # générer (busy->idle), la session est automatiquement tuée côté serveur — que la réponse
-        # soit une conclusion ou une question bloquante. Il n'y a donc plus de "reprise" possible
-        # dans la même session : le prompt doit être explicite là-dessus pour que l'agent ne
-        # planifie pas un futur échange qui n'aura jamais lieu.
+        # Une question ne termine plus la session (2026-10-06, à la demande d'Armand) : elle reste
+        # ouverte et sa réponse arrive comme nouveau message dans la même session (depuis Odoo ou
+        # IAssistant). Le prompt doit le dire, sinon l'agent conclurait à la place de demander.
         return (
             "# How this session works (important)\n"
-            "This session runs a single unattended turn — nobody is watching it live, and as "
-            "soon as you stop generating, this session is automatically terminated. There is no "
-            "back-and-forth: you will not get a chance to ask something and wait here for a "
-            "reply. Do as much as you reasonably can on your own (including using your own "
-            "database access, see above) before concluding.\n"
+            "This session runs unattended in the background — nobody is watching it live. Do as "
+            "much as you reasonably can on your own (including using your own database access, see "
+            "above) before concluding or asking.\n"
             f"- When your task is ENTIRELY complete (nothing left pending, no question), end "
             f"your final reply with this exact line, alone, with nothing after it:\n"
             f"{AI_AGENT_DONE_MARKER}\n"
-            "- If you genuinely cannot proceed without a decision or input from Armand, end your "
-            "reply instead with a clear, self-contained question or summary of what's blocking "
-            "you. He will see it in Odoo and decide whether to follow up (e.g. by launching a "
-            f"new session with the answer) — do not add {AI_AGENT_DONE_MARKER} in that case."
+            "- If you genuinely cannot proceed without a decision or input from Armand, ask a "
+            "clear, self-contained question (see the status instructions at the end of this "
+            "prompt) and stop. The session stays open: his answer will reach you as a new "
+            "message in this same session — then continue the task from where you stopped "
+            f"instead of starting over. Do not add {AI_AGENT_DONE_MARKER} when you ask a question."
         )
 
     def _ai_agent_prompt_record_json(self, record):
