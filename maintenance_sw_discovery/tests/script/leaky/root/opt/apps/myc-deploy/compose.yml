@@ -8,6 +8,12 @@ odoo:
       - "PGPASSWORD=LEAK26 with space"
       - --workers=2
       - ODOO_ARGS=--db_password=LEAK35
+      - --user=admin:LEAK122
+      - -uadmin:LEAK123
+      - Authorization:Basic LEAK124
+      - "Cookie: sid=LEAK125"
+      - https://hooks.slack.com/services/T/B/LEAK126
+      - https://h/x?ok=1&pwd=LEAK127&b=2
     environment:
       DATABASE_URL: postgres://u:p@ssLEAK19@db/x
       INIT: "x; PGPASSWORD='LEAK20' psql"

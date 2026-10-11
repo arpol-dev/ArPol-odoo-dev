@@ -30,7 +30,19 @@
             "Bearer LEAK95.x",
             "-u",
             "admin:LEAK96",
-            "curl -u admin:LEAK97 http://x"
+            "curl -u admin:LEAK97 http://x",
+            "--user=admin:LEAK99",
+            "-uadmin:LEAK100",
+            "curl -H Authorization:Bearer LEAK101",
+            "AUTHORIZATION:basic LEAK102",
+            "-H'authorization:Bearer LEAK103'",
+            "Cookie: session=LEAK104",
+            "Cookie:session=LEAK105",
+            "set-cookie:sid=LEAK106; Path=/",
+            "https://hooks.slack.com/services/T000/B000/LEAK107",
+            "notify https://discord.com/api/webhooks/1/LEAK108 now",
+            "https://h.example.com/cb?Sig=LEAK110&a=1\u0026access_token=LEAK109#f",
+            "--user=\"admin:LEAK111\""
         ],
         "State": {
             "Status": "running",
@@ -85,6 +97,11 @@
                 "USER=leakuser",
                 "TZ=Europe/Paris",
                 "PATH=/usr/local/bin:/usr/bin",
+                "LANG=C.UTF-8\nsecret_access_key = LEAK114",
+                "PGHOST=https://acme.webhook.office.com/webhookb2/LEAK115",
+                "PORT=https://h/?api_key=LEAK116",
+                "PGUSER=Cookie:sid=LEAK117",
+                "PGPORT=--user=a:LEAK118",
                 "DB_PW=LEAK85",
                 "PGPWD=LEAK86",
                 "ODOO_ADMIN_PW=LEAK87",
@@ -99,7 +116,8 @@
             "Cmd": [
                 "odoo",
                 "--db_password",
-                "LEAK01"
+                "LEAK01",
+                "--user=admin:LEAK112"
             ],
             "Healthcheck": {
                 "Test": [
@@ -109,7 +127,8 @@
             },
             "Image": "odoo:17.0@sha256:abababababababababababababababababababababababababababababababab",
             "Entrypoint": [
-                "/entrypoint.sh"
+                "/entrypoint.sh",
+                "https://outlook.office.com/webhook/LEAK113"
             ],
             "Labels": {
                 "com.docker.compose.project": "leaky",

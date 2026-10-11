@@ -608,14 +608,29 @@ class TestDiscoverScript(BaseCase):
             # -u / --user: user:password masked, a plain user kept
             "-u", "***",
             "curl -u *** http://x",
+            # attached forms of -u / --user
+            "--user=***", "-u***",
+            # Authorization: / Cookie: / Set-Cookie: headers, value attached or not, any case
+            "curl -H Authorization:***", "AUTHORIZATION:***", "-H'authorization:***",
+            "Cookie: ***", "Cookie:***", "set-cookie:***",
+            # webhook URLs: path after the known prefix; secret-like query parameters
+            "https://hooks.slack.com/***",
+            "notify https://discord.com/api/webhooks/*** now",
+            "https://h.example.com/cb?Sig=***&a=1&access_token=***",
+            '--user="***"',
         ])
-        self.assertEqual(odoo["Config"]["Cmd"], ["odoo", "--db_password", "***"])
+        self.assertEqual(odoo["Config"]["Cmd"], ["odoo", "--db_password", "***", "--user=***"])
+        self.assertEqual(odoo["Config"]["Entrypoint"],
+                         ["/entrypoint.sh", "https://outlook.office.com/webhook/***"])
         # Env: every name, the value only for a short allowlist (still masked), *** otherwise
         self.assertEqual(odoo["Config"]["Env"], [
             "ADMIN_PASSWORD=***", "DATABASE_URL=***", "ODOO_ARGS=***", "SMTP_PWD=***",
             "HTTP_AUTH=***", "GIT_AUTHOR_NAME=***", "PWD=***", "ODOO_ARGS2=***", "GIT_URL=***",
             "DSN=***", "CONTACT=***", "IMG=***",
             "HOST=***@db", "USER=leakuser", "TZ=Europe/Paris", "PATH=/usr/local/bin:/usr/bin",
+            # allowlisted names: first line of the value only, then masked like any value
+            "LANG=C.UTF-8 ***", "PGHOST=https://acme.webhook.office.com/***",
+            "PORT=https://h/?api_key=***", "PGUSER=Cookie:***", "PGPORT=--user=***",
             "DB_PW=***", "PGPWD=***", "ODOO_ADMIN_PW=***", "API_SALT=***", "GITHUB_PAT=***",
             "SLACK_URL=***", "RCLONE_CONFIG=***", "OPTS=***", "CURL_HEADER=***", "NOVALUE",
         ])
@@ -635,7 +650,9 @@ class TestDiscoverScript(BaseCase):
         self.assertNotIn("ContainerConfig", image)
         self.assertEqual(image["RepoTags"], ["odoo:17.0"])
         self.assertEqual(image["Config"]["Env"],
-                         ["ODOO_VERSION=17.0", "PG_VERSION=16.1", "BUILD_TOKEN_FILE=***"])
+                         ["ODOO_VERSION=17.0", "PG_VERSION=16.1", "BUILD_TOKEN_FILE=***",
+                          "ODOO_RC=/etc/odoo.conf ***",
+                          "OPENERP_SERVER=https://discordapp.com/api/webhooks/***", "TZ=-u***"])
         self.assertEqual(image["Config"]["Labels"], {"org.opencontainers.image.source": "https://***@h/x"})
         # compose.yml: services only; block and flow lists masked, image digest kept
         services = self.data(sections, "zerok")["services"]
@@ -643,7 +660,9 @@ class TestDiscoverScript(BaseCase):
         self.assertEqual(services[0]["image"], "reg:5000/odoo@sha256:abababababababababababababababababababababababababababababababab")
         self.assertEqual(services[0]["command"],
                          ["--db_password", "***", "PGPASSWORD=***", "--workers=2",
-                          "ODOO_ARGS=--db_password=***"])
+                          "ODOO_ARGS=--db_password=***", "--user=***", "-u***",
+                          "Authorization:***", "Cookie: ***", "https://hooks.slack.com/***",
+                          "https://h/x?ok=1&pwd=***&b=2"])
         # services named like secrets keep their data; nothing but name, charm, image, command,
         # volumes is read (environment, options... never output)
         self.assertEqual([s["name"] for s in services],

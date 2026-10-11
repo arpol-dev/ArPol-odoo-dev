@@ -23,17 +23,28 @@
 # INSPECT_KEPT, IMAGE_KEPT: no Healthcheck, health log, image history, nor labels other than
 # compose / Cloudron / OCI identification). Env of containers and images: every name is kept, the
 # value only for a short allowlist (ENV_KEPT: versions, Odoo configuration path, Postgres host /
-# port / user / database, HOST, PORT, USER, LANG, TZ, PATH), NAME=*** otherwise. Every value kept
+# port / user / database, HOST, PORT, USER, LANG, TZ, PATH; first line only, " ***" appended when
+# the value has more), NAME=*** otherwise. Every value kept
 # is then masked on its own (one argv item, one Env string, one URL; MASK_AWK): NAME=value (also
 # quoted, at any = of a word) with NAME containing PASS, SECRET, TOKEN, KEY, CREDENTIAL, PRIVATE,
 # AUTH (not AUTHOR) or _PWD; the word or list item after such an option or after -w, -a, --pass,
-# --requirepass; the rest of the item after a secret key word (Authorization:, DB_PASSWORD:,
-# Bearer); user:password after -u / --user; -p<value>; the user info of URLs (up to the last @; a
-# plain "git" user and image digests kept) and user:password@host.
+# --requirepass; the rest of the item after a secret key word (Authorization:, Cookie:,
+# Set-Cookie:, DB_PASSWORD:, Bearer) or an Authorization / Cookie / Set-Cookie header with its
+# value attached (Authorization:Bearer x, -H'Cookie:x', any case); user:password after -u / --user,
+# -u<user:password>, --user=<user:password>; -p<value>; the user info of URLs (up to the last @; a
+# plain "git" user and image digests kept) and user:password@host; the path after a webhook URL
+# prefix (hooks.slack.com/, discord(app).com/api/webhooks/, outlook.office.com/webhook/,
+# *.webhook.office.com/) and URL query / fragment parameters with a secret-like name (also sig,
+# signature, pwd).
 # Heuristic limits: a secret passed as a free word (positional argument, other short options
-# such as -P x), a URL whose password contains a blank or a quote, a non-URL value under a
+# such as -P x), a URL whose password contains a blank or a quote, a webhook address without its
+# scheme (hooks.slack.com/services/... alone) or on another host, a header other than
+# Authorization / Cookie / Set-Cookie written Name:value (X-Api-Key: x is masked, X-Api-Key:x is
+# not), a non-URL value under a
 # repos.yaml remote, or a secret inside an upstream URL (frozen "# <remote>: <url>" comments,
-# kept only for a remote name and a URL / scp-like address, masked like remotes) may still leak; masking may hide harmless values (-p8080, the word after -a).
+# kept only for a remote name and a URL / scp-like address, masked like remotes) may still leak;
+# masking may hide harmless values (-p8080, the word after -a, -u1000:1000, what follows a secret
+# NAME=value in a URL query).
 set -u
 SCRIPT_VERSION="1.0.0"
 SCHEMA_VERSION=1
@@ -415,8 +426,17 @@ function secret_name(n,   u) {
   return u ~ /PASS|SECRET|TOKEN|KEY|CREDENTIAL|PRIVATE|AUTH|_PWD/
 }
 function user_flag(t) { return t == "-u" || t == "--user" }  # next word: user, or user:password
-function secret_word(t) {  # key word after which the rest of the item is a secret
-  return tolower(t) == "bearer" || (t ~ /^[A-Za-z0-9_.-]+:$/ && secret_name(substr(t, 1, length(t) - 1)))
+function header_name(n,   u) {  # HTTP header whose value is a credential
+  u = tolower(n); return u == "authorization" || u == "proxy-authorization" || u == "cookie" || u == "set-cookie"
+}
+function secret_word(t,   n) {  # key word after which the rest of the item is a secret
+  if (tolower(t) == "bearer") return 1
+  n = substr(t, 1, length(t) - 1)
+  return t ~ /^[A-Za-z0-9_.-]+:$/ && (secret_name(n) || header_name(n))
+}
+function attached_header(t,   h, c) {  # Authorization:x, -HCookie:x, --header=Set-Cookie:x (quoted too)
+  h = t; sub(/^(-H|--header=?)/, "", h); h = unquote(h); c = index(h, ":")
+  return c > 1 && c < length(h) && header_name(substr(h, 1, c - 1))
 }
 function is_flag(t) {  # option whose next word is a secret
   if (t == "-w" || t == "-a" || t == "--requirepass" || t == "--pass") return 1
@@ -525,6 +545,17 @@ function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, n
     }
     if (is_flag(bare)) { out = out tok; nxt = 1; i = j; continue }
     if (user_flag(bare)) { out = out tok; nxu = 1; i = j; continue }
+    if (attached_header(bare)) return out substr(tok, 1, index(tok, ":")) "***"
+    if (bare ~ /^(--user|-u)=/) {  # --user=user:password (a plain user kept)
+      k = index(tok, "="); out = out substr(tok, 1, k); v = i + k; q = quote_at(s, v)
+      if (q != "") { out = out q "***" q; i = qend(s, v + length(q), q); continue }
+      k = value_end(s, v, n, json); tok = substr(s, v, k - v)
+      out = out (index(tok, ":") ? "***" tail_q(tok, out) : tok); i = k; continue
+    }
+    if (bare ~ /^-u[^-=]/ && index(bare, ":")) {  # -uuser:password
+      out = out substr(tok, 1, index(tok, "-u") + 1); k = value_end(s, i, n, json)
+      out = out "***" tail_q(substr(s, i, k - i), out); i = k; continue
+    }
     if (secret_word(bare)) {
       out = out tok
       while (j <= n && (k = sep_len(s, j, json)) > 0) { out = out substr(s, j, k); j += k }
@@ -553,7 +584,8 @@ function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, n
   }
   return out
 }
-function mask_url(s,   out, k, r, e, m, a, c, h) {
+function mask_url(s) { return mask_url_secrets(mask_url_userinfo(s)) }
+function mask_url_userinfo(s,   out, k, r, e, m, a, c, h) {
   # scheme://userinfo@host -> scheme://***@host (token or user:password), up to the LAST @
   # before a blank or quote; a plain "git" user and image digests (x@sha256:...) are kept
   out = ""
@@ -570,11 +602,76 @@ function mask_url(s,   out, k, r, e, m, a, c, h) {
   }
   return out s
 }
-function env_item(s, json,   e, n) {  # NAME=value of an Env list: the value only for ENV_KEPT
+function url_end(s,   m, e, c) {  # index after the URL that starts at 1 (after "scheme://"): up
+  # to a blank, a quote, < >, or a backslash other than the JSON escape \u0026 (&)
+  m = length(s); e = 1
+  while (e <= m) {
+    c = substr(s, e, 1)
+    if (c == "\\" && substr(s, e, 6) == "\\u0026") { e += 6; continue }
+    if (c == " " || c == "\t" || c == SQ || c == "\"" || c == "<" || c == ">" || c == "\\" || index(CTL, c)) break
+    e++
+  }
+  return e
+}
+function webhook_len(r,   k, h, p) {  # length of the kept prefix of a webhook URL r (after
+  # "scheme://"; what follows it is the secret), 0 for other URLs
+  k = match(r, /[\/?#]/); if (!k || substr(r, k, 1) != "/") return 0
+  h = tolower(substr(r, 1, k - 1)); sub(/^.*@/, "", h); sub(/:[0-9]*$/, "", h); p = tolower(substr(r, k))
+  if (h == "hooks.slack.com" || h ~ /\.webhook\.office\.com$/) return k
+  if (h ~ /^([a-z0-9-]+\.)*discord(app)?\.com$/ && match(p, /^\/api(\/v[0-9]+)?\/webhooks\//)) return k - 1 + RLENGTH
+  if (h == "outlook.office.com" && match(p, /^\/webhookb?2?\//)) return k - 1 + RLENGTH
+  return 0
+}
+function secret_param(n) {  # URL query / fragment parameter name holding a secret
+  n = tolower(n)
+  return secret_name(n) || n ~ /(^|[_.-])(pwd|sig|signature)$/
+}
+function url_secrets(r,   w, k, out, e, p, c) {  # one URL after "scheme://"
+  if ((w = webhook_len(r)) && w < length(r)) return substr(r, 1, w) "***"
+  k = match(r, /[?#]/); if (!k) k = length(r) + 1
+  out = substr(r, 1, k - 1); r = substr(r, k)
+  if ((e = index(out, "://")) > 0) out = substr(out, 1, e + 2) url_secrets(substr(out, e + 3))
+  while (r != "") {  # separator (? # & \u0026), then one parameter
+    c = (substr(r, 1, 6) == "\\u0026") ? 6 : 1; out = out substr(r, 1, c); r = substr(r, c + 1)
+    for (e = 1; e <= length(r); e++) if (index("?#&", substr(r, e, 1)) || substr(r, e, 6) == "\\u0026") break
+    p = substr(r, 1, e - 1); r = substr(r, e); k = index(p, "=")
+    if (k > 1 && secret_param(substr(p, 1, k - 1))) p = substr(p, 1, k) "***"
+    else if (k && (c = index(p, "://"))) p = substr(p, 1, c + 2) url_secrets(substr(p, c + 3))
+    out = out p
+  }
+  return out
+}
+function mask_url_secrets(s,   out, k, e) {
+  # path after a webhook prefix (hooks.slack.com/, discord(app).com/api/webhooks/,
+  # outlook.office.com/webhook/, *.webhook.office.com/) and secret-like query parameters -> ***
+  out = ""
+  while ((k = index(s, "://")) > 0) {
+    out = out substr(s, 1, k + 2); s = substr(s, k + 3)
+    e = url_end(s); out = out url_secrets(substr(s, 1, e - 1)); s = substr(s, e)
+  }
+  return out s
+}
+function line_end(v, json,   i, n, c) {  # index of the first line break of v, 0 when none
+  n = length(v)
+  for (i = 1; i <= n; i++) {
+    c = substr(v, i, 1)
+    if (json && c == "\\") {
+      c = substr(v, i + 1, 5)
+      if (c ~ /^([nr]|u000[aAdD]|u202[89])/) return i
+      i++; continue
+    }
+    if (c == "\n" || c == "\r" || substr(v, i, 3) == "\342\200\250" || substr(v, i, 3) == "\342\200\251") return i
+  }
+  return 0
+}
+function env_item(s, json,   e, n, v, k) {  # NAME=value of an Env list: the value only for
+  # ENV_KEPT, first line only (" ***" when there are more)
   e = index(s, "="); if (!e) return s
   n = substr(s, 1, e - 1)
-  if (n ~ ("^(" ENV_KEPT ")$")) return n "=" mask_url(mask_text(substr(s, e + 1), json))
-  return n "=***"
+  if (n !~ ("^(" ENV_KEPT ")$")) return n "=***"
+  v = substr(s, e + 1); k = line_end(v, json)
+  if (k) return n "=" mask_url(mask_text(substr(v, 1, k - 1), json)) " ***"
+  return n "=" mask_url(mask_text(v, json))
 }
 function mask_str(s, prev, path) {  # a whole JSON string; prev = previous string of the list
   if (path ~ /^(Id|Image|Config\/Image|RepoTags\/#|RepoDigests\/#)$/) return s   # image refs, ids
@@ -1421,6 +1518,10 @@ as JSON on stdout, to import into the Odoo maintenance inventory.
   --help    show this help
 
 Nothing is modified on the server; secrets (passwords, tokens, keys) are not output.
+Secret masking of command lines and kept Env values is heuristic: a secret passed as a
+free word (positional argument, unknown short option), a webhook address without its
+scheme or on an unknown host, or a header other than Authorization / Cookie written
+Name:value may still leak (see the script header for the full list).
 EOF
 }
 
