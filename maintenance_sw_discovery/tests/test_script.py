@@ -618,6 +618,18 @@ class TestDiscoverScript(BaseCase):
             "notify https://discord.com/api/webhooks/*** now",
             "https://h.example.com/cb?Sig=***&a=1&access_token=***",
             '--user="***"',
+            # attached headers named like a credential; look-alike host:port / headers kept
+            "curl -H X-Api-Key:***", "-H'X-Auth-Token:***", "Private-Token:***",
+            "x-access-token:***", "Api-Key:***", "X-Vault-Token:***", "apikey:***",
+            "keycloak:24.0", "keycloak-db:5432", "authelia-redis:6379", "authentik-server:9000",
+            "passbolt-db:3306", "token-db:5432", "X-Forwarded-Proto:https",
+            "Content-Type:application/json", "gunicorn -b 0.0.0.0:8069", "psql -U odoo",
+            # user / cookie options: after a NAME=, --proxy-user, -U, -b, --cookie
+            "ODOO_ARGS=--user=***", "ODOO_ARGS=--user ***", "--proxy-user=***",
+            "--proxy-user", "***", "curl -U *** http://x", "-b", "***",
+            "curl --cookie *** http://x", "--cookie=***",
+            # JSON header objects
+            '{"Authorization":***', '{"Cookie": ***',
         ])
         self.assertEqual(odoo["Config"]["Cmd"], ["odoo", "--db_password", "***", "--user=***"])
         self.assertEqual(odoo["Config"]["Entrypoint"],
@@ -631,6 +643,7 @@ class TestDiscoverScript(BaseCase):
             # allowlisted names: first line of the value only, then masked like any value
             "LANG=C.UTF-8 ***", "PGHOST=https://acme.webhook.office.com/***",
             "PORT=https://h/?api_key=***", "PGUSER=Cookie:***", "PGPORT=--user=***",
+            "USER=X-Auth-Token:***",
             "DB_PW=***", "PGPWD=***", "ODOO_ADMIN_PW=***", "API_SALT=***", "GITHUB_PAT=***",
             "SLACK_URL=***", "RCLONE_CONFIG=***", "OPTS=***", "CURL_HEADER=***", "NOVALUE",
         ])
@@ -652,7 +665,8 @@ class TestDiscoverScript(BaseCase):
         self.assertEqual(image["Config"]["Env"],
                          ["ODOO_VERSION=17.0", "PG_VERSION=16.1", "BUILD_TOKEN_FILE=***",
                           "ODOO_RC=/etc/odoo.conf ***",
-                          "OPENERP_SERVER=https://discordapp.com/api/webhooks/***", "TZ=-u***"])
+                          "OPENERP_SERVER=https://discordapp.com/api/webhooks/***", "TZ=-u***",
+                          "LANG=apikey:***"])
         self.assertEqual(image["Config"]["Labels"], {"org.opencontainers.image.source": "https://***@h/x"})
         # compose.yml: services only; block and flow lists masked, image digest kept
         services = self.data(sections, "zerok")["services"]
@@ -662,7 +676,9 @@ class TestDiscoverScript(BaseCase):
                          ["--db_password", "***", "PGPASSWORD=***", "--workers=2",
                           "ODOO_ARGS=--db_password=***", "--user=***", "-u***",
                           "Authorization:***", "Cookie: ***", "https://hooks.slack.com/***",
-                          "https://h/x?ok=1&pwd=***&b=2"])
+                          "https://h/x?ok=1&pwd=***&b=2", "X-Api-Key:***",
+                          "--proxy-user", "***", "-b", "***", "keycloak-db:5432",
+                          "Content-Type:application/json"])
         # services named like secrets keep their data; nothing but name, charm, image, command,
         # volumes is read (environment, options... never output)
         self.assertEqual([s["name"] for s in services],

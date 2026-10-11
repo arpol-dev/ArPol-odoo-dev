@@ -14,6 +14,13 @@ odoo:
       - "Cookie: sid=LEAK125"
       - https://hooks.slack.com/services/T/B/LEAK126
       - https://h/x?ok=1&pwd=LEAK127&b=2
+      - X-Api-Key:LEAK145
+      - --proxy-user
+      - a:LEAK146
+      - -b
+      - sid=LEAK147
+      - keycloak-db:5432
+      - Content-Type:application/json
     environment:
       DATABASE_URL: postgres://u:p@ssLEAK19@db/x
       INIT: "x; PGPASSWORD='LEAK20' psql"

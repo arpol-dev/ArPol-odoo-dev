@@ -29,22 +29,24 @@
 # quoted, at any = of a word) with NAME containing PASS, SECRET, TOKEN, KEY, CREDENTIAL, PRIVATE,
 # AUTH (not AUTHOR) or _PWD; the word or list item after such an option or after -w, -a, --pass,
 # --requirepass; the rest of the item after a secret key word (Authorization:, Cookie:,
-# Set-Cookie:, DB_PASSWORD:, Bearer) or an Authorization / Cookie / Set-Cookie header with its
-# value attached (Authorization:Bearer x, -H'Cookie:x', any case); user:password after -u / --user,
-# -u<user:password>, --user=<user:password>; -p<value>; the user info of URLs (up to the last @; a
-# plain "git" user and image digests kept) and user:password@host; the path after a webhook URL
-# prefix (hooks.slack.com/, discord(app).com/api/webhooks/, outlook.office.com/webhook/,
-# *.webhook.office.com/) and URL query / fragment parameters with a secret-like name (also sig,
-# signature, pwd).
+# Set-Cookie:, DB_PASSWORD:, "password": of a JSON object, Bearer) or a header with its value
+# attached (any case, also quoted or JSON "Name":"x"): Authorization, Proxy-Authorization,
+# Cookie, Set-Cookie, and names like a credential (X-Api-Key, X-Auth-Token, Private-Token,
+# apikey...: <words->key / token / secret / password / auth / credentials, api-key, apikey);
+# user:password after -u / --user / --proxy-user / -U (also --user=..., -u<user:password>, and
+# after NAME=, as in ODOO_ARGS=--user=...); name=value after -b / --cookie (also --cookie=...);
+# -p<value>; the user info of URLs (up to the last @; a plain "git" user and image digests
+# kept) and user:password@host; the path after a webhook URL prefix (hooks.slack.com/,
+# discord(app).com/api/webhooks/, outlook.office.com/webhook/, *.webhook.office.com/) and URL
+# query / fragment parameters with a secret-like name (also sig, signature, pwd).
 # Heuristic limits: a secret passed as a free word (positional argument, other short options
 # such as -P x), a URL whose password contains a blank or a quote, a webhook address without its
-# scheme (hooks.slack.com/services/... alone) or on another host, a header other than
-# Authorization / Cookie / Set-Cookie written Name:value (X-Api-Key: x is masked, X-Api-Key:x is
-# not), a non-URL value under a
+# scheme (hooks.slack.com/services/... alone) or on another host, a credential header with an
+# unusual name written Name:value (X-Session:x, X-Signature:x), a non-URL value under a
 # repos.yaml remote, or a secret inside an upstream URL (frozen "# <remote>: <url>" comments,
 # kept only for a remote name and a URL / scp-like address, masked like remotes) may still leak;
-# masking may hide harmless values (-p8080, the word after -a, -u1000:1000, what follows a secret
-# NAME=value in a URL query).
+# masking may hide harmless values (-p8080, the word after -a, -u1000:1000, a word holding an =
+# after -b, what follows a secret NAME=value in a URL query).
 set -u
 SCRIPT_VERSION="1.0.0"
 SCHEMA_VERSION=1
@@ -425,18 +427,30 @@ function secret_name(n,   u) {
   u = toupper(n); gsub(/AUTHOR_/, "_", u); sub(/AUTHOR$/, "", u)
   return u ~ /PASS|SECRET|TOKEN|KEY|CREDENTIAL|PRIVATE|AUTH|_PWD/
 }
-function user_flag(t) { return t == "-u" || t == "--user" }  # next word: user, or user:password
+function cred_flag(t) {  # option whose next word is a secret when it holds the character
+  # returned: user:password (-u, --user, --proxy-user, -U), name=value cookie (-b, --cookie)
+  if (t == "-u" || t == "--user" || t == "--proxy-user" || t == "-U") return ":"
+  if (t == "-b" || t == "--cookie") return "="
+  return ""
+}
 function header_name(n,   u) {  # HTTP header whose value is a credential
   u = tolower(n); return u == "authorization" || u == "proxy-authorization" || u == "cookie" || u == "set-cookie"
 }
+function secret_header(n) {  # X-Api-Key, X-Auth-Token, Private-Token...: header named like a credential
+  return tolower(n) ~ /^([a-z0-9]+-)+(api-?key|key|token|secret|password|passwd|auth|credentials?)$|^(api-?key|apikey)$/
+}
 function secret_word(t,   n) {  # key word after which the rest of the item is a secret
   if (tolower(t) == "bearer") return 1
-  n = substr(t, 1, length(t) - 1)
-  return t ~ /^[A-Za-z0-9_.-]+:$/ && (secret_name(n) || header_name(n))
+  if (t !~ /:$/) return 0
+  n = unquote(substr(t, 1, length(t) - 1))  # also "Authorization": of a JSON object
+  return n ~ /^[A-Za-z0-9_.-]+$/ && (secret_name(n) || header_name(n))
 }
-function attached_header(t,   h, c) {  # Authorization:x, -HCookie:x, --header=Set-Cookie:x (quoted too)
+function attached_header(t,   h, c, n) {  # Authorization:x, -HCookie:x, --header=Set-Cookie:x,
+  # X-Api-Key:x, "Authorization":"x" (quoted too)
   h = t; sub(/^(-H|--header=?)/, "", h); h = unquote(h); c = index(h, ":")
-  return c > 1 && c < length(h) && header_name(substr(h, 1, c - 1))
+  if (c <= 1 || c >= length(h)) return 0
+  n = unquote(substr(h, 1, c - 1))
+  return n ~ /^[A-Za-z0-9_.-]+$/ && (header_name(n) || secret_header(n))
 }
 function is_flag(t) {  # option whose next word is a secret
   if (t == "-w" || t == "-a" || t == "--requirepass" || t == "--pass") return 1
@@ -529,14 +543,15 @@ function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, n
   # NAME=value / NAME=<quote>v<quote> (single, double, \" quotes) with a secret-like NAME at any
   # "=" of a word (ODOO_ARGS=--db_password=x); the word after a secret option (--db_password x,
   # -a x, ODOO_ARGS=--db_password x); everything after a secret key word (Authorization: x y,
-  # DB_PASSWORD: x, Bearer x); -p<value>; user:password after -u / --user; user:password@host
-  out = ""; n = length(s); i = 1; nxt = 0; nxu = 0
+  # DB_PASSWORD: x, Bearer x); attached credential headers; -p<value>; the word after a cred_flag option (user:password,
+  # cookie); user:password@host
+  out = ""; n = length(s); i = 1; nxt = 0; nxu = ""
   while (i <= n) {
     if ((k = sep_len(s, i, json)) > 0) { out = out substr(s, i, k); i += k; continue }
     j = word_end(s, i, n, json); tok = substr(s, i, j - i); bare = unquote(tok)
-    if (nxu) {
-      nxu = 0
-      if (index(bare, ":")) { out = out "***" tail_q(tok, out); i = j; continue }
+    if (nxu != "") {  # after a cred_flag option: masked when it holds the character nxu
+      k = index(bare, nxu); nxu = ""
+      if (k) { out = out "***" tail_q(tok, out); i = j; continue }
     }
     if (nxt) {
       nxt = 0; q = quote_at(s, i)
@@ -544,14 +559,8 @@ function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, n
       out = out "***" tail_q(tok, out); i = j; continue
     }
     if (is_flag(bare)) { out = out tok; nxt = 1; i = j; continue }
-    if (user_flag(bare)) { out = out tok; nxu = 1; i = j; continue }
+    if (cred_flag(bare) != "") { out = out tok; nxu = cred_flag(bare); i = j; continue }
     if (attached_header(bare)) return out substr(tok, 1, index(tok, ":")) "***"
-    if (bare ~ /^(--user|-u)=/) {  # --user=user:password (a plain user kept)
-      k = index(tok, "="); out = out substr(tok, 1, k); v = i + k; q = quote_at(s, v)
-      if (q != "") { out = out q "***" q; i = qend(s, v + length(q), q); continue }
-      k = value_end(s, v, n, json); tok = substr(s, v, k - v)
-      out = out (index(tok, ":") ? "***" tail_q(tok, out) : tok); i = k; continue
-    }
     if (bare ~ /^-u[^-=]/ && index(bare, ":")) {  # -uuser:password
       out = out substr(tok, 1, index(tok, "-u") + 1); k = value_end(s, i, n, json)
       out = out "***" tail_q(substr(s, i, k - i), out); i = k; continue
@@ -573,6 +582,8 @@ function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, n
       last = k
       name = substr(tok, 1, k - 1); sub(/.*[^A-Za-z0-9_.-]/, "", name)
       if (name != "" && secret_name(name)) { e = k; break }
+      # --user=user:password, --cookie=name=value (a plain user kept), also after NAME=
+      if ((q = cred_flag(name)) != "" && index(substr(tok, k + 1), q)) { e = k; break }
     }
     if (e) {
       out = out substr(s, i, e); v = i + e; q = quote_at(s, v)
@@ -580,6 +591,7 @@ function mask_text(s, json,   out, i, j, n, tok, bare, k, e, last, name, v, q, n
       k = value_end(s, v, n, json); out = out "***" tail_q(substr(s, v, k - v), out); i = k; continue
     }
     if (last && is_flag(unquote(substr(tok, last + 1)))) { out = out tok; nxt = 1; i = j; continue }
+    if (last && (q = cred_flag(unquote(substr(tok, last + 1)))) != "") { out = out tok; nxu = q; i = j; continue }
     out = out mask_userinfo(tok); i = j
   }
   return out
@@ -676,13 +688,14 @@ function env_item(s, json,   e, n, v, k) {  # NAME=value of an Env list: the val
 function mask_str(s, prev, path) {  # a whole JSON string; prev = previous string of the list
   if (path ~ /^(Id|Image|Config\/Image|RepoTags\/#|RepoDigests\/#)$/) return s   # image refs, ids
   if (path == "Config/Env/#") return env_item(s, 1)
-  if (is_flag(prev) || (user_flag(prev) && index(s, ":"))) return "***"
+  if (is_flag(prev) || (cred_flag(prev) != "" && index(s, cred_flag(prev)))) return "***"
   if (whole_secret(s)) return substr(s, 1, index(s, "=")) "***"
   return mask_url(mask_text(s, 1))
 }
 function mask_arg(s, prev) {  # one raw value (argv item, URL, "remote ref"...); prev = the
                               # previous item of its list
-  if (is_flag(unquote(prev)) || (user_flag(unquote(prev)) && index(s, ":"))) return "***"
+  prev = unquote(prev)
+  if (is_flag(prev) || (cred_flag(prev) != "" && index(s, cred_flag(prev)))) return "***"
   if (whole_secret(s)) return substr(s, 1, index(s, "=")) "***"
   return mask_url(mask_text(s, 0))
 }'
@@ -1520,8 +1533,8 @@ as JSON on stdout, to import into the Odoo maintenance inventory.
 Nothing is modified on the server; secrets (passwords, tokens, keys) are not output.
 Secret masking of command lines and kept Env values is heuristic: a secret passed as a
 free word (positional argument, unknown short option), a webhook address without its
-scheme or on an unknown host, or a header other than Authorization / Cookie written
-Name:value may still leak (see the script header for the full list).
+scheme or on an unknown host, or a header with an unusual name written Name:value
+may still leak (see the script header for the full list).
 EOF
 }
 
