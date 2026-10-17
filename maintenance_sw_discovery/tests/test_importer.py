@@ -5,6 +5,7 @@ from datetime import datetime
 
 from odoo.exceptions import AccessError, UserError
 
+from ..models import discovery_tools as tools
 from ..models.discovery_importer import PlanState
 from .common import MID, REFERENCE, REFERENCE_RAW, DiscoveryCase
 from .test_script import run_scenario
@@ -890,3 +891,29 @@ class TestImporterScenarios(DiscoveryCase):
         modules = {m.name: m for m in odoo.odoo_database_ids.module_ids}
         self.assertEqual(modules["web_responsive"].component_id.path, "/mnt/extra-addons/oca-web")
         self.assertFalse(modules["base"].component_id)
+
+
+class TestMachineIdentity(DiscoveryCase):
+    """The server identity is the SMBIOS product UUID, the machine-id being shared by servers
+    built from the same disk image."""
+
+    def test_product_uuid_is_the_identity(self):
+        data = self.reference()
+        self.assertEqual(tools.machine_ids(data)[2], ROOT_KEY)  # no UUID: the machine-id
+        data["sections"]["machine"]["data"]["product_uuid"] = "68505A59-2EDF-4727-A1FF-8061BBA82EBF"
+        mid, hostname, key = tools.machine_ids(data)
+        self.assertEqual(mid, "68505a59-2edf-4727-a1ff-8061bba82ebf")
+        self.assertEqual(key, "machine:68505a59-2edf-4727-a1ff-8061bba82ebf")
+        self.assertEqual(hostname, "arpol")
+
+    def test_same_machine_id_other_uuid_is_another_server(self):
+        root = self.Importer._apply(REFERENCE_RAW)
+        data = self.reference()
+        machine = data["sections"]["machine"]["data"]
+        machine.update(hostname="mas-reemploi.fr", product_uuid="d709aad0-375c-4254-8173-ab6fabcba75c")
+        self.assertTrue(self.Importer._plan(data))
+        other = self.Importer._apply(data)
+        self.assertEqual(other.discovery_key, "machine:d709aad0-375c-4254-8173-ab6fabcba75c")
+        self.assertEqual(other.discovery_hostname, "mas-reemploi.fr")
+        self.assertEqual(root.discovery_key, ROOT_KEY)
+        self.assertEqual(root.discovery_hostname, "arpol")

@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 {
     "name": "Maintenance - Server Discovery",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.1.0",
     "summary": "Describe a server with a read-only script and import it into the software inventory",
     "description": """
 Maintenance - Server Discovery

@@ -117,10 +117,16 @@ def env_value(env_list, name):
 
 
 def machine_ids(data):
-    """(machine id, host name, root key) of a discovery; the host name stands for a missing id."""
+    """(machine id, host name, root key) of a discovery; the host name stands for a missing id.
+
+    The identity is the SMBIOS product UUID when the script found one: the machine-id is generated
+    once per installation, so two servers built from the same disk image share it (the import
+    would then merge them). The machine-id stays the fallback for discoveries without a UUID.
+    """
     machine = section(data, "machine") or {}
     hostname = machine.get("hostname") or "unknown"
-    mid = machine.get("machine_id") or f"host-{hostname}"
+    uuid = (machine.get("product_uuid") or "").lower()
+    mid = uuid or machine.get("machine_id") or f"host-{hostname}"
     return mid, hostname, f"machine:{mid}"
 
 

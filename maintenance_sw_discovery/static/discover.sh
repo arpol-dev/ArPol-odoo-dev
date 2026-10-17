@@ -276,14 +276,21 @@ virtualization() {  # physical, vm, lxc, container or unknown
 }
 
 collect_machine() {
-  local hn mid
+  local hn mid uuid
   hn="$(run hostname)"
   [ -n "$hn" ] || hn="$(rf /etc/hostname | head -n 1)"
   [ -n "$hn" ] || hn="$(run uname -n)"
   mid="$(rf /etc/machine-id)"; [ -n "$mid" ] || mid="$(rf /var/lib/dbus/machine-id)"
   mid="${mid//[[:space:]]/}"
-  printf '{"hostname": %s, "machine_id": %s, "ips": [%s], "virtualization": %s}' \
-    "$(jnull "$hn")" "$(jnull "$mid")" "$(ips_json)" "$(json_str "$(virtualization)")"
+  # SMBIOS UUID: set by the hypervisor (or the board) per machine, unlike machine-id, which is
+  # generated once per installation and survives a copied disk. Kept only when well formed.
+  uuid="$(rf /sys/class/dmi/id/product_uuid | tr -d '[:space:]' | tr 'A-F' 'a-f')"
+  if ! [[ $uuid =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] ||
+     [ "$uuid" = 00000000-0000-0000-0000-000000000000 ]; then
+    uuid=""
+  fi
+  printf '{"hostname": %s, "machine_id": %s, "product_uuid": %s, "ips": [%s], "virtualization": %s}' \
+    "$(jnull "$hn")" "$(jnull "$mid")" "$(jnull "$uuid")" "$(ips_json)" "$(json_str "$(virtualization)")"
 }
 
 # ----------------------------------------------------------------------------- os

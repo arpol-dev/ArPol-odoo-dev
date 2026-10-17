@@ -198,6 +198,7 @@ class TestDiscoverScript(BaseCase):
         machine = self.data(sections, "machine")
         self.assertEqual(machine["hostname"], "srv-debian")
         self.assertEqual(machine["machine_id"], "0f3a9b1c2d4e5f60718293a4b5c6d7e8")
+        self.assertIsNone(machine["product_uuid"])  # no /sys in the scenario
         self.assertEqual(machine["virtualization"], "vm")
         self.assertEqual(machine["ips"], [
             {"address": "192.168.1.20", "family": "inet", "interface": "eth0"},
