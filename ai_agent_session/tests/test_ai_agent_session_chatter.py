@@ -235,3 +235,79 @@ class TestAiAgentSessionChatterCallback(AiAgentChatterCommon, HttpCase):
         self.assertEqual(good.status_code, 200)
         session.invalidate_recordset()
         self.assertEqual(session.status, 'done')
+
+
+@tagged('post_install', '-at_install')
+class TestAiAgentSessionChat(AiAgentChatterCommon, TransactionCase):
+
+    def setUp(self):
+        super().setUp()
+        self._setup_user_and_record()
+        self.bot = self.env.ref('ai_agent_session.partner_claude')
+
+    def _chat_post(self, session, text):
+        session.channel_id.with_context(mail_post_autofollow=False).message_post(
+            body=text, author_id=self.env.user.partner_id.id,
+            message_type='comment', subtype_xmlid='mail.mt_comment')
+
+    def test_launch_opens_a_private_chat(self):
+        session, __ = self._launch()
+        channel = session.channel_id
+        self.assertTrue(channel)
+        self.assertEqual(channel.channel_member_ids.partner_id, self.env.user.partner_id | self.bot)
+        self.assertEqual(channel.message_ids[0].author_id, self.bot)
+
+    def test_question_is_posted_in_the_chat(self):
+        session, __ = self._launch()
+        with patch(SESSION_REQUESTS):
+            session._handle_callback('needs_input', conclusion='Which company?')
+        message = session.channel_id.message_ids[0]
+        self.assertIn('Which company?', message.body)
+        self.assertEqual(message.author_id, self.bot)
+
+    def test_chat_answer_is_forwarded_to_the_agent(self):
+        session, __ = self._launch()
+        with patch(SESSION_REQUESTS) as requests_mock:
+            session._handle_callback('needs_input', conclusion='Which company?')
+            requests_mock.post.return_value = _response({'ok': True})
+            self._chat_post(session, 'Company A')
+        call = requests_mock.post.call_args
+        self.assertEqual(call.args[0], 'https://webhook.example.com/api/webhook/sessions/ccm-1/message')
+        self.assertEqual(call.kwargs['json'], {'text': 'Company A'})
+        self.assertEqual(session.status, 'running')
+
+    def test_chat_message_while_running_is_forwarded_without_status_change(self):
+        session, __ = self._launch()
+        with patch(SESSION_REQUESTS) as requests_mock:
+            requests_mock.post.return_value = _response({'ok': True})
+            self._chat_post(session, 'Also check invoices')
+        self.assertEqual(requests_mock.post.call_args.kwargs['json'], {'text': 'Also check invoices'})
+        self.assertEqual(session.status, 'running')
+
+    def test_chat_message_after_the_end_is_not_forwarded(self):
+        session, __ = self._launch()
+        with patch(SESSION_REQUESTS) as requests_mock:
+            requests_mock.get.return_value = _response({'text': 'log'})
+            session._handle_callback('task_done', conclusion='Done')
+            requests_mock.post.reset_mock()
+            self._chat_post(session, 'Wait, one more thing')
+        requests_mock.post.assert_not_called()
+        self.assertEqual(session.channel_id.message_ids[0].author_id, self.bot)
+
+    def test_vanished_session_is_reported_in_the_chat(self):
+        session, __ = self._launch()
+        with patch(SESSION_REQUESTS) as requests_mock:
+            session._handle_callback('needs_input', conclusion='Which company?')
+            requests_mock.post.return_value = MagicMock(status_code=400)
+            self._chat_post(session, 'Company A')
+        self.assertEqual(session.status, 'cancelled')
+        self.assertEqual(session.channel_id.message_ids[0].author_id, self.bot)
+
+    def test_answer_from_the_systray_is_echoed_in_the_chat(self):
+        session, __ = self._launch()
+        with patch(SESSION_REQUESTS) as requests_mock:
+            session._handle_callback('needs_input', conclusion='Which company?')
+            requests_mock.post.return_value = _response({'ok': True})
+            session.action_reply('Company A')
+        self.assertEqual(requests_mock.post.call_count, 1)  # pas de second envoi par l'écho
+        self.assertEqual(session.channel_id.message_ids[0].author_id, self.env.user.partner_id)

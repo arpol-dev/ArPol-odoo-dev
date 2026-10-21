@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 {
     'name': 'AI Agent Session',
-    'version': '18.0.2.1.0',
+    'version': '18.0.2.2.0',
     'summary': 'Launch a Claude Code agent session from the chatter or a server action, via webhook',
     'description': """
 AI Agent Session
@@ -15,6 +15,9 @@ server, configured per user) with a prompt built from the record's data, its ful
 history and the request typed by the user. The agent works in the background; the conclusion
 (or its question) is posted as an internal note on the record, and a systray menu tracks the
 sessions.
+
+Each session also gets a private Discuss conversation where the agent asks its questions and
+you answer.
 """,
     'author': 'Armand Polmard',
     'website': 'https://arpol.fr',
@@ -26,6 +29,7 @@ sessions.
     'data': [
         'security/ir.model.access.csv',
         'security/security.xml',
+        'data/ai_agent_partner.xml',
         'views/res_users_views.xml',
         'views/ai_agent_session_wizard_views.xml',
         'views/ai_agent_session_reply_views.xml',

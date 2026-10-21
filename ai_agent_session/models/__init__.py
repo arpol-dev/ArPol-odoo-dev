@@ -4,3 +4,4 @@ from . import ai_agent_session
 from . import ai_agent_session_wizard
 from . import ai_agent_session_reply
 from . import ir_actions_server
+from . import discuss_channel

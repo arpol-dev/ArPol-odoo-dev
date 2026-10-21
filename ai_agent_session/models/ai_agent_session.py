@@ -7,8 +7,9 @@ import secrets
 import requests
 from markupsafe import Markup
 
-from odoo import _, api, fields, models
+from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import plaintext2html
 
 from .ai_selections import AI_AGENT_DONE_MARKER
 
@@ -44,6 +45,8 @@ class AiAgentSession(models.Model):
     is_dismissed = fields.Boolean(default=False, index=True)
     # Authentifie le callback du webhook (voir controllers/main.py).
     callback_secret = fields.Char(readonly=True, copy=False)
+    # Conversation Discuss où l'agent pose ses questions et reçoit les réponses.
+    channel_id = fields.Many2one('discuss.channel', string="Chat", index=True, ondelete='set null', copy=False)
 
     def action_dismiss(self):
         # Une session en attente est toujours vivante côté serveur : la masquer sans l'arrêter la
@@ -52,6 +55,18 @@ class AiAgentSession(models.Model):
             session._kill_remote_session()
             session.write({'status': 'cancelled'})
         self.write({'is_dismissed': True})
+
+    def action_open_chat(self):
+        self.ensure_one()
+        if not self.channel_id:
+            return False
+        active_id = f'discuss.channel_{self.channel_id.id}'
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'mail.action_discuss',
+            'context': {'active_id': active_id},
+            'params': {'active_id': active_id},
+        }
 
     def action_open_record(self):
         self.ensure_one()
@@ -93,6 +108,7 @@ class AiAgentSession(models.Model):
                                 if base_url and s.session_name and s.status in ('running', 'needs_attention')
                                 else False),
                 'conclusion': s.conclusion,
+                'channel_id': s.channel_id.id,
             } for s in sessions],
         }
 
@@ -142,8 +158,71 @@ class AiAgentSession(models.Model):
             'res_name': record.display_name,
             'callback_secret': secrets.token_urlsafe(24),
         })
+        session._create_channel(record, request_text)
         session._launch(record, request_text, ai_model, permission_mode)
         return session
+
+    # -- Conversation Discuss -------------------------------------------------
+
+    def _create_channel(self, record, request_text):
+        """Ouvre le chat privé (utilisateur + interlocuteur « Claude ») dans lequel l'agent posera
+        ses questions ; ce que l'utilisateur y écrit lui est transmis (voir _forward_chat_message)."""
+        self.ensure_one()
+        bot = self._ai_agent_partner()
+        self.channel_id = self.env['discuss.channel'].sudo().create({
+            'name': f'🤖 {self.name}',
+            'channel_type': 'group',
+            'channel_member_ids': [
+                Command.create({'partner_id': self.user_id.partner_id.id}),
+                Command.create({'partner_id': bot.id}),
+            ],
+        })
+        self._post_in_channel(Markup("%s<br/>%s") % (
+            _("Session started on %s.", record.display_name),
+            _("I'll ask my questions here — just answer in this conversation."),
+        ))
+
+    def _ai_agent_partner(self):
+        return self.env.ref('ai_agent_session.partner_claude').sudo()
+
+    def _post_in_channel(self, body):
+        """Poste `body` (HTML) dans le chat de la session, au nom de l'agent."""
+        self.ensure_one()
+        if not self.channel_id:
+            return
+        self.channel_id.sudo().with_context(ai_agent_no_forward=True).message_post(
+            body=body,
+            author_id=self._ai_agent_partner().id,
+            message_type='comment',
+            subtype_xmlid='mail.mt_comment',
+        )
+
+    def _forward_chat_message(self, text):
+        """Message écrit par l'utilisateur dans le chat : répond à la question en attente, ou
+        s'ajoute à la session en cours. Un échec est signalé dans le chat par l'agent plutôt que
+        levé (le message de l'utilisateur doit rester posté)."""
+        self.ensure_one()
+        if not text:
+            return
+        session = self.sudo()
+        try:
+            # Savepoint : un échec ne doit pas laisser la session 'En cours' sans que l'agent ait reçu la réponse.
+            with self.env.cr.savepoint():
+                if session.status == 'needs_attention':
+                    delivered = session.action_reply(text, echo=False)
+                elif session.status == 'running':
+                    delivered = session._send_to_agent(text)
+                else:
+                    session._post_in_channel(Markup("<p>%s</p>") % _(
+                        "This session is over. Start a new one from the record's chatter."))
+                    return
+        except UserError as exc:
+            session._post_in_channel(Markup("<p>%s</p>") % exc.args[0])
+            return
+        if not delivered:
+            session._post_in_channel(Markup("<p>%s</p>") % _(
+                "The session no longer exists on the agent server (it was probably stopped). "
+                "Start a new session instead."))
 
     def _launch(self, record, request_text, ai_model, permission_mode):
         self.ensure_one()
@@ -226,10 +305,12 @@ class AiAgentSession(models.Model):
         self.write({'status': 'done' if is_done else 'needs_attention', 'conclusion': text})
         self._notify_systray()
         self._post_conclusion(text, is_done, attachment_ids)
+        self._post_in_channel(Markup("<p>%s %s</p>") % (
+            '✅' if is_done else '❓', Markup(plaintext2html(text))))
 
     # -- Réponse / fin depuis Odoo ---------------------------------------------
 
-    def action_reply(self, text):
+    def action_reply(self, text, echo=True):
         """Transmet la réponse de l'utilisateur à la session restée vivante après une question
         (`/message` du webhook) ; la session repasse 'En cours' et le callback suivant (fin de tâche
         ou nouvelle question) est posté comme d'habitude. Renvoie False (et passe la session en
@@ -246,8 +327,22 @@ class AiAgentSession(models.Model):
         session.invalidate_recordset(['status'])
         if session.status != 'needs_attention':
             raise UserError(_("This session is not waiting for an answer."))
-        user = session.user_id
         session.write({'status': 'running'})
+        if not session._send_to_agent(text):
+            return False
+        if echo and session.channel_id:
+            # Réponse donnée hors du chat (systray) : on la recopie pour que la conversation reste complète.
+            session.channel_id.sudo().with_context(ai_agent_no_forward=True).message_post(
+                body=plaintext2html(text), author_id=session.user_id.partner_id.id,
+                message_type='comment', subtype_xmlid='mail.mt_comment')
+        return True
+
+    def _send_to_agent(self, text):
+        """Envoie `text` à la session vivante (`/message`). Renvoie False, session passée en
+        'Annulée', si elle n'existe plus côté serveur."""
+        self.ensure_one()
+        session = self
+        user = session.user_id
         try:
             response = requests.post(
                 f'{user.claude_webhook_url.rstrip("/")}/api/webhook/sessions/{session.session_name}/message',

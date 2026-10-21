@@ -77,6 +77,15 @@ export class AiAgentMenu extends Component {
         });
     }
 
+    async onOpenChat(session, ev) {
+        ev.stopPropagation();
+        this.dropdown.close();
+        const action = await this.orm.call("ai.agent.session", "action_open_chat", [[session.id]]);
+        if (action) {
+            this.action.doAction(action);
+        }
+    }
+
     async onDismiss(session, ev) {
         ev.stopPropagation();
         await this.orm.call("ai.agent.session", "action_dismiss", [[session.id]]);

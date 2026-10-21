@@ -27,6 +27,12 @@
                                 <div t-if="session.status !== 'running' and session.conclusion"
                                      class="small text-muted text-truncate" t-esc="session.conclusion"/>
                             </div>
+                            <button t-if="session.channel_id and (session.status === 'needs_attention' or session.status === 'running')"
+                                    class="btn btn-sm btn-link o-mail-ai-agent-chat"
+                                    title="Open chat"
+                                    t-on-click="(ev) => this.onOpenChat(session, ev)">
+                                <i class="fa fa-comments"/>
+                            </button>
                             <button t-if="session.status === 'needs_attention'"
                                     class="btn btn-sm btn-link o-mail-ai-agent-reply"
                                     title="Answer"

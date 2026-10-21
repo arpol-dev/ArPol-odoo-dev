@@ -589,3 +589,27 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_simple_modif_ai_agent
 msgid "https://your-server.example.com"
 msgstr ""
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "Session started on %s."
+msgstr ""
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "I'll ask my questions here — just answer in this conversation."
+msgstr ""
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+msgid "This session is over. Start a new one from the record's chatter."
+msgstr ""
+
+#. module: ai_agent_session
+#. odoo-javascript
+#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
+msgid "Open chat"
+msgstr ""
