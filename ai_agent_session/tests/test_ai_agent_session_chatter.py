@@ -243,7 +243,7 @@ class TestAiAgentSessionChat(AiAgentChatterCommon, TransactionCase):
     def setUp(self):
         super().setUp()
         self._setup_user_and_record()
-        self.bot = self.env.ref('ai_agent_session.partner_claude')
+        self.bot = self.env['ai.agent.session']._ai_agent_partner()
 
     def _chat_post(self, session, text):
         session.channel_id.with_context(mail_post_autofollow=False).message_post(

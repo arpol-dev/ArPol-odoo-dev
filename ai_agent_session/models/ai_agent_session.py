@@ -183,7 +183,18 @@ class AiAgentSession(models.Model):
         ))
 
     def _ai_agent_partner(self):
-        return self.env.ref('ai_agent_session.partner_claude').sudo()
+        """Interlocuteur des conversations Discuss (auteur des messages de l'agent), sans
+        utilisateur donc sans connexion possible. Créé à la demande plutôt que par un fichier
+        de données : au chargement du module, les champs obligatoires des modules chargés
+        après lui (ex. `autopost_bills` de account) ne sont pas encore connus de l'ORM."""
+        partner = self.env.ref('ai_agent_session.partner_claude', raise_if_not_found=False)
+        if not partner:
+            partner = self.env['res.partner'].sudo().create({'name': 'Claude (AI Agent)'})
+            self.env['ir.model.data'].sudo().create({
+                'module': 'ai_agent_session', 'name': 'partner_claude',
+                'model': 'res.partner', 'res_id': partner.id, 'noupdate': True,
+            })
+        return partner.sudo()
 
     def _post_in_channel(self, body):
         """Poste `body` (HTML) dans le chat de la session, au nom de l'agent."""

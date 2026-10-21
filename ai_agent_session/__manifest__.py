@@ -29,7 +29,6 @@ you answer.
     'data': [
         'security/ir.model.access.csv',
         'security/security.xml',
-        'data/ai_agent_partner.xml',
         'views/res_users_views.xml',
         'views/ai_agent_session_wizard_views.xml',
         'views/ai_agent_session_reply_views.xml',

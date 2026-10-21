@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo noupdate="1">
-    <!-- Interlocuteur des conversations Discuss : auteur des messages de l'agent. Sans utilisateur,
-         il ne peut se connecter à rien. -->
-    <record id="partner_claude" model="res.partner">
-        <field name="name">Claude (AI Agent)</field>
-        <field name="active" eval="True"/>
-    </record>
-</odoo>
