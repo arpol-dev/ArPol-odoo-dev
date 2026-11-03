@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0-20260926\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-06 12:20+0000\n"
-"PO-Revision-Date: 2026-10-06 12:20+0000\n"
+"POT-Creation-Date: 2026-11-03 14:05+0000\n"
+"PO-Revision-Date: 2026-11-03 14:05+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -17,8 +17,14 @@ msgstr ""
 
 #. module: ai_agent_session
 #. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+#: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
 msgid "%(user)s has no AI Agent webhook configured (Preferences > AI Agent)."
+msgstr ""
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/res_users.py:0
+msgid "%s AI Agent models synchronized."
 msgstr ""
 
 #. module: ai_agent_session
@@ -33,6 +39,16 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_ai_agent
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_simple_modif_ai_agent
 msgid "AI Agent"
+msgstr ""
+
+#. module: ai_agent_session
+#: model:ir.model,name:ai_agent_session.model_ai_agent_launcher
+msgid "AI Agent Launcher"
+msgstr ""
+
+#. module: ai_agent_session
+#: model:ir.model,name:ai_agent_session.model_ai_agent_model
+msgid "AI Agent Model"
 msgstr ""
 
 #. module: ai_agent_session
@@ -53,17 +69,6 @@ msgid "AI Agent Session"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model,name:ai_agent_session.model_ai_agent_session
-msgid "AI Agent Session (notification tracking)"
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-javascript
-#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
-msgid "AI Agent Sessions"
-msgstr ""
-
-#. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_res_users__claude_webhook_token
 msgid "AI Agent Webhook Token"
 msgstr ""
@@ -80,21 +85,26 @@ msgstr ""
 
 #. module: ai_agent_session
 #. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session_wizard.py:0
-msgid "AI Agent session started. You will be notified here when it finishes."
+#: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
+msgid "AI Agent session launched: %s"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__ai_model
-#: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_model
-#: model:ir.model.fields,field_description:ai_agent_session.field_ir_cron__ai_agent_model
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_session_wizard.py:0
+msgid "AI Agent session started. Its reference is in the chatter."
+msgstr ""
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__ai_model_id
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_model_id
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_cron__ai_agent_model_id
 msgid "AI Model"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__acceptedits
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__acceptedits
-msgid "Accept edits automatically (recommended)"
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__active
+msgid "Active"
 msgstr ""
 
 #. module: ai_agent_session
@@ -104,32 +114,9 @@ msgid "Agent Request"
 msgstr ""
 
 #. module: ai_agent_session
-#. odoo-javascript
-#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
-msgid "Answer"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model,name:ai_agent_session.model_ai_agent_session_reply
-msgid "Answer an AI Agent session"
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session_reply.py:0
-msgid "Answer sent. The agent resumes its work."
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.actions.act_window,name:ai_agent_session.ai_agent_session_reply_action
-#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
-msgid "Answer the AI Agent"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__default
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__default
-msgid "Ask for everything"
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission__allow
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission__allow
+msgid "Allow — run without asking"
 msgstr ""
 
 #. module: ai_agent_session
@@ -139,164 +126,97 @@ msgid "Ask the AI agent to..."
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__auto
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__auto
-msgid "Auto — the model decides what needs confirmation"
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission__ask
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission__ask
+msgid "Ask — pause for confirmation in IArPol"
 msgstr ""
 
 #. module: ai_agent_session
 #: model:ir.model.fields,help:ai_agent_session.field_res_users__claude_webhook_url
 msgid ""
-"Base URL of your personal Claude Code webhook server (e.g. "
-"https://iassistant.arpol.fr). Leave empty to disable AI Agent sessions for "
-"your account."
+"Base URL of the IArPol webhook server (e.g. https://hook.arpol.fr). Leave "
+"empty to disable AI Agent sessions for your account."
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__callback_secret
-msgid "Callback Secret"
-msgstr ""
-
-#. module: ai_agent_session
-#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
 msgid "Cancel"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session__status__cancelled
-msgid "Cancelled"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__session_name
-msgid "Claude Session"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__conclusion
-msgid "Conclusion"
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__code
+msgid "Code"
 msgstr ""
 
 #. module: ai_agent_session
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_simple_modif_ai_agent
 msgid ""
 "Connect the \"AI Agent\" button of the chatter (and the \"Launch AI Agent\n"
-"                        Session\" server action) to your own Claude Code webhook server. Launching\n"
-"                        a session on any record will call this webhook to start an agent for you."
+"                        Session\" server action) to the IArPol webhook. Each launch creates a\n"
+"                        session on the IArPol server."
 msgstr ""
 
 #. module: ai_agent_session
 #. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
+#: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
 msgid "Could not reach the AI Agent webhook: %s"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__create_uid
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__create_uid
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__create_uid
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__create_uid
 msgid "Created by"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__create_date
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__create_date
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__create_date
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__create_date
 msgid "Created on"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,help:ai_agent_session.field_res_users__claude_webhook_token
-msgid ""
-"Dedicated webhook token for your server (distinct from any personal app "
-"token). Find it in ~/.claude-console/config.json on your server."
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission__deny
+#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission__deny
+msgid "Deny — refuse every action"
 msgstr ""
 
 #. module: ai_agent_session
 #: model:ir.model.fields,help:ai_agent_session.field_res_users__claude_webhook_cwd
 msgid ""
 "Directory the agent opens when a session starts (must be inside the "
-"directories allowed by your webhook server's configuration). The agent reads"
-" and writes files relative to this directory."
+"allowedRoots of the IArPol webhook configuration)."
 msgstr ""
 
 #. module: ai_agent_session
-#. odoo-javascript
-#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
-msgid "Dismiss"
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-javascript
-#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
-msgid "Dismiss and stop the session"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__display_name
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__display_name
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__display_name
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__display_name
 msgid "Display Name"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session__status__done
-msgid "Done"
+#: model:ir.model.constraint,message:ai_agent_session.constraint_ai_agent_model_code_unique
+msgid "Each AI Agent model must have a unique code."
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session__status__error
-msgid "Error"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_model__fable
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__fable
-msgid "Fable — newest, less proven yet"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_model__haiku
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__haiku
-msgid "Haiku — fastest & cheapest"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__ai_permission_mode
-#: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__ai_agent_permission_mode
-#: model:ir.model.fields,help:ai_agent_session.field_ir_cron__ai_agent_permission_mode
-msgid ""
-"How much the agent can do without asking you first:\n"
-"• Auto — a classifier approves routine actions and only blocks risky ones, so the agent can run unattended without the blanket risk of 'No confirmation at all'.\n"
-"• Accept edits automatically — recommended. File edits run without confirmation, but shell commands and other sensitive actions still ask (you can step in via the remote session if needed).\n"
-"• Ask for everything — the agent pauses for your confirmation before each sensitive action. Safer but the session will need you to connect often.\n"
-"• Plan only — the agent reads and proposes a plan but makes no change at all.\n"
-"• No confirmation at all — fastest but the agent can run shell commands and edit files with zero oversight. Use only for directories/tasks you fully trust."
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__id
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__id
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__id
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__id
 msgid "ID"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__is_dismissed
-msgid "Is Dismissed"
+#: model:ir.model.fields,help:ai_agent_session.field_ai_agent_model__code
+msgid "Identifier sent to the server: provider/model."
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__write_uid
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__write_uid
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__write_uid
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__write_uid
 msgid "Last Updated by"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__write_date
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__write_date
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__write_date
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__write_date
 msgid "Last Updated on"
 msgstr ""
@@ -325,37 +245,35 @@ msgid ""
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__name
+#: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__ai_model_id
+#: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__ai_agent_model_id
+#: model:ir.model.fields,help:ai_agent_session.field_ir_cron__ai_agent_model_id
+msgid ""
+"Model that handles the task. The list comes from the AI Agent server: use "
+"the Synchronize button in your AI Agent preferences when it changes. Empty ="
+" the server's default."
+msgstr ""
+
+#. module: ai_agent_session
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
+msgid "Model:"
+msgstr ""
+
+#. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__name
 msgid "Name"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session__status__needs_attention
-msgid "Needs your attention"
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-javascript
-#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
-msgid "No AI agent session yet."
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__bypasspermissions
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__bypasspermissions
-msgid "No confirmation at all (risky)"
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-javascript
-#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
-msgid "Open record"
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
+msgid "Open the session (Netbird VPN)"
 msgstr ""
 
 #. module: ai_agent_session
 #: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__summary
-msgid ""
-"Optional. Names the session in Claude Code and in the notifications menu."
+msgid "Optional. Names the session in IArPol and in the chatter note."
 msgstr ""
 
 #. module: ai_agent_session
@@ -366,39 +284,21 @@ msgid ""
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_model__opus
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__opus
-msgid "Opus — deepest reasoning"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__ai_permission_mode
-#: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_permission_mode
-#: model:ir.model.fields,field_description:ai_agent_session.field_ir_cron__ai_agent_permission_mode
-msgid "Permission Mode"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission_mode__plan
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission_mode__plan
-msgid "Plan only, no changes"
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__ai_permission
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_permission
+#: model:ir.model.fields,field_description:ai_agent_session.field_ir_cron__ai_agent_permission
+msgid "Permissions"
 msgstr ""
 
 #. module: ai_agent_session
 #. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
-msgid "Please type your answer."
+#: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
+msgid "Permissions:"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__question
-#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
-msgid "Question from the agent"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__remote_url
-msgid "Remote Session URL"
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__provider
+msgid "Provider"
 msgstr ""
 
 #. module: ai_agent_session
@@ -408,46 +308,24 @@ msgid "Request"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__res_id
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
+msgid "Request:"
+msgstr ""
+
+#. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__res_id
 msgid "Res"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__res_model
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__res_model
 msgid "Res Model"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__res_name
-msgid "Res Name"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session__status__running
-msgid "Running"
-msgstr ""
-
-#. module: ai_agent_session
-#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
-msgid "Send"
-msgstr ""
-
-#. module: ai_agent_session
 #: model:ir.model,name:ai_agent_session.model_ir_actions_server
 msgid "Server Action"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_model__
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__
-msgid "Server default"
-msgstr ""
-
-#. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__session_id
-msgid "Session"
 msgstr ""
 
 #. module: ai_agent_session
@@ -458,66 +336,45 @@ msgstr ""
 
 #. module: ai_agent_session
 #. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
-msgid "Session ended."
+#: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
+msgid "Session:"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_model__sonnet
-#: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_model__sonnet
-msgid "Sonnet — balanced (recommended)"
+#. odoo-python
+#: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
+msgid "Set an AI Agent working directory in your preferences first."
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__status
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__status
 msgid "Status"
 msgstr ""
 
 #. module: ai_agent_session
-#. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
-msgid "The AI Agent finished session <b>%s</b>:"
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
-msgid "The AI Agent stopped on session <b>%s</b>, waiting for your input:"
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_ai_agent
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_simple_modif_ai_agent
+msgid "Synchronize AI models"
 msgstr ""
 
 #. module: ai_agent_session
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_wizard_view_form
 msgid ""
 "The request below is the main task sent to the agent. It also receives the\n"
-"                    full record data and the chatter history, and can freely explore the database\n"
-"                    if it has its own access. The result will be posted as an internal note on\n"
-"                    this record."
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
-msgid ""
-"The session no longer exists on the agent server (it was probably stopped)."
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session_reply.py:0
-msgid ""
-"The session no longer exists on the agent server (it was probably stopped). "
-"Start a new session instead."
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
-msgid "This session is not waiting for an answer."
+"                    full record data and the chatter history. The session runs on the IArPol\n"
+"                    server; a note with its reference is posted on this record."
 msgstr ""
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__summary
 msgid "Title"
+msgstr ""
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_res_users__claude_webhook_token
+msgid ""
+"Token of the IArPol webhook, sent in the X-Webhook-Token header. Find it in "
+"~/.config/iarpol/webhook.json on the IArPol server."
 msgstr ""
 
 #. module: ai_agent_session
@@ -542,13 +399,7 @@ msgid ""
 msgstr ""
 
 #. module: ai_agent_session
-#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
-msgid "Type your answer to the agent..."
-msgstr ""
-
-#. module: ai_agent_session
 #: model:ir.model,name:ai_agent_session.model_res_users
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session__user_id
 msgid "User"
 msgstr ""
 
@@ -561,22 +412,24 @@ msgid ""
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__ai_model
-#: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__ai_agent_model
-#: model:ir.model.fields,help:ai_agent_session.field_ir_cron__ai_agent_model
-msgid ""
-"Which Claude model handles this task:\n"
-"• Server default — whatever the webhook server is configured to use.\n"
-"• Haiku — fastest and cheapest. Best for simple, well-defined tasks (classification, extraction, short factual answers).\n"
-"• Sonnet — balanced speed/quality. Recommended default for most tasks (analysis, everyday coding, drafting).\n"
-"• Opus — most capable for complex or ambiguous reasoning, deep analysis. Slower and more expensive: reserve for tasks that actually need it.\n"
-"• Fable — newest model family member. Use based on your own testing; its specific strengths are less established yet than Sonnet/Opus/Haiku."
+#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__variants
+msgid "Variants"
 msgstr ""
 
 #. module: ai_agent_session
-#: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_reply__answer
-#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_session_reply_view_form
-msgid "Your answer"
+#: model:ir.model.fields,help:ai_agent_session.field_ai_agent_model__variants
+msgid "Variants reported by the server (not used yet)."
+msgstr ""
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__ai_permission
+#: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__ai_agent_permission
+#: model:ir.model.fields,help:ai_agent_session.field_ir_cron__ai_agent_permission
+msgid ""
+"What the agent may do without asking first:\n"
+"• Allow — default. Commands and file changes run without confirmation.\n"
+"• Ask — the session waits for an answer in IArPol before each sensitive action.\n"
+"• Deny — the agent can read and reason, but every action is refused."
 msgstr ""
 
 #. module: ai_agent_session
@@ -587,29 +440,11 @@ msgstr ""
 #. module: ai_agent_session
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_ai_agent
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_simple_modif_ai_agent
-msgid "https://your-server.example.com"
+msgid "https://hook.arpol.fr"
 msgstr ""
 
 #. module: ai_agent_session
 #. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
-msgid "Session started on %s."
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
-msgid "I'll ask my questions here — just answer in this conversation."
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-python
-#: code:addons/ai_agent_session/models/ai_agent_session.py:0
-msgid "This session is over. Start a new one from the record's chatter."
-msgstr ""
-
-#. module: ai_agent_session
-#. odoo-javascript
-#: code:addons/ai_agent_session/static/src/ai_agent_menu.xml:0
-msgid "Open chat"
+#: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
+msgid "server default"
 msgstr ""

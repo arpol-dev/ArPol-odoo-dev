@@ -11,16 +11,18 @@
                 <page string="AI Agent" name="page_ai_agent">
                     <div class="text-muted mb-3">
                         Connect the "AI Agent" button of the chatter (and the "Launch AI Agent
-                        Session" server action) to your own Claude Code webhook server. Launching
-                        a session on any record will call this webhook to start an agent for you.
+                        Session" server action) to the IArPol webhook. Each launch creates a
+                        session on the IArPol server.
                     </div>
                     <group>
                         <field name="claude_webhook_url" readonly="0"
-                               placeholder="https://your-server.example.com"/>
+                               placeholder="https://hook.arpol.fr"/>
                         <field name="claude_webhook_token" readonly="0" password="True"/>
                         <field name="claude_webhook_cwd" readonly="0"
                                placeholder="/home/you/some-directory"/>
                     </group>
+                    <button name="action_sync_ai_agent_models" type="object"
+                            string="Synchronize AI models" class="btn-secondary"/>
                 </page>
             </xpath>
         </field>
@@ -36,10 +38,12 @@
             <xpath expr="//page[@name='preferences']" position="after">
                 <page string="AI Agent" name="page_ai_agent">
                     <group>
-                        <field name="claude_webhook_url" placeholder="https://your-server.example.com"/>
+                        <field name="claude_webhook_url" placeholder="https://hook.arpol.fr"/>
                         <field name="claude_webhook_token" password="True"/>
                         <field name="claude_webhook_cwd" placeholder="/home/you/some-directory"/>
                     </group>
+                    <button name="action_sync_ai_agent_models" type="object"
+                            string="Synchronize AI models" class="btn-secondary"/>
                 </page>
             </xpath>
         </field>

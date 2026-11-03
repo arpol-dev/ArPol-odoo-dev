@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-# Construction du prompt envoyé à l'agent (utilisé par ai.agent.session). Aucune de ces méthodes
+# Construction du prompt envoyé à l'agent (utilisé par ai.agent.launcher). Aucune de ces méthodes
 # ne lit de champ de l'enregistrement qui les porte : seulement self.env et le record cible.
 import json
 import logging
 
 from odoo import models
 from odoo.tools import html2plaintext
-
-from .ai_selections import AI_AGENT_DONE_MARKER
 
 _logger = logging.getLogger(__name__)
 
@@ -73,22 +71,12 @@ class AiAgentPromptMixin(models.AbstractModel):
         return '\n'.join(lines)
 
     def _ai_agent_prompt_process_instructions(self):
-        # Une question ne termine plus la session (2026-10-06, à la demande d'Armand) : elle reste
-        # ouverte et sa réponse arrive comme nouveau message dans la même session (depuis Odoo ou
-        # IAssistant). Le prompt doit le dire, sinon l'agent conclurait à la place de demander.
         return (
-            "# How this session works (important)\n"
-            "This session runs unattended in the background — nobody is watching it live. Do as "
-            "much as you reasonably can on your own (including using your own database access, see "
-            "above) before concluding or asking.\n"
-            f"- When your task is ENTIRELY complete (nothing left pending, no question), end "
-            f"your final reply with this exact line, alone, with nothing after it:\n"
-            f"{AI_AGENT_DONE_MARKER}\n"
-            "- If you genuinely cannot proceed without a decision or input from Armand, ask a "
-            "clear, self-contained question (see the status instructions at the end of this "
-            "prompt) and stop. The session stays open: his answer will reach you as a new "
-            "message in this same session — then continue the task from where you stopped "
-            f"instead of starting over. Do not add {AI_AGENT_DONE_MARKER} when you ask a question."
+            "# How this session works\n"
+            "This session runs in the background — nobody is watching it live. Do as much as you "
+            "reasonably can on your own (including using your own database access, see above) "
+            "before stopping. If you need a decision from Armand, say so clearly in your final reply: "
+            "he will answer in the same session from IArPol."
         )
 
     def _ai_agent_prompt_record_json(self, record):

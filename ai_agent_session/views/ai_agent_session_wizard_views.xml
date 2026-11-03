@@ -9,14 +9,13 @@
                 <field name="res_id" invisible="1"/>
                 <div class="alert alert-info" role="alert">
                     The request below is the main task sent to the agent. It also receives the
-                    full record data and the chatter history, and can freely explore the database
-                    if it has its own access. The result will be posted as an internal note on
-                    this record.
+                    full record data and the chatter history. The session runs on the IArPol
+                    server; a note with its reference is posted on this record.
                 </div>
                 <group>
                     <field name="summary" placeholder="e.g. Analyse this ticket"/>
-                    <field name="ai_model"/>
-                    <field name="ai_permission_mode"/>
+                    <field name="ai_model_id" options="{'no_create': True}"/>
+                    <field name="ai_permission"/>
                 </group>
                 <separator string="Request"/>
                 <field name="request" nolabel="1" placeholder="Ask the AI agent to..."/>

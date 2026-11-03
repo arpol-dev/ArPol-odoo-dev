@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import json
 from unittest.mock import MagicMock, patch
 
-from odoo.exceptions import UserError
-from odoo.tests import HttpCase, TransactionCase, tagged
+import requests
 
-SESSION_REQUESTS = 'odoo.addons.ai_agent_session.models.ai_agent_session.requests'
+from odoo.exceptions import UserError
+from odoo.tests import TransactionCase, tagged
+
+LAUNCHER_REQUEST = 'odoo.addons.ai_agent_session.models.ai_agent_launcher.requests.request'
 
 
 def _response(data):
@@ -14,8 +15,11 @@ def _response(data):
     return response
 
 
-class AiAgentChatterCommon:
-    def _setup_user_and_record(self):
+@tagged('post_install', '-at_install')
+class TestAiAgentSession(TransactionCase):
+
+    def setUp(self):
+        super().setUp()
         self.env.user.sudo().write({
             'claude_webhook_url': 'https://webhook.example.com',
             'claude_webhook_token': 'tok',
@@ -23,291 +27,142 @@ class AiAgentChatterCommon:
         })
         self.partner = self.env['res.partner'].create({'name': 'Chatter Target'})
 
-    def _launch(self, **kwargs):
+    def _launch(self, webhook_reply=None, **kwargs):
         wizard = self.env['ai.agent.session.wizard'].create({
             'res_model': 'res.partner',
             'res_id': self.partner.id,
             'request': 'Summarize this contact',
             **kwargs,
         })
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.post.return_value = _response({'name': 'ccm-1', 'remoteControlUrl': 'https://rc'})
+        with patch(LAUNCHER_REQUEST) as request_mock:
+            request_mock.return_value = _response(webhook_reply or {'name': 'ses_abc123', 'label': 'x'})
             wizard.action_launch()
-        session = self.env['ai.agent.session'].search([('res_id', '=', self.partner.id)])
-        return session, requests_mock.post.call_args
+        return request_mock.call_args
 
+    def _notes(self):
+        return self.partner.message_ids.filtered(lambda m: 'AI Agent session launched' in (m.body or ''))
 
-@tagged('post_install', '-at_install')
-class TestAiAgentSessionChatter(AiAgentChatterCommon, TransactionCase):
-
-    def setUp(self):
-        super().setUp()
-        self._setup_user_and_record()
-
-    def test_wizard_defaults(self):
+    def test_wizard_defaults_to_allow(self):
         wizard = self.env['ai.agent.session.wizard'].new({})
-        self.assertEqual(wizard.ai_permission_mode, 'auto')
-        self.assertEqual(wizard.ai_model, 'sonnet')
+        self.assertEqual(wizard.ai_permission, 'allow')
+        self.assertFalse(wizard.ai_model_id)
 
-    def test_launch_calls_webhook_and_tracks_session(self):
-        session, call = self._launch()
-        payload = call.kwargs['json']
-        self.assertEqual(session.status, 'running')
-        self.assertEqual(session.session_name, 'ccm-1')
-        self.assertEqual(payload['permissionMode'], 'auto')
+    def test_launch_posts_session_to_webhook(self):
+        call = self._launch(summary='Contact review')
+        args, kwargs = call.args, call.kwargs
+        self.assertEqual(args[0], 'POST')
+        self.assertEqual(args[1], 'https://webhook.example.com/api/webhook/sessions')
+        self.assertEqual(kwargs['headers'], {'X-Webhook-Token': 'tok'})
+        payload = kwargs['json']
         self.assertEqual(payload['cwd'], '/work')
+        self.assertEqual(payload['label'], 'Contact review')
+        self.assertEqual(payload['permission'], 'allow')
+        self.assertIsNone(payload['model'])
+        self.assertTrue(payload['idempotencyKey'].startswith('odoo-ai-agent-'))
         self.assertIn('Summarize this contact', payload['prompt'])
         self.assertIn('Chatter Target', payload['prompt'])
-        self.assertIn('an Odoo record', payload['prompt'])
-        self.assertIn(f'session_id={session.id}&secret={session.callback_secret}', payload['callbackUrl'])
-        self.assertEqual(call.kwargs['headers'], {'X-Webhook-Token': 'tok'})
+        self.assertNotIn('AGENT_SESSION_DONE', payload['prompt'])
 
-    def test_launch_without_webhook_config(self):
-        self.env.user.sudo().claude_webhook_url = False
+    def test_launch_posts_internal_note_with_session_reference(self):
+        self._launch(webhook_reply={'name': 'ses_abc123', 'label': 'x', 'url': 'http://vpn/session/ses_abc123'})
+        notes = self._notes()
+        self.assertEqual(len(notes), 1)
+        self.assertTrue(notes.subtype_id.internal)
+        self.assertIn('ses_abc123', notes.body)
+        self.assertIn('server default', notes.body)
+        self.assertIn('Allow', notes.body)
+        self.assertIn('Summarize this contact', notes.body)
+        self.assertIn('http://vpn/session/ses_abc123', notes.body)
+
+    def test_launch_sends_selected_model_and_permission(self):
+        model = self.env['ai.agent.model'].create({'code': 'anthropic/claude-sonnet-5', 'name': 'Sonnet 5'})
+        call = self._launch(ai_model_id=model.id, ai_permission='ask')
+        payload = call.kwargs['json']
+        self.assertEqual(payload['model'], 'anthropic/claude-sonnet-5')
+        self.assertEqual(payload['permission'], 'ask')
+        self.assertIn('anthropic/claude-sonnet-5', self._notes().body)
+
+    def test_missing_webhook_configuration_raises_and_posts_nothing(self):
+        self.env.user.sudo().write({'claude_webhook_url': False})
+        with self.assertRaises(UserError):
+            self._launch()
+        self.assertFalse(self._notes())
+
+    def test_missing_working_directory_raises(self):
+        self.env.user.sudo().write({'claude_webhook_cwd': False})
         with self.assertRaises(UserError):
             self._launch()
 
-    def test_task_done_posts_note_and_closes(self):
-        session, __ = self._launch()
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.get.return_value = _response({'text': 'full log'})
-            session._handle_callback('task_done', conclusion='All good')
-            requests_mock.delete.assert_called_once()
-        self.assertEqual((session.status, session.conclusion), ('done', 'All good'))
-        message = self.partner.message_ids[0]
-        self.assertIn('All good', message.body)
-        self.assertEqual(message.attachment_ids.name, 'session_log.txt')
-        self.assertEqual(message.subtype_id, self.env.ref('mail.mt_note'))
-        # Un second callback (dédoublonnage) ne repost rien.
-        count = len(self.partner.message_ids)
-        session._handle_callback('task_done', conclusion='again')
-        self.assertEqual(len(self.partner.message_ids), count)
-
-    def _wait_for_answer(self, session):
-        with patch(SESSION_REQUESTS) as requests_mock:
-            session._handle_callback('needs_input', conclusion='Which company?')
-        return requests_mock
-
-    def test_needs_input_posts_question_and_keeps_session_alive(self):
-        session, __ = self._launch()
-        requests_mock = self._wait_for_answer(session)
-        self.assertEqual(session.status, 'needs_attention')
-        self.assertIn('Which company?', self.partner.message_ids[0].body)
-        # La session reste vivante : on doit pouvoir lui répondre.
-        requests_mock.delete.assert_not_called()
-
-    def test_reply_sends_message_and_resumes(self):
-        session, __ = self._launch()
-        self._wait_for_answer(session)
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.post.return_value = _response({'ok': True})
-            self.env['ai.agent.session.reply'].create({
-                'session_id': session.id, 'answer': 'Company A',
-            }).action_send()
-        call = requests_mock.post.call_args
-        self.assertEqual(call.args[0], 'https://webhook.example.com/api/webhook/sessions/ccm-1/message')
-        self.assertEqual(call.kwargs['json'], {'text': 'Company A'})
-        self.assertEqual(session.status, 'running')
-
-    def test_reply_requires_a_waiting_session(self):
-        session, __ = self._launch()
-        with self.assertRaises(UserError), patch(SESSION_REQUESTS):
-            session.action_reply('too early')
-
-    def test_reply_when_session_is_gone(self):
-        # 400 : session retirée du suivi (arrêtée par DELETE) ; 404 : disparue de `claude agents`.
-        for status_code in (400, 404):
-            session, __ = self._launch()
-            self._wait_for_answer(session)
-            with patch(SESSION_REQUESTS) as requests_mock:
-                requests_mock.post.return_value = MagicMock(status_code=status_code)
-                self.assertFalse(session.action_reply('hello?'))
-            self.assertEqual(session.status, 'cancelled')
-            self.assertIn('no longer exists', session.conclusion)
-            session.unlink()
-
-    def test_reply_wizard_warns_when_session_is_gone(self):
-        session, __ = self._launch()
-        self._wait_for_answer(session)
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.post.return_value = MagicMock(status_code=400)
-            action = self.env['ai.agent.session.reply'].create({
-                'session_id': session.id, 'answer': 'hello?',
-            }).action_send()
-        self.assertEqual(action['params']['type'], 'warning')
-
-    def test_reply_network_failure_is_a_clear_error(self):
-        session, __ = self._launch()
-        self._wait_for_answer(session)
-        with self.assertRaises(UserError), patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.RequestException = ConnectionError
-            requests_mock.post.side_effect = ConnectionError('boom')
-            session.action_reply('hello?')
-        self.assertEqual(session.status, 'needs_attention')
-
-    def test_task_done_after_waiting_closes_and_stops_session(self):
-        session, __ = self._launch()
-        self._wait_for_answer(session)
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.get.return_value = _response({'text': 'log'})
-            session._handle_callback('task_done', conclusion='Finished anyway')
-            requests_mock.delete.assert_called_once()
-        self.assertEqual(session.status, 'done')
-
-    def test_idle_heuristic_ignored_while_waiting(self):
-        session, __ = self._launch()
-        self._wait_for_answer(session)
-        count = len(self.partner.message_ids)
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.get.return_value = _response({'text': 'something'})
-            session._handle_callback('idle')
-        self.assertEqual(len(self.partner.message_ids), count)
-
-    def test_dismissing_a_waiting_session_stops_it(self):
-        session, __ = self._launch()
-        self._wait_for_answer(session)
-        with patch(SESSION_REQUESTS) as requests_mock:
-            session.action_dismiss()
-            requests_mock.delete.assert_called_once()
-        self.assertEqual((session.status, session.is_dismissed), ('cancelled', True))
-
-    def test_systray_links_live_sessions_to_iassistant(self):
-        session, __ = self._launch()
-        data = self.env['ai.agent.session'].get_systray_data()['sessions'][0]
-        self.assertEqual(data['session_url'], 'https://webhook.example.com/s/ccm-1')
-        self._wait_for_answer(session)
-        data = self.env['ai.agent.session'].get_systray_data()['sessions'][0]
-        self.assertEqual(data['session_url'], 'https://webhook.example.com/s/ccm-1')
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.get.return_value = _response({'text': 'log'})
-            session._handle_callback('task_done', conclusion='ok')
-        data = self.env['ai.agent.session'].get_systray_data()['sessions'][0]
-        self.assertFalse(data['session_url'])
-
-    def test_prompt_tells_the_agent_the_session_stays_open(self):
-        __, call = self._launch()
-        prompt = call.kwargs['json']['prompt']
-        self.assertIn('his answer will reach you as a new message', prompt)
-        self.assertNotIn('automatically terminated', prompt)
-
-    def test_server_action_launches_session_for_configured_user(self):
-        other = self.env['res.users'].create({
-            'name': 'Agent Owner', 'login': 'agent_owner',
-            'claude_webhook_url': 'https://other.example.com', 'claude_webhook_token': 'other-tok',
+    def test_unreachable_webhook_raises_and_posts_nothing(self):
+        wizard = self.env['ai.agent.session.wizard'].create({
+            'res_model': 'res.partner', 'res_id': self.partner.id, 'request': 'Ping',
         })
+        with patch(LAUNCHER_REQUEST, side_effect=requests.ConnectionError('down')):
+            with self.assertRaises(UserError):
+                wizard.action_launch()
+        self.assertFalse(self._notes())
+
+    def test_webhook_refusal_raises_and_posts_nothing(self):
+        wizard = self.env['ai.agent.session.wizard'].create({
+            'res_model': 'res.partner', 'res_id': self.partner.id, 'request': 'Ping',
+        })
+        reply = _response({})
+        reply.raise_for_status.side_effect = requests.HTTPError('403')
+        with patch(LAUNCHER_REQUEST, return_value=reply):
+            with self.assertRaises(UserError):
+                wizard.action_launch()
+        self.assertFalse(self._notes())
+
+    def test_server_action_launches_for_its_record(self):
         action = self.env['ir.actions.server'].create({
-            'name': 'Ask AI',
+            'name': 'AI test',
             'model_id': self.env['ir.model']._get_id('res.partner'),
             'state': 'ai_agent',
-            'ai_agent_user_id': other.id,
+            'ai_agent_user_id': self.env.user.id,
             'ai_agent_request': 'Check this partner',
-            'ai_agent_title': 'Partner check',
+            'ai_agent_permission': 'deny',
         })
-        self.assertEqual(action.ai_agent_permission_mode, 'auto')
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.post.return_value = _response({'name': 'ccm-2'})
-            action.with_context(active_model='res.partner', active_id=self.partner.id,
-                                active_ids=[self.partner.id]).run()
-        session = self.env['ai.agent.session'].search([('res_id', '=', self.partner.id)])
-        self.assertEqual((session.user_id, session.name, session.status), (other, 'Partner check', 'running'))
-        call = requests_mock.post.call_args
-        self.assertTrue(call.args[0].startswith('https://other.example.com'))
-        self.assertEqual(call.kwargs['headers'], {'X-Webhook-Token': 'other-tok'})
-        self.assertIn('Check this partner', call.kwargs['json']['prompt'])
+        with patch(LAUNCHER_REQUEST) as request_mock:
+            request_mock.return_value = _response({'name': 'ses_action1'})
+            action._run_action_ai_agent({'record': self.partner})
+        self.assertEqual(request_mock.call_args.kwargs['json']['permission'], 'deny')
+        self.assertIn('ses_action1', self._notes().body)
 
 
 @tagged('post_install', '-at_install')
-class TestAiAgentSessionChatterCallback(AiAgentChatterCommon, HttpCase):
-
-    def test_callback_route_authenticates_by_session_secret(self):
-        self._setup_user_and_record()
-        session, __ = self._launch()
-        url = f'/claude_agent/callback?session_id={session.id}'
-        body = json.dumps({'status': 'task_done', 'conclusion': 'Done'})
-        bad = self.url_open(f'{url}&secret=wrong', data=body, headers={'Content-Type': 'application/json'})
-        self.assertEqual(bad.status_code, 403)
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.get.return_value = _response({'text': 'log'})
-            good = self.url_open(
-                f'{url}&secret={session.callback_secret}', data=body,
-                headers={'Content-Type': 'application/json'},
-            )
-        self.assertEqual(good.status_code, 200)
-        session.invalidate_recordset()
-        self.assertEqual(session.status, 'done')
-
-
-@tagged('post_install', '-at_install')
-class TestAiAgentSessionChat(AiAgentChatterCommon, TransactionCase):
+class TestAiAgentModelSync(TransactionCase):
 
     def setUp(self):
         super().setUp()
-        self._setup_user_and_record()
-        self.bot = self.env['ai.agent.session']._ai_agent_partner()
+        self.env.user.sudo().write({
+            'claude_webhook_url': 'https://webhook.example.com',
+            'claude_webhook_token': 'tok',
+        })
 
-    def _chat_post(self, session, text):
-        session.channel_id.with_context(mail_post_autofollow=False).message_post(
-            body=text, author_id=self.env.user.partner_id.id,
-            message_type='comment', subtype_xmlid='mail.mt_comment')
+    def _sync(self, models):
+        with patch(LAUNCHER_REQUEST) as request_mock:
+            request_mock.return_value = _response({'models': models})
+            return self.env.user.action_sync_ai_agent_models(), request_mock
 
-    def test_launch_opens_a_private_chat(self):
-        session, __ = self._launch()
-        channel = session.channel_id
-        self.assertTrue(channel)
-        self.assertEqual(channel.channel_member_ids.partner_id, self.env.user.partner_id | self.bot)
-        self.assertEqual(channel.message_ids[0].author_id, self.bot)
+    def test_sync_creates_then_deactivates_missing_models(self):
+        first = [
+            {'id': 'anthropic/claude-sonnet-5', 'name': 'Sonnet 5', 'provider': 'anthropic', 'variants': ['high'], 'status': 'active'},
+            {'id': 'opencode/flint', 'name': 'Flint', 'provider': 'opencode', 'variants': [], 'status': 'beta'},
+        ]
+        result, request_mock = self._sync(first)
+        self.assertEqual(request_mock.call_args.args[0], 'GET')
+        self.assertEqual(request_mock.call_args.args[1], 'https://webhook.example.com/api/webhook/models')
+        self.assertIn('2 AI Agent models synchronized', result['params']['message'])
+        Model = self.env['ai.agent.model']
+        self.assertEqual(Model.search_count([('active', '=', True)]), 2)
+        self.assertEqual(Model.search([('code', '=', 'anthropic/claude-sonnet-5')]).variants, 'high')
 
-    def test_question_is_posted_in_the_chat(self):
-        session, __ = self._launch()
-        with patch(SESSION_REQUESTS):
-            session._handle_callback('needs_input', conclusion='Which company?')
-        message = session.channel_id.message_ids[0]
-        self.assertIn('Which company?', message.body)
-        self.assertEqual(message.author_id, self.bot)
+        self._sync([{'id': 'anthropic/claude-sonnet-5', 'name': 'Sonnet 5 bis', 'provider': 'anthropic', 'variants': [], 'status': 'active'}])
+        self.assertEqual(Model.search_count([('code', '=', 'anthropic/claude-sonnet-5')]), 1)
+        self.assertEqual(Model.search([('code', '=', 'anthropic/claude-sonnet-5')]).name, 'Sonnet 5 bis')
+        self.assertFalse(Model.search([('code', '=', 'opencode/flint')]).active)
 
-    def test_chat_answer_is_forwarded_to_the_agent(self):
-        session, __ = self._launch()
-        with patch(SESSION_REQUESTS) as requests_mock:
-            session._handle_callback('needs_input', conclusion='Which company?')
-            requests_mock.post.return_value = _response({'ok': True})
-            self._chat_post(session, 'Company A')
-        call = requests_mock.post.call_args
-        self.assertEqual(call.args[0], 'https://webhook.example.com/api/webhook/sessions/ccm-1/message')
-        self.assertEqual(call.kwargs['json'], {'text': 'Company A'})
-        self.assertEqual(session.status, 'running')
-
-    def test_chat_message_while_running_is_forwarded_without_status_change(self):
-        session, __ = self._launch()
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.post.return_value = _response({'ok': True})
-            self._chat_post(session, 'Also check invoices')
-        self.assertEqual(requests_mock.post.call_args.kwargs['json'], {'text': 'Also check invoices'})
-        self.assertEqual(session.status, 'running')
-
-    def test_chat_message_after_the_end_is_not_forwarded(self):
-        session, __ = self._launch()
-        with patch(SESSION_REQUESTS) as requests_mock:
-            requests_mock.get.return_value = _response({'text': 'log'})
-            session._handle_callback('task_done', conclusion='Done')
-            requests_mock.post.reset_mock()
-            self._chat_post(session, 'Wait, one more thing')
-        requests_mock.post.assert_not_called()
-        self.assertEqual(session.channel_id.message_ids[0].author_id, self.bot)
-
-    def test_vanished_session_is_reported_in_the_chat(self):
-        session, __ = self._launch()
-        with patch(SESSION_REQUESTS) as requests_mock:
-            session._handle_callback('needs_input', conclusion='Which company?')
-            requests_mock.post.return_value = MagicMock(status_code=400)
-            self._chat_post(session, 'Company A')
-        self.assertEqual(session.status, 'cancelled')
-        self.assertEqual(session.channel_id.message_ids[0].author_id, self.bot)
-
-    def test_answer_from_the_systray_is_echoed_in_the_chat(self):
-        session, __ = self._launch()
-        with patch(SESSION_REQUESTS) as requests_mock:
-            session._handle_callback('needs_input', conclusion='Which company?')
-            requests_mock.post.return_value = _response({'ok': True})
-            session.action_reply('Company A')
-        self.assertEqual(requests_mock.post.call_count, 1)  # pas de second envoi par l'écho
-        self.assertEqual(session.channel_id.message_ids[0].author_id, self.env.user.partner_id)
+    def test_sync_ignores_duplicates(self):
+        dupes = [{'id': 'anthropic/x', 'name': 'X'}, {'id': 'anthropic/x', 'name': 'X'}]
+        self._sync(dupes)
+        self.assertEqual(self.env['ai.agent.model'].search_count([('code', '=', 'anthropic/x')]), 1)

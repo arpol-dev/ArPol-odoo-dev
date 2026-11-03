@@ -9,8 +9,9 @@
                 <field name="ai_agent_user_id" invisible="state != 'ai_agent'"
                        required="state == 'ai_agent'" options="{'no_create': True}"/>
                 <field name="ai_agent_title" invisible="state != 'ai_agent'"/>
-                <field name="ai_agent_model" invisible="state != 'ai_agent'"/>
-                <field name="ai_agent_permission_mode" invisible="state != 'ai_agent'"
+                <field name="ai_agent_model_id" invisible="state != 'ai_agent'"
+                       options="{'no_create': True}"/>
+                <field name="ai_agent_permission" invisible="state != 'ai_agent'"
                        required="state == 'ai_agent'"/>
                 <field name="ai_agent_request" invisible="state != 'ai_agent'"
                        required="state == 'ai_agent'" colspan="2"

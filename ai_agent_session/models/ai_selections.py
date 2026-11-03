@@ -1,49 +1,19 @@
 # -*- coding: utf-8 -*-
 # Constantes partagées entre le wizard du chatter (ai.agent.session.wizard) et l'action serveur
 # (ir.actions.server) : mêmes options, mêmes aides.
-AI_MODEL_DEFAULT = 'sonnet'
-AI_MODEL_SELECTION = [
-    ('', "Server default"),
-    ('haiku', "Haiku — fastest & cheapest"),
-    ('sonnet', "Sonnet — balanced (recommended)"),
-    ('opus', "Opus — deepest reasoning"),
-    ('fable', "Fable — newest, less proven yet"),
+AI_AGENT_PERMISSION_DEFAULT = 'allow'
+AI_AGENT_PERMISSION_SELECTION = [
+    ('allow', "Allow — run without asking"),
+    ('ask', "Ask — pause for confirmation in IArPol"),
+    ('deny', "Deny — refuse every action"),
 ]
-AI_MODEL_HELP = (
-    "Which Claude model handles this task:\n"
-    "• Server default — whatever the webhook server is configured to use.\n"
-    "• Haiku — fastest and cheapest. Best for simple, well-defined tasks "
-    "(classification, extraction, short factual answers).\n"
-    "• Sonnet — balanced speed/quality. Recommended default for most tasks "
-    "(analysis, everyday coding, drafting).\n"
-    "• Opus — most capable for complex or ambiguous reasoning, deep analysis. "
-    "Slower and more expensive: reserve for tasks that actually need it.\n"
-    "• Fable — newest model family member. Use based on your own testing; its "
-    "specific strengths are less established yet than Sonnet/Opus/Haiku."
+AI_AGENT_PERMISSION_HELP = (
+    "What the agent may do without asking first:\n"
+    "• Allow — default. Commands and file changes run without confirmation.\n"
+    "• Ask — the session waits for an answer in IArPol before each sensitive action.\n"
+    "• Deny — the agent can read and reason, but every action is refused."
 )
-
-AI_PERMISSION_MODE_SELECTION = [
-    ('auto', "Auto — the model decides what needs confirmation"),
-    ('acceptEdits', "Accept edits automatically (recommended)"),
-    ('default', "Ask for everything"),
-    ('plan', "Plan only, no changes"),
-    ('bypassPermissions', "No confirmation at all (risky)"),
-]
-AI_PERMISSION_MODE_HELP = (
-    "How much the agent can do without asking you first:\n"
-    "• Auto — a classifier approves routine actions and only blocks risky ones, so the "
-    "agent can run unattended without the blanket risk of 'No confirmation at all'.\n"
-    "• Accept edits automatically — recommended. File edits run without confirmation, "
-    "but shell commands and other sensitive actions still ask (you can step in via the "
-    "remote session if needed).\n"
-    "• Ask for everything — the agent pauses for your confirmation before each sensitive "
-    "action. Safer but the session will need you to connect often.\n"
-    "• Plan only — the agent reads and proposes a plan but makes no change at all.\n"
-    "• No confirmation at all — fastest but the agent can run shell commands and edit "
-    "files with zero oversight. Use only for directories/tasks you fully trust."
+AI_AGENT_MODEL_HELP = (
+    "Model that handles the task. The list comes from the AI Agent server: use the "
+    "Synchronize button in your AI Agent preferences when it changes. Empty = the server's default."
 )
-
-# Ligne que l'agent doit renvoyer, seule, quand sa tâche est entièrement terminée (plus aucune
-# question en attente). Permet de distinguer une vraie fin de tâche d'une simple pause en
-# attente de réponse utilisateur (le statut busy/idle seul ne fait pas cette distinction).
-AI_AGENT_DONE_MARKER = 'AGENT_SESSION_DONE'
