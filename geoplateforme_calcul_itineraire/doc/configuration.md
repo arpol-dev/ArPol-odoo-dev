@@ -14,7 +14,7 @@ paramètre revient simplement à **créer la clé correspondante** dans
 |---|---|---|---|
 | `geoplateforme.base_url` | str | `https://data.geopf.fr/navigation` | URL de base de l'API (sans `/` final) |
 | `geoplateforme.timeout` | float (s) | `10` | Timeout HTTP côté `requests` |
-| `geoplateforme.default_resource` | str | `bdtopo-osrm` | Ressource utilisée si `resource=None` dans `compute_route` |
+| `geoplateforme.default_resource` | str | `bdtopo-valhalla` | Ressource utilisée si `resource=None` dans `compute_route` |
 | `geoplateforme.default_profile` | str | `car` | Profil par défaut |
 | `geoplateforme.default_optimization` | str | `fastest` | `fastest` ou `shortest` |
 | `geoplateforme.capabilities_cache_ttl` | int (s) | `3600` | TTL du cache mémoire de `/getCapabilities` |

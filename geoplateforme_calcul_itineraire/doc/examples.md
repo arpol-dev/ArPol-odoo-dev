@@ -68,13 +68,13 @@ ou pour valider un paramètre avant l'appel.
 caps = service.get_capabilities()  # cache process activé par défaut
 
 resources = service.list_available_resources()
-# ['bdtopo-osrm', 'bdtopo-valhalla', 'bdtopo-pgr']
+# ['bdtopo-valhalla', 'bdtopo-pgr']
 
-profiles_osrm = service.list_available_profiles(resource="bdtopo-osrm")
-# ['car', ...]
+profiles_valhalla = service.list_available_profiles(resource="bdtopo-valhalla")
+# ['car', 'pedestrian']
 
-if "pedestrian" not in service.list_available_profiles(resource="bdtopo-osrm"):
-    raise UserError(_("Le profil piéton n'est plus supporté par bdtopo-osrm."))
+if "pedestrian" not in service.list_available_profiles(resource="bdtopo-valhalla"):
+    raise UserError(_("Le profil piéton n'est plus supporté par bdtopo-valhalla."))
 ```
 
 ---

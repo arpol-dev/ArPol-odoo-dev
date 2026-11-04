@@ -6,11 +6,6 @@
   "operations": ["itineraire", "isochrone"],
   "resources": [
     {
-      "id": "bdtopo-osrm",
-      "profiles": ["car", "pedestrian"],
-      "optimization": ["fastest", "shortest"]
-    },
-    {
       "id": "bdtopo-valhalla",
       "profiles": ["car", "pedestrian"],
       "optimization": ["fastest", "shortest"]

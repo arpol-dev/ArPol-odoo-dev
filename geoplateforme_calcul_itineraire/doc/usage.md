@@ -104,9 +104,9 @@ caps = service.get_capabilities()
 print(caps)
 
 resources = service.list_available_resources()
-# ex: ['bdtopo-osrm', 'bdtopo-valhalla', 'bdtopo-pgr']
+# ex: ['bdtopo-valhalla', 'bdtopo-pgr']
 
-profiles = service.list_available_profiles(resource="bdtopo-osrm")
+profiles = service.list_available_profiles(resource="bdtopo-valhalla")
 # ex: ['car', 'pedestrian']
 ```
 

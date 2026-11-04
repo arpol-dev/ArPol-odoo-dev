@@ -72,7 +72,7 @@ service = self.env['geoplateforme.itineraire']
 
 # 1) Découvrir l'API (cache process actif)
 caps = service.get_capabilities()
-print(service.list_available_resources())  # ex: ['bdtopo-osrm', 'bdtopo-valhalla', ...]
+print(service.list_available_resources())  # ex: ['bdtopo-valhalla', 'bdtopo-pgr', ...]
 
 # 2) Calculer un itinéraire (Paris : Notre-Dame -> Bastille)
 route = service.compute_route(
@@ -113,7 +113,7 @@ Paramètres système*.
 |---|---|---|
 | `geoplateforme.base_url` | `https://data.geopf.fr/navigation` | URL de base de l'API |
 | `geoplateforme.timeout` | `10` | Timeout HTTP (secondes) |
-| `geoplateforme.default_resource` | `bdtopo-osrm` | Ressource par défaut |
+| `geoplateforme.default_resource` | `bdtopo-valhalla` | Ressource par défaut |
 | `geoplateforme.default_profile` | `car` | Profil par défaut |
 | `geoplateforme.default_optimization` | `fastest` | Optimisation par défaut |
 | `geoplateforme.capabilities_cache_ttl` | `3600` | TTL cache `/getCapabilities` |

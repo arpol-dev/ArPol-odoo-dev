@@ -119,13 +119,14 @@ class TestGeoplateformeItineraire(TransactionCase):
     def test_list_available_resources(self, mock_request):
         mock_request.return_value = _make_response(json_data=self.caps_payload)
         resources = self.service.list_available_resources()
-        self.assertIn("bdtopo-osrm", resources)
         self.assertIn("bdtopo-valhalla", resources)
+        self.assertIn("bdtopo-pgr", resources)
+        self.assertNotIn("bdtopo-osrm", resources)
 
     @patch(REQUESTS_PATH)
     def test_list_available_profiles_filtered(self, mock_request):
         mock_request.return_value = _make_response(json_data=self.caps_payload)
-        profiles = self.service.list_available_profiles(resource="bdtopo-osrm")
+        profiles = self.service.list_available_profiles(resource="bdtopo-valhalla")
         self.assertIn("car", profiles)
         self.assertIn("pedestrian", profiles)
 
@@ -181,7 +182,7 @@ class TestGeoplateformeItineraire(TransactionCase):
         self.assertEqual(args[0], "GET")
         self.assertTrue(args[1].endswith("/itineraire"))
         sent_params = kwargs["params"]
-        self.assertEqual(sent_params["resource"], "bdtopo-osrm")
+        self.assertEqual(sent_params["resource"], "bdtopo-valhalla")
         self.assertEqual(sent_params["start"], "2.337306,48.849319")
         self.assertEqual(sent_params["end"], "2.367776,48.852891")
         self.assertEqual(sent_params["profile"], "car")

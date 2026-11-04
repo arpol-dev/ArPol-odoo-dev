@@ -19,12 +19,12 @@
 | **CRS d'entrée par défaut** | EPSG:4326 (`lon,lat`) |
 | **Données sous-jacentes** | BD TOPO® de l'IGN |
 
-L'API est servie par trois moteurs interchangeables :
+L'API est servie par plusieurs moteurs. `bdtopo-osrm` n'existe plus côté IGN
+(erreur HTTP 400 « it does not exist on this service ») ; les ressources courantes sont :
 
 | Ressource | Moteur | Caractéristiques |
 |---|---|---|
-| `bdtopo-osrm` | OSRM | Performance maximale, par défaut |
-| `bdtopo-valhalla` | Valhalla | Plus d'options de profils et contraintes |
+| `bdtopo-valhalla` | Valhalla | Par défaut ; profils `car` et `pedestrian` |
 | `bdtopo-pgr` | pgRouting | Contraintes/attributs avancés, plus lent |
 
 ---
@@ -92,7 +92,7 @@ d'étapes intermédiaires.
 
 | Nom (API) | Type | Description |
 |---|---|---|
-| `resource` | string | `bdtopo-osrm` \| `bdtopo-valhalla` \| `bdtopo-pgr` |
+| `resource` | string | `bdtopo-valhalla` \| `bdtopo-pgr` |
 | `start` | string | `"lon,lat"` (EPSG:4326) |
 | `end` | string | `"lon,lat"` (EPSG:4326) |
 
@@ -179,7 +179,7 @@ module lève `GeoplateformeNetworkError`.
 
 ```
 https://data.geopf.fr/navigation/itineraire?
-  resource=bdtopo-osrm&
+  resource=bdtopo-valhalla&
   start=2.349902,48.852968&
   end=2.369248,48.853110&
   profile=pedestrian&

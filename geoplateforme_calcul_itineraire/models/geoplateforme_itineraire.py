@@ -55,7 +55,7 @@ _logger = logging.getLogger(__name__)
 
 DEFAULT_BASE_URL = "https://data.geopf.fr/navigation"
 DEFAULT_TIMEOUT = 10.0
-DEFAULT_RESOURCE = "bdtopo-osrm"
+DEFAULT_RESOURCE = "bdtopo-valhalla"
 DEFAULT_PROFILE = "car"
 DEFAULT_OPTIMIZATION = "fastest"
 DEFAULT_CAPABILITIES_TTL = 3600  # secondes
@@ -101,7 +101,7 @@ class GeoplateformeItineraire(models.AbstractModel):
 
     @api.model
     def _get_default_resource(self):
-        """Nom de ressource par défaut (``bdtopo-osrm``, ``bdtopo-valhalla``, …)."""
+        """Nom de ressource par défaut (``bdtopo-valhalla``, ``bdtopo-pgr``, …)."""
         return self._get_config_param("geoplateforme.default_resource", DEFAULT_RESOURCE)
 
     @api.model
@@ -321,7 +321,7 @@ class GeoplateformeItineraire(models.AbstractModel):
         """Récupère les capacités de l'API Géoplateforme (``/getCapabilities``).
 
         La réponse décrit les opérations disponibles, les ressources
-        (``bdtopo-osrm``, ``bdtopo-valhalla``, ``bdtopo-pgr``), les profils
+        (``bdtopo-valhalla``, ``bdtopo-pgr``, …), les profils
         (``car``, ``pedestrian``) et les options supportées. Elle change
         très rarement → on la cache en mémoire process pour ``ttl`` secondes
         (cf. :meth:`_get_capabilities_ttl`).
@@ -360,7 +360,7 @@ class GeoplateformeItineraire(models.AbstractModel):
         :param start: point de départ — ``"lon,lat"`` ou ``(lon, lat)``.
         :param end: point d'arrivée — ``"lon,lat"`` ou ``(lon, lat)``.
         :param str|None resource: ressource (défaut config —
-            ``bdtopo-osrm`` en standard).
+            ``bdtopo-valhalla`` en standard).
         :param str|None profile: ``car`` ou ``pedestrian`` (défaut config).
         :param str|None optimization: ``fastest`` ou ``shortest``
             (défaut config).
