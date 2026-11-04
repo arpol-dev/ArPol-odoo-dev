@@ -23,6 +23,7 @@ class AiAgentSessionWizard(models.TransientModel):
     request = fields.Text(string="Request", required=True)
     ai_model_id = fields.Many2one(
         'ai.agent.model', string="AI Model", domain=[('active', '=', True)], help=AI_AGENT_MODEL_HELP,
+        default=lambda self: self.env.user.ai_agent_default_model_id.id,
     )
     ai_permission = fields.Selection(
         AI_AGENT_PERMISSION_SELECTION, string="Permissions", default=AI_AGENT_PERMISSION_DEFAULT,

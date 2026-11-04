@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ai_agent_model_view_list" model="ir.ui.view">
+        <field name="name">ai.agent.model.list</field>
+        <field name="model">ai.agent.model</field>
+        <field name="arch" type="xml">
+            <list string="AI Agent Models">
+                <header>
+                    <button name="action_sync_from_server" type="object" string="Synchronize"
+                            class="btn-primary"/>
+                </header>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="provider"/>
+                <field name="variants"/>
+                <field name="status"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="ai_agent_model_view_search" model="ir.ui.view">
+        <field name="name">ai.agent.model.search</field>
+        <field name="model">ai.agent.model</field>
+        <field name="arch" type="xml">
+            <search string="AI Agent Models">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="provider"/>
+                <filter name="active_models" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="inactive_models" string="Inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="ai_agent_model_action" model="ir.actions.act_window">
+        <field name="name">AI Agent Models</field>
+        <field name="res_model">ai.agent.model</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_active_models': 1}</field>
+        <field name="help" type="html">
+            <p>Models available on the IArPol server. Use Synchronize to refresh the list.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_ai_agent_models" name="AI Agent Models" parent="base.menu_administration"
+              action="ai_agent_model_action" sequence="90"/>
+</odoo>

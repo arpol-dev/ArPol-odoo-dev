@@ -2,7 +2,7 @@
 # Modèles disponibles sur le serveur IArPol, copiés depuis GET /api/webhook/models. Liste partagée :
 # un seul serveur OpenCode. Les modèles absents de la dernière synchronisation sont désactivés et
 # non supprimés, pour garder le lien avec les sessions déjà lancées.
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class AiAgentModel(models.Model):
@@ -19,6 +19,11 @@ class AiAgentModel(models.Model):
     _sql_constraints = [
         ('code_unique', 'unique(code)', "Each AI Agent model must have a unique code."),
     ]
+
+    @api.model
+    def action_sync_from_server(self):
+        """Bouton de la liste : synchronise avec le serveur de l'utilisateur courant."""
+        return self.env.user.action_sync_ai_agent_models()
 
     def _sync_from_server(self, models_data):
         """Crée ou met à jour les modèles reçus, désactive ceux qui ne sont plus listés."""

@@ -20,6 +20,7 @@
                         <field name="claude_webhook_token" readonly="0" password="True"/>
                         <field name="claude_webhook_cwd" readonly="0"
                                placeholder="/home/you/some-directory"/>
+                        <field name="ai_agent_default_model_id" readonly="0" options="{'no_create': True}"/>
                     </group>
                     <button name="action_sync_ai_agent_models" type="object"
                             string="Synchronize AI models" class="btn-secondary"/>
@@ -41,6 +42,7 @@
                         <field name="claude_webhook_url" placeholder="https://hook.arpol.fr"/>
                         <field name="claude_webhook_token" password="True"/>
                         <field name="claude_webhook_cwd" placeholder="/home/you/some-directory"/>
+                        <field name="ai_agent_default_model_id" options="{'no_create': True}"/>
                     </group>
                     <button name="action_sync_ai_agent_models" type="object"
                             string="Synchronize AI models" class="btn-secondary"/>

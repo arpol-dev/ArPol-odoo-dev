@@ -23,16 +23,23 @@ class ResUsers(models.Model):
              "allowedRoots of the IArPol webhook configuration).",
     )
 
+    ai_agent_default_model_id = fields.Many2one(
+        'ai.agent.model', string="Default AI Model", domain=[('active', '=', True)],
+        help="Model preselected when you launch an AI Agent session. Empty = the server's default.",
+    )
+
     @property
     def SELF_READABLE_FIELDS(self):
         return super().SELF_READABLE_FIELDS + [
             'claude_webhook_url', 'claude_webhook_token', 'claude_webhook_cwd',
+            'ai_agent_default_model_id',
         ]
 
     @property
     def SELF_WRITEABLE_FIELDS(self):
         return super().SELF_WRITEABLE_FIELDS + [
             'claude_webhook_url', 'claude_webhook_token', 'claude_webhook_cwd',
+            'ai_agent_default_model_id',
         ]
 
     def action_sync_ai_agent_models(self):

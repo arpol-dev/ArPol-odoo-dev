@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 {
     'name': 'AI Agent Session',
-    'version': '18.0.3.0.0',
+    'version': '18.0.3.1.0',
     'summary': 'Launch an OpenCode session on the IArPol server from the chatter or a server action',
     'description': """
 AI Agent Session
@@ -26,6 +26,7 @@ The list of available models is synchronized from the same server (AI Agent pref
     },
     'data': [
         'security/ir.model.access.csv',
+        'views/ai_agent_model_views.xml',
         'views/res_users_views.xml',
         'views/ai_agent_session_wizard_views.xml',
         'views/ir_actions_server_views.xml',

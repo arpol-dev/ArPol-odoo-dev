@@ -90,6 +90,6 @@ class AiAgentLauncher(models.AbstractModel):
             _("Permissions:"), permission_label,
             _("Request:"), request_text.strip(),
         )
-        if data.get('url'):
-            body += Markup('<p><a href="%s">%s</a></p>') % (data['url'], _("Open the session (Netbird VPN)"))
+        if data.get('openUrl'):
+            body += Markup('<p><a href="%s">%s</a></p>') % (data['openUrl'], _("Open the session"))
         record.message_post(body=body, subtype_xmlid='mail.mt_note')

@@ -64,7 +64,7 @@ class TestAiAgentSession(TransactionCase):
         self.assertNotIn('AGENT_SESSION_DONE', payload['prompt'])
 
     def test_launch_posts_internal_note_with_session_reference(self):
-        self._launch(webhook_reply={'name': 'ses_abc123', 'label': 'x', 'url': 'http://vpn/session/ses_abc123'})
+        self._launch(webhook_reply={'name': 'ses_abc123', 'label': 'x', 'openUrl': 'https://iarpol.arpol.fr/open/ses_abc123'})
         notes = self._notes()
         self.assertEqual(len(notes), 1)
         self.assertTrue(notes.subtype_id.internal)
@@ -72,7 +72,7 @@ class TestAiAgentSession(TransactionCase):
         self.assertIn('server default', notes.body)
         self.assertIn('Allow', notes.body)
         self.assertIn('Summarize this contact', notes.body)
-        self.assertIn('http://vpn/session/ses_abc123', notes.body)
+        self.assertIn('https://iarpol.arpol.fr/open/ses_abc123', notes.body)
 
     def test_launch_sends_selected_model_and_permission(self):
         model = self.env['ai.agent.model'].create({'code': 'anthropic/claude-sonnet-5', 'name': 'Sonnet 5'})
@@ -166,3 +166,47 @@ class TestAiAgentModelSync(TransactionCase):
         dupes = [{'id': 'anthropic/x', 'name': 'X'}, {'id': 'anthropic/x', 'name': 'X'}]
         self._sync(dupes)
         self.assertEqual(self.env['ai.agent.model'].search_count([('code', '=', 'anthropic/x')]), 1)
+
+@tagged('post_install', '-at_install')
+class TestAiAgentDefaultModel(TransactionCase):
+
+    def setUp(self):
+        super().setUp()
+        self.env.user.sudo().write({
+            'claude_webhook_url': 'https://webhook.example.com',
+            'claude_webhook_token': 'tok',
+            'claude_webhook_cwd': '/work',
+        })
+        self.partner = self.env['res.partner'].create({'name': 'Default Target'})
+        self.model = self.env['ai.agent.model'].create({'code': 'anthropic/haiku-test', 'name': 'Haiku test'})
+
+    def test_wizard_preselects_user_default_model(self):
+        self.env.user.sudo().ai_agent_default_model_id = self.model
+        wizard = self.env['ai.agent.session.wizard'].new({})
+        self.assertEqual(wizard.ai_model_id, self.model)
+
+    def test_wizard_without_default_model_is_empty(self):
+        wizard = self.env['ai.agent.session.wizard'].new({})
+        self.assertFalse(wizard.ai_model_id)
+
+    def test_server_action_falls_back_to_user_default_model(self):
+        self.env.user.sudo().ai_agent_default_model_id = self.model
+        action = self.env['ir.actions.server'].create({
+            'name': 'AI default',
+            'model_id': self.env['ir.model']._get_id('res.partner'),
+            'state': 'ai_agent',
+            'ai_agent_user_id': self.env.user.id,
+            'ai_agent_request': 'Check default',
+        })
+        with patch(LAUNCHER_REQUEST) as request_mock:
+            request_mock.return_value = _response({'name': 'ses_default'})
+            action._run_action_ai_agent({'record': self.partner})
+        self.assertEqual(request_mock.call_args.kwargs['json']['model'], 'anthropic/haiku-test')
+
+    def test_models_list_action_and_sync_button(self):
+        action = self.env.ref('ai_agent_session.ai_agent_model_action')
+        self.assertEqual(action.res_model, 'ai.agent.model')
+        with patch(LAUNCHER_REQUEST) as request_mock:
+            request_mock.return_value = _response({'models': [{'id': 'opencode/x', 'name': 'X'}]})
+            self.env['ai.agent.model'].action_sync_from_server()
+        self.assertTrue(self.env['ai.agent.model'].search([('code', '=', 'opencode/x')]))

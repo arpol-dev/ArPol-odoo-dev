@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0-20260926\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 14:05+0000\n"
-"PO-Revision-Date: 2026-11-03 14:05+0000\n"
+"POT-Creation-Date: 2026-11-03 21:10+0000\n"
+"PO-Revision-Date: 2026-11-03 21:10+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -20,7 +20,9 @@ msgstr ""
 #: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
 msgid "%(user)s has no AI Agent webhook configured (Preferences > AI Agent)."
 msgstr "%(user)s n'a pas de webhook d'agent IA configuré (Préférences > AI Agent)."
-"%(user)s n'a aucun webhook d'agent IA configuré (Préférences > Agent IA)."
+"%(user)s n'a pas de webhook d'agent IA configuré (Préférences > AI "
+"Agent).%(user)s n'a aucun webhook d'agent IA configuré (Préférences > Agent "
+"IA)."
 
 #. module: ai_agent_session
 #. odoo-python
@@ -51,6 +53,14 @@ msgstr "Lanceur d'agent IA"
 #: model:ir.model,name:ai_agent_session.model_ai_agent_model
 msgid "AI Agent Model"
 msgstr "Modèle d'agent IA"
+
+#. module: ai_agent_session
+#: model:ir.actions.act_window,name:ai_agent_session.ai_agent_model_action
+#: model:ir.ui.menu,name:ai_agent_session.menu_ai_agent_models
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_model_view_list
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_model_view_search
+msgid "AI Agent Models"
+msgstr "Modèles d'agent IA"
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__ai_agent_user_id
@@ -105,6 +115,7 @@ msgstr "Modèle IA"
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__active
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_model_view_search
 msgid "Active"
 msgstr "Actif"
 
@@ -138,7 +149,9 @@ msgid ""
 "Base URL of the IArPol webhook server (e.g. https://hook.arpol.fr). Leave "
 "empty to disable AI Agent sessions for your account."
 msgstr "URL de base du serveur webhook IArPol (ex. https://hook.arpol.fr). Laisser vide pour désactiver les sessions d'agent IA pour votre compte."
-"URL de base de votre serveur webhook Claude Code personnel (ex. "
+"URL de base du serveur webhook IArPol (ex. https://hook.arpol.fr). Laisser "
+"vide pour désactiver les sessions d'agent IA pour votre compte.URL de base "
+"de votre serveur webhook Claude Code personnel (ex. "
 "https://iassistant.arpol.fr). Laissez vide pour désactiver les sessions "
 "d'agent IA pour votre compte."
 
@@ -179,6 +192,11 @@ msgid "Created on"
 msgstr "Créé le"
 
 #. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_res_users__ai_agent_default_model_id
+msgid "Default AI Model"
+msgstr "Modèle IA par défaut"
+
+#. module: ai_agent_session
 #: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission__deny
 #: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission__deny
 msgid "Deny — refuse every action"
@@ -190,9 +208,11 @@ msgid ""
 "Directory the agent opens when a session starts (must be inside the "
 "allowedRoots of the IArPol webhook configuration)."
 msgstr "Dossier ouvert par l'agent au démarrage d'une session (doit être dans les allowedRoots de la configuration du webhook IArPol)."
-"Dossier que l'agent ouvre au démarrage d'une session (il doit se trouver "
-"dans les dossiers autorisés par la configuration de votre serveur webhook). "
-"L'agent lit et écrit des fichiers relativement à ce dossier."
+"Dossier ouvert par l'agent au démarrage d'une session (doit être dans les "
+"allowedRoots de la configuration du webhook IArPol).Dossier que l'agent "
+"ouvre au démarrage d'une session (il doit se trouver dans les dossiers "
+"autorisés par la configuration de votre serveur webhook). L'agent lit et "
+"écrit des fichiers relativement à ce dossier."
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__display_name
@@ -215,6 +235,11 @@ msgstr "ID"
 #: model:ir.model.fields,help:ai_agent_session.field_ai_agent_model__code
 msgid "Identifier sent to the server: provider/model."
 msgstr "Identifiant envoyé au serveur : fournisseur/modèle."
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_model_view_search
+msgid "Inactive"
+msgstr "Inactif"
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__write_uid
@@ -250,9 +275,18 @@ msgid ""
 "Main task sent to the agent. It also receives the full data of the record "
 "the action runs on, and its chatter history."
 msgstr "Tâche principale confiée à l'agent. Il reçoit aussi les données complètes de l'enregistrement sur lequel l'action s'exécute, et son historique de chatter."
-"Tâche principale envoyée à l'agent. Il reçoit aussi toutes les données de "
-"l'enregistrement sur lequel l'action s'exécute, ainsi que son historique de "
-"chatter."
+"Tâche principale confiée à l'agent. Il reçoit aussi les données complètes de"
+" l'enregistrement sur lequel l'action s'exécute, et son historique de "
+"chatter.Tâche principale envoyée à l'agent. Il reçoit aussi toutes les "
+"données de l'enregistrement sur lequel l'action s'exécute, ainsi que son "
+"historique de chatter."
+
+#. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_res_users__ai_agent_default_model_id
+msgid ""
+"Model preselected when you launch an AI Agent session. Empty = the server's "
+"default."
+msgstr "Modèle présélectionné lorsque vous lancez une session d'agent IA. Vide = modèle par défaut du serveur."
 
 #. module: ai_agent_session
 #: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__ai_model_id
@@ -271,6 +305,12 @@ msgid "Model:"
 msgstr "Modèle :"
 
 #. module: ai_agent_session
+#: model_terms:ir.actions.act_window,help:ai_agent_session.ai_agent_model_action
+msgid ""
+"Models available on the IArPol server. Use Synchronize to refresh the list."
+msgstr "Modèles disponibles sur le serveur IArPol. Utilisez Synchroniser pour actualiser la liste."
+
+#. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__name
 msgid "Name"
 msgstr "Nom"
@@ -278,14 +318,15 @@ msgstr "Nom"
 #. module: ai_agent_session
 #. odoo-python
 #: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
-msgid "Open the session (Netbird VPN)"
-msgstr "Ouvrir la session (VPN Netbird)"
+msgid "Open the session"
+msgstr "Ouvrir la session"
 
 #. module: ai_agent_session
 #: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__summary
 msgid "Optional. Names the session in IArPol and in the chatter note."
 msgstr "Facultatif. Nomme la session dans IArPol et dans la note du chatter."
-"Facultatif. Nomme la session dans Claude Code et dans le menu des "
+"Facultatif. Nomme la session dans IArPol et dans la note du "
+"chatter.Facultatif. Nomme la session dans Claude Code et dans le menu des "
 "notifications."
 
 #. module: ai_agent_session
@@ -294,7 +335,9 @@ msgstr "Facultatif. Nomme la session dans IArPol et dans la note du chatter."
 msgid ""
 "Optional. Names the session; defaults to the first line of the request."
 msgstr "Facultatif. Nomme la session ; par défaut, la première ligne de la demande."
-"Facultatif. Nomme la session ; par défaut, la première ligne de la demande."
+"Facultatif. Nomme la session ; par défaut, la première ligne de la "
+"demande.Facultatif. Nomme la session ; par défaut, la première ligne de la "
+"demande."
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_session_wizard__ai_permission
@@ -365,6 +408,11 @@ msgid "Status"
 msgstr "Statut"
 
 #. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_model_view_list
+msgid "Synchronize"
+msgstr "Synchroniser"
+
+#. module: ai_agent_session
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_ai_agent
 #: model_terms:ir.ui.view,arch_db:ai_agent_session.view_users_form_simple_modif_ai_agent
 msgid "Synchronize AI models"
@@ -389,9 +437,10 @@ msgid ""
 "Token of the IArPol webhook, sent in the X-Webhook-Token header. Find it in "
 "~/.config/iarpol/webhook.json on the IArPol server."
 msgstr "Jeton du webhook IArPol, envoyé dans l'en-tête X-Webhook-Token. Il se trouve dans ~/.config/iarpol/webhook.json sur le serveur IArPol."
-"Jeton webhook dédié à votre serveur (distinct de tout jeton d'application "
-"personnel). Vous le trouverez dans ~/.claude-console/config.json sur votre "
-"serveur."
+"Jeton du webhook IArPol, envoyé dans l'en-tête X-Webhook-Token. Il se trouve"
+" dans ~/.config/iarpol/webhook.json sur le serveur IArPol.Jeton webhook "
+"dédié à votre serveur (distinct de tout jeton d'application personnel). Vous"
+" le trouverez dans ~/.claude-console/config.json sur votre serveur."
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ir_actions_server__state
@@ -436,9 +485,11 @@ msgid ""
 "User whose AI Agent webhook (Preferences > AI Agent) runs the session. "
 "Needed because automated actions run as OdooBot, which has no webhook."
 msgstr "Utilisateur dont le webhook d'agent IA (Préférences > AI Agent) lance la session. Nécessaire car les actions automatisées s'exécutent sous OdooBot, qui n'a pas de webhook."
-"Utilisateur dont le webhook d'agent IA (Préférences > Agent IA) exécute la "
-"session. Nécessaire car les actions automatisées s'exécutent en tant "
-"qu'OdooBot, qui n'a pas de webhook."
+"Utilisateur dont le webhook d'agent IA (Préférences > AI Agent) lance la "
+"session. Nécessaire car les actions automatisées s'exécutent sous OdooBot, "
+"qui n'a pas de webhook.Utilisateur dont le webhook d'agent IA (Préférences >"
+" Agent IA) exécute la session. Nécessaire car les actions automatisées "
+"s'exécutent en tant qu'OdooBot, qui n'a pas de webhook."
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__variants

@@ -46,9 +46,11 @@ class IrActionsServer(models.Model):
         record = (eval_context or {}).get('record')
         if not record or not self.ai_agent_request:
             return False
+        user = self.ai_agent_user_id
+        model = self.ai_agent_model_id or user.sudo().ai_agent_default_model_id
         self.env['ai.agent.launcher']._ai_agent_launch(
-            record, self.ai_agent_request, user=self.ai_agent_user_id,
-            label=self.ai_agent_title, model=self.ai_agent_model_id.code,
+            record, self.ai_agent_request, user=user,
+            label=self.ai_agent_title, model=model.code,
             permission=self.ai_agent_permission,
         )
         return False

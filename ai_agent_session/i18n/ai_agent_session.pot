@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0-20260926\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 14:05+0000\n"
-"PO-Revision-Date: 2026-11-03 14:05+0000\n"
+"POT-Creation-Date: 2026-11-03 21:10+0000\n"
+"PO-Revision-Date: 2026-11-03 21:10+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -49,6 +49,14 @@ msgstr ""
 #. module: ai_agent_session
 #: model:ir.model,name:ai_agent_session.model_ai_agent_model
 msgid "AI Agent Model"
+msgstr ""
+
+#. module: ai_agent_session
+#: model:ir.actions.act_window,name:ai_agent_session.ai_agent_model_action
+#: model:ir.ui.menu,name:ai_agent_session.menu_ai_agent_models
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_model_view_list
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_model_view_search
+msgid "AI Agent Models"
 msgstr ""
 
 #. module: ai_agent_session
@@ -104,6 +112,7 @@ msgstr ""
 
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__active
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_model_view_search
 msgid "Active"
 msgstr ""
 
@@ -175,6 +184,11 @@ msgid "Created on"
 msgstr ""
 
 #. module: ai_agent_session
+#: model:ir.model.fields,field_description:ai_agent_session.field_res_users__ai_agent_default_model_id
+msgid "Default AI Model"
+msgstr ""
+
+#. module: ai_agent_session
 #: model:ir.model.fields.selection,name:ai_agent_session.selection__ai_agent_session_wizard__ai_permission__deny
 #: model:ir.model.fields.selection,name:ai_agent_session.selection__ir_actions_server__ai_agent_permission__deny
 msgid "Deny — refuse every action"
@@ -207,6 +221,11 @@ msgstr ""
 #. module: ai_agent_session
 #: model:ir.model.fields,help:ai_agent_session.field_ai_agent_model__code
 msgid "Identifier sent to the server: provider/model."
+msgstr ""
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_model_view_search
+msgid "Inactive"
 msgstr ""
 
 #. module: ai_agent_session
@@ -245,6 +264,13 @@ msgid ""
 msgstr ""
 
 #. module: ai_agent_session
+#: model:ir.model.fields,help:ai_agent_session.field_res_users__ai_agent_default_model_id
+msgid ""
+"Model preselected when you launch an AI Agent session. Empty = the server's "
+"default."
+msgstr ""
+
+#. module: ai_agent_session
 #: model:ir.model.fields,help:ai_agent_session.field_ai_agent_session_wizard__ai_model_id
 #: model:ir.model.fields,help:ai_agent_session.field_ir_actions_server__ai_agent_model_id
 #: model:ir.model.fields,help:ai_agent_session.field_ir_cron__ai_agent_model_id
@@ -261,6 +287,12 @@ msgid "Model:"
 msgstr ""
 
 #. module: ai_agent_session
+#: model_terms:ir.actions.act_window,help:ai_agent_session.ai_agent_model_action
+msgid ""
+"Models available on the IArPol server. Use Synchronize to refresh the list."
+msgstr ""
+
+#. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__name
 msgid "Name"
 msgstr ""
@@ -268,7 +300,7 @@ msgstr ""
 #. module: ai_agent_session
 #. odoo-python
 #: code:addons/ai_agent_session/models/ai_agent_launcher.py:0
-msgid "Open the session (Netbird VPN)"
+msgid "Open the session"
 msgstr ""
 
 #. module: ai_agent_session
@@ -349,6 +381,11 @@ msgstr ""
 #. module: ai_agent_session
 #: model:ir.model.fields,field_description:ai_agent_session.field_ai_agent_model__status
 msgid "Status"
+msgstr ""
+
+#. module: ai_agent_session
+#: model_terms:ir.ui.view,arch_db:ai_agent_session.ai_agent_model_view_list
+msgid "Synchronize"
 msgstr ""
 
 #. module: ai_agent_session
