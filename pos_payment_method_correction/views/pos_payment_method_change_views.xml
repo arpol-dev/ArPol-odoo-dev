@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="pos_payment_method_change_view_form" model="ir.ui.view">
+        <field name="name">pos.payment.method.change.form</field>
+        <field name="model">pos.payment.method.change</field>
+        <field name="arch" type="xml">
+            <form string="Correct payment method">
+                <group>
+                    <group>
+                        <field name="payment_id" invisible="1"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="available_payment_method_ids" invisible="1"/>
+                        <field name="session_id"/>
+                        <field name="amount"/>
+                        <field name="current_payment_method_id"/>
+                        <field name="new_payment_method_id"/>
+                    </group>
+                    <group>
+                        <field name="cash_impact"/>
+                        <field name="session_end_before"/>
+                        <field name="session_end_after"/>
+                    </group>
+                </group>
+                <field name="line_ids" invisible="not line_ids">
+                    <list editable="bottom" create="false">
+                        <field name="session_id"/>
+                        <field name="session_state"/>
+                        <field name="start_before"/>
+                        <field name="start_after"/>
+                        <field name="end_before"/>
+                        <field name="end_after"/>
+                    </list>
+                </field>
+                <footer>
+                    <button string="Apply correction" type="object" name="action_apply" class="btn-primary"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
