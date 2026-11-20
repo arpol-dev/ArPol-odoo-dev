@@ -84,7 +84,7 @@ class PosPaymentMethodChangeLine(models.TransientModel):
 
     wizard_id = fields.Many2one('pos.payment.method.change', required=True, ondelete='cascade')
     currency_id = fields.Many2one(related='wizard_id.currency_id')
-    session_id = fields.Many2one('pos.session', string='Session', required=True, readonly=True)
+    session_id = fields.Many2one('pos.session', string='Session', required=True)
     session_state = fields.Selection(related='session_id.state')
     start_before = fields.Monetary(string='Opening cash before', readonly=True)
     start_after = fields.Monetary(string='Opening cash after', required=True)

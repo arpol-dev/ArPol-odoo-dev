@@ -95,6 +95,19 @@ class TestPosPaymentMethodChange(TestPoSCommon):
         bank_line = session_a.move_id.line_ids.filtered(lambda l: l.display_type == 'payment_term' and l.name.endswith(self.bank_pm1.name))
         self.assertAlmostEqual(sum(bank_line.mapped('balance')), 70.0, places=2)
 
+    def test_correction_after_payment_method_renamed(self):
+        session = self._run_session(100, [(self.cash_pm1, 36)])
+        self.cash_pm1.name = 'Espèce renamed'
+        payment = session.order_ids.payment_ids
+        self._correct(payment, self.bank_pm1)
+        self.assertEqual(payment.payment_method_id, self.bank_pm1)
+        self.assertEqual(session.cash_register_balance_end_real, 100)
+        self._assert_session_accounting_consistent(session)
+
+    def test_line_session_is_not_readonly(self):
+        fields_info = self.env['pos.payment.method.change.line'].fields_get(['session_id'])
+        self.assertFalse(fields_info['session_id']['readonly'])
+
     def test_bank_to_cash_in_closed_session(self):
         session = self._run_session(50, [(self.bank_pm1, 40)])
         self.assertEqual(session.cash_register_balance_end_real, 50)

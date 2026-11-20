@@ -30,19 +30,8 @@ class PosSession(models.Model):
         for method, amount in shifts:
             if method.type == 'pay_later':
                 raise UserError(_("Pay later payments cannot be corrected."))
-            line = self.move_id.line_ids.filtered(
-                lambda l, m=method: l.display_type == 'payment_term' and l.name == '%s - %s' % (self.name, m.name)
-            )
-            counterpart = AccountMoveLine
+            line, counterpart = self._find_payment_method_ledger(method)
             if line:
-                counterpart = (line.matched_debit_ids.debit_move_id | line.matched_credit_ids.credit_move_id).filtered(
-                    lambda l: l.move_id != self.move_id
-                )
-                if len(counterpart) != 1 or not (counterpart.payment_id or counterpart.move_id.statement_line_id):
-                    raise UserError(_(
-                        "The %(method)s receivable line of %(session)s is not reconciled with a single cash or bank document.",
-                        method=method.name, session=self.name,
-                    ))
                 line.remove_move_reconcile()
             elif amount < 0:
                 raise UserError(_("No %(method)s amount to remove from %(session)s.", method=method.name, session=self.name))
@@ -78,6 +67,41 @@ class PosSession(models.Model):
         for method, amount, line, counterpart in plan:
             if line.exists() and counterpart.exists():
                 (line | counterpart).with_context(no_cash_basis=True).reconcile()
+
+    def _find_payment_method_ledger(self, payment_method):
+        """Return the session receivable line of a payment method and its counterpart.
+
+        The line is found through the cash statement line (cash method) or the account
+        payment (bank method) of the session, not through its name: the name is written
+        at closing, with the name the payment method had at that time.
+        """
+        self.ensure_one()
+        receivable = self._get_receivable_account(payment_method)
+        if payment_method.is_cash_count:
+            statement_lines = self.env['account.bank.statement.line'].search([
+                ('pos_session_id', '=', self.id),
+                ('journal_id', '=', payment_method.journal_id.id),
+            ])
+            counterparts = statement_lines.move_id.line_ids.filtered(lambda l: l.account_id == receivable)
+        else:
+            payments = self.env['account.payment'].search([
+                ('pos_session_id', '=', self.id),
+                ('pos_payment_method_id', '=', payment_method.id),
+            ])
+            counterparts = payments.move_id.line_ids.filtered(lambda l: l.account_id == receivable)
+        if not counterparts:
+            return self.env['account.move.line'], self.env['account.move.line']
+        if len(counterparts) != 1:
+            raise UserError(_("Several cash or bank documents for %(method)s in %(session)s.", method=payment_method.name, session=self.name))
+        line = (counterparts.matched_debit_ids.debit_move_id | counterparts.matched_credit_ids.credit_move_id).filtered(
+            lambda l: l.move_id == self.move_id
+        )
+        if len(line) != 1:
+            raise UserError(_(
+                "The %(method)s receivable line of %(session)s is not reconciled with a single cash or bank document.",
+                method=payment_method.name, session=self.name,
+            ))
+        return line, counterparts
 
     def _shift_counterpart(self, line, counterpart, amount):
         """Shift the session line and its counterpart document by ``amount``.
